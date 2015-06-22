@@ -234,12 +234,12 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     virtual DComplex getDComplex (const vector<TableExprId>& = vector<TableExprId>());
     virtual MVTime getDate (const vector<TableExprId>& = vector<TableExprId>());
     virtual String getString (const vector<TableExprId>& = vector<TableExprId>());
-    virtual Array<Bool> getArrayBool (const vector<TableExprId>& = vector<TableExprId>());
-    virtual Array<Int64> getArrayInt (const vector<TableExprId>& = vector<TableExprId>());
-    virtual Array<Double> getArrayDouble (const vector<TableExprId>& = vector<TableExprId>());
-    virtual Array<DComplex> getArrayDComplex (const vector<TableExprId>& = vector<TableExprId>());
-    virtual Array<MVTime> getArrayDate (const vector<TableExprId>& = vector<TableExprId>());
-    virtual Array<String> getArrayString (const vector<TableExprId>& = vector<TableExprId>());
+    virtual MArray<Bool> getArrayBool (const vector<TableExprId>& = vector<TableExprId>());
+    virtual MArray<Int64> getArrayInt (const vector<TableExprId>& = vector<TableExprId>());
+    virtual MArray<Double> getArrayDouble (const vector<TableExprId>& = vector<TableExprId>());
+    virtual MArray<DComplex> getArrayDComplex (const vector<TableExprId>& = vector<TableExprId>());
+    virtual MArray<MVTime> getArrayDate (const vector<TableExprId>& = vector<TableExprId>());
+    virtual MArray<String> getArrayString (const vector<TableExprId>& = vector<TableExprId>());
     // <group>
   private:
     // Copying is not needed, thus not allowed.
@@ -294,12 +294,12 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     virtual DComplex getDComplex (const vector<TableExprId>&);
     virtual MVTime getDate (const vector<TableExprId>&);
     virtual String getString (const vector<TableExprId>&);
-    virtual Array<Bool> getArrayBool (const vector<TableExprId>&);
-    virtual Array<Int64> getArrayInt (const vector<TableExprId>&);
-    virtual Array<Double> getArrayDouble (const vector<TableExprId>&);
-    virtual Array<DComplex> getArrayDComplex (const vector<TableExprId>&);
-    virtual Array<MVTime> getArrayDate (const vector<TableExprId>&);
-    virtual Array<String> getArrayString (const vector<TableExprId>&);
+    virtual MArray<Bool> getArrayBool (const vector<TableExprId>&);
+    virtual MArray<Int64> getArrayInt (const vector<TableExprId>&);
+    virtual MArray<Double> getArrayDouble (const vector<TableExprId>&);
+    virtual MArray<DComplex> getArrayDComplex (const vector<TableExprId>&);
+    virtual MArray<MVTime> getArrayDate (const vector<TableExprId>&);
+    virtual MArray<String> getArrayString (const vector<TableExprId>&);
   protected:
     TableExprId itsId;
   };
@@ -362,7 +362,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     virtual ~TableExprGroupRowid();
     virtual Bool isLazy() const;
     virtual void apply (const TableExprId& id);
-    virtual Array<Int64> getArrayInt (const vector<TableExprId>&);
+    virtual MArray<Int64> getArrayInt (const vector<TableExprId>&);
   };
 
   // <summary>
@@ -382,15 +382,15 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     virtual ~TableExprGroupAggr();
     virtual Bool isLazy() const;
     virtual void apply (const TableExprId& id);
-    virtual Array<Bool> getArrayBool (const vector<TableExprId>&);
-    virtual Array<Int64> getArrayInt (const vector<TableExprId>&);
-    virtual Array<Double> getArrayDouble (const vector<TableExprId>&);
-    virtual Array<DComplex> getArrayDComplex (const vector<TableExprId>&);
-    virtual Array<MVTime> getArrayDate (const vector<TableExprId>&);
-    virtual Array<String> getArrayString (const vector<TableExprId>&);
+    virtual MArray<Bool> getArrayBool (const vector<TableExprId>&);
+    virtual MArray<Int64> getArrayInt (const vector<TableExprId>&);
+    virtual MArray<Double> getArrayDouble (const vector<TableExprId>&);
+    virtual MArray<DComplex> getArrayDComplex (const vector<TableExprId>&);
+    virtual MArray<MVTime> getArrayDate (const vector<TableExprId>&);
+    virtual MArray<String> getArrayString (const vector<TableExprId>&);
   protected:
     template<typename T>
-    Array<T> getArray (const vector<TableExprId>& ids)
+    MArray<T> getArray (const vector<TableExprId>& ids)
     {
       // Return scalar values as a Vector.
       if (itsOperand->valueType() == TableExprNodeRep::VTScalar) {
@@ -398,25 +398,40 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
         for (size_t i=0; i<ids.size(); ++i) {
           itsOperand->get (ids[i], result[i]);
         }
-        return result;
+        return MArray<T>(result);
       }
       // Array values are returned as an array with one more axis.
-      // Get the first value to determine the shape.
-      Array<T> arr;
+      // Get the first value to determine the shape and if masked.
+      MArray<T> arr;
       itsOperand->get (ids[0], arr);
       IPosition shp = arr.shape();
+      Bool hasMask = arr.hasMask();
       shp.append (IPosition (1, ids.size()));
       Array<T> result(shp);
       ArrayIterator<T> iter (result, arr.ndim());
-      iter.array() = arr;
+      iter.array() = arr.array();
       iter.next();
+      Array<Bool> mask;
+      CountedPtr<ArrayIterator<Bool> > miter;
+      if (hasMask) {
+        mask.resize (shp);
+        miter = new ArrayIterator<Bool> (mask, arr.ndim());
+        miter->array() = arr.mask();
+        miter->next();
+      }
       int i=1;
       while (! iter.pastEnd()) {
-        itsOperand->get (ids[i], iter.array());
+        MArray<T> values;
+        itsOperand->get (ids[i], values);
+        iter.array() = values.array();
         iter.next();
+        if (hasMask) {
+          miter->array() = values.mask();
+          miter->next();
+        }
         i++;
       }
-      return result;
+      return MArray<T>(result, mask);
     }
   };
 
@@ -605,7 +620,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       : TableExprGroupFuncBase (node)
     {}
     virtual ~TableExprGroupFuncArrayBool();
-    virtual Array<Bool> getArrayBool (const vector<TableExprId>&);
+    virtual MArray<Bool> getArrayBool (const vector<TableExprId>&);
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
@@ -633,7 +648,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       : TableExprGroupFuncBase (node)
     {}
     virtual ~TableExprGroupFuncArrayInt();
-    virtual Array<Int64> getArrayInt (const vector<TableExprId>&);
+    virtual MArray<Int64> getArrayInt (const vector<TableExprId>&);
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
@@ -661,7 +676,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       : TableExprGroupFuncBase (node)
     {}
     virtual ~TableExprGroupFuncArrayDouble();
-    virtual Array<Double> getArrayDouble (const vector<TableExprId>&);
+    virtual MArray<Double> getArrayDouble (const vector<TableExprId>&);
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
@@ -689,7 +704,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       : TableExprGroupFuncBase (node)
     {}
     virtual ~TableExprGroupFuncArrayDComplex();
-    virtual Array<DComplex> getArrayDComplex (const vector<TableExprId>&);
+    virtual MArray<DComplex> getArrayDComplex (const vector<TableExprId>&);
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
@@ -717,7 +732,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       : TableExprGroupFuncBase (node)
     {}
     virtual ~TableExprGroupFuncArrayDate();
-    virtual Array<MVTime> getArrayDate (const vector<TableExprId>&);
+    virtual MArray<MVTime> getArrayDate (const vector<TableExprId>&);
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
@@ -745,7 +760,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       : TableExprGroupFuncBase (node)
     {}
     virtual ~TableExprGroupFuncArrayString();
-    virtual Array<String> getArrayString (const vector<TableExprId>&);
+    virtual MArray<String> getArrayString (const vector<TableExprId>&);
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.

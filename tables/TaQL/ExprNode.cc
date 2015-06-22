@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: ExprNode.cc 21277 2012-10-31 16:07:31Z gervandiepen $
 
 #include <casacore/tables/TaQL/ExprNode.h>
 #include <casacore/tables/TaQL/ExprNodeSet.h>
@@ -190,6 +190,67 @@ TableExprNode::TableExprNode (const Array<String>& val)
     node_p->link();
 }
 TableExprNode::TableExprNode (const Array<MVTime>& val)
+{
+    node_p = new TableExprNodeArrayConstDate (val);
+    node_p->link();
+}
+
+TableExprNode::TableExprNode (const MArray<Bool>& val)
+{
+    node_p = new TableExprNodeArrayConstBool (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<uChar>& val)
+{
+    node_p = new TableExprNodeArrayConstInt (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<Short>& val)
+{
+    node_p = new TableExprNodeArrayConstInt (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<uShort>& val)
+{
+    node_p = new TableExprNodeArrayConstInt (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<Int>& val)
+{
+    node_p = new TableExprNodeArrayConstInt (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<uInt>& val)
+{
+    node_p = new TableExprNodeArrayConstInt (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<Float>& val)
+{
+    node_p = new TableExprNodeArrayConstDouble (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<Double>& val)
+{
+    node_p = new TableExprNodeArrayConstDouble (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<Complex>& val)
+{
+    node_p = new TableExprNodeArrayConstDComplex (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<DComplex>& val)
+{
+    node_p = new TableExprNodeArrayConstDComplex (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<String>& val)
+{
+    node_p = new TableExprNodeArrayConstString (val);
+    node_p->link();
+}
+TableExprNode::TableExprNode (const MArray<MVTime>& val)
 {
     node_p = new TableExprNodeArrayConstDate (val);
     node_p->link();
@@ -818,7 +879,6 @@ TableExprNodeRep* TableExprNode::newGE (TableExprNodeRep* right) const
 TableExprNodeRep* TableExprNode::newIN (TableExprNodeRep* right,
                                         const TaQLStyle& style) const
 {
-    // Use EQ if a single value is used (scalar or single set element).
     TableExprNodeRep::ValueType vtRight = right->valueType();
     if (vtRight == TableExprNodeRep::VTScalar) {
       return newEQ (right);
@@ -1183,6 +1243,25 @@ TableExprNode TableExprNode::newKeyConst (const TableRecord& keyset,
 	throw (TableInvExpr ("keyword " + keyword + " has unknown data type"));
     }
     return tsnptr;
+}
+
+TableExprNode diagonal (const TableExprNode& array,
+                        const TableExprNode& firstAxis)
+{
+    TableExprNodeSet set;
+    set.add (TableExprNodeSetElem(firstAxis));
+    return TableExprNode::newFunctionNode (TableExprFuncNode::diagonalFUNC,
+					   array, set);
+}
+TableExprNode diagonal (const TableExprNode& array,
+                        const TableExprNode& firstAxis,
+                        const TableExprNode& diag)
+{
+    TableExprNodeSet set;
+    set.add (TableExprNodeSetElem(firstAxis));
+    set.add (TableExprNodeSetElem(diag));
+    return TableExprNode::newFunctionNode (TableExprFuncNode::diagonalFUNC,
+					   array, set);
 }
 
 TableExprNode TableExprNode::newFunctionNode

@@ -386,7 +386,6 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     virtual void apply (const TableExprId& id);
     virtual Double getDouble (const vector<TableExprId>& ids);
   private:
-    void copyArray (const Array<Double>& arr, vector<Double>& buffer) const;
     Double itsFrac;
   };
 
@@ -479,7 +478,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     explicit TableExprGroupHistBase (TableExprNodeRep* node,
                                      Int64 nbin, Double start, Double end);
     virtual ~TableExprGroupHistBase();
-    virtual Array<Int64> getArrayInt (const vector<TableExprId>&);
+    virtual MArray<Int64> getArrayInt (const vector<TableExprId>&);
   protected:
     // Add the value to the histogram.
     void add (Double value);

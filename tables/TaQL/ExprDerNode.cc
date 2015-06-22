@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: ExprDerNode.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #include <casacore/tables/TaQL/ExprDerNode.h>
 #include <casacore/tables/Tables/Table.h>

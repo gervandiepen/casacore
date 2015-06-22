@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: ExprFuncNode.h 21277 2012-10-31 16:07:31Z gervandiepen $
 
 #ifndef TABLES_EXPRFUNCNODE_H
 #define TABLES_EXPRFUNCNODE_H
@@ -107,10 +107,10 @@ public:
 	normFUNC,         //# 21
 	absFUNC,          //# 22
 	argFUNC,          //# 23
-            // for Int, Double or DComplex returning Double
+            // for Int, Double, DComplex, Bool or String returning Double
 	realFUNC,         //# 24
 	imagFUNC,         //# 25
-            // for Int or Double returning Int (using floor)
+            // for Int, Double, Bool or String returning Int (using floor)
         intFUNC,          //# 26
             // for Int or Double returning Double
 	asinFUNC,         //# 27
@@ -246,21 +246,30 @@ public:
             // angular distance returning radians
         angdistFUNC,      //# 135
         angdistxFUNC,     //# 136
-	    // other functions, implemented in derived class
+	    // cone search functions, implemented in derived class
 	conesFUNC,        //# 137
 	cones3FUNC,       //# 138
 	anyconeFUNC,      //# 139
 	anycone3FUNC,     //# 140
 	findconeFUNC,     //# 141
 	findcone3FUNC,    //# 142
+            // for Int, Double, Complex or String returning Bool
+        boolFUNC,         //# 143
+	    // for any type returning array of that type
+	diagonalFUNC,     //# 144
+            // masked array functions
+        marrayFUNC,       //# 145
+        arrdataFUNC,      //# 146
+        arrmaskFUNC,      //# 147
+        arrflatFUNC,      //# 148
         //# AGGREGATE functions must be the last ones.
-        FirstAggrFunc,    //# 143
+        FirstAggrFunc,    //# 149
         countallFUNC = FirstAggrFunc,
         gcountFUNC,
         gfirstFUNC,
         glastFUNC,
         //# Grouping doing aggregation on the fly; reducing to a scalar per group
-        gminFUNC,         //# 147
+        gminFUNC,         //# 153
         gmaxFUNC,
         gsumFUNC,
         gproductFUNC,
@@ -275,7 +284,7 @@ public:
         gnfalseFUNC,
         ghistFUNC,
         //# Grouping requiring aggregation of rows when getting result
-        gaggrFUNC,        //# 160
+        gaggrFUNC,        //# 167
         growidFUNC,
         gmedianFUNC,
         gfractileFUNC,
@@ -398,6 +407,12 @@ public:
     // Get the angular distance between two positions on a sphere.
     static double angdist (double ra1, double dec1, double ra2, double dec2)
       { return acos (sin(dec1)*sin(dec2) + cos(dec1)*cos(dec2)*cos(ra1-ra2)); }
+
+    // Read a string as an integer, double, complex or bool.
+    static Int64 string2Int (const String&);
+    static Double string2Real (const String&);
+    static DComplex string2Complex (const String&);
+    static Bool string2Bool (const String&);
 
 private:
     // Try if the function gives a constant result.

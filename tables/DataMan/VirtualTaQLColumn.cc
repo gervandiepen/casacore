@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: VirtualTaQLColumn.cc 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #include <casacore/tables/DataMan/VirtualTaQLColumn.h>
 #include <casacore/tables/Tables/Table.h>
@@ -365,84 +365,100 @@ IPosition VirtualTaQLColumn::getResult (uInt rownr, void* dataPtr)
   IPosition shp;
   switch (itsDataType) {
   case TpBool:
-    itsNode->get (rownr, *static_cast<Array<Bool>*>(dataPtr));
-    shp = static_cast<Array<String>*>(dataPtr)->shape();
-    break;
+    {
+      MArray<Bool> arr =itsNode->getArrayBool (rownr);
+      Array<Bool>& out = *static_cast<Array<Bool>*>(dataPtr);
+      out.reference (arr.array());
+      shp = out.shape();
+      break;
+    }
   case TpUChar:
     {
-      Array<Int64> arr = itsNode->getArrayInt (rownr);
+      MArray<Int64> arr = itsNode->getArrayInt (rownr);
       Array<uChar>& out = *static_cast<Array<uChar>*>(dataPtr);
       out.resize (arr.shape());
-      convertArray (out, arr);
+      convertArray (out, arr.array());
       shp = out.shape();
       break;
     }
   case TpShort:
     {
-      Array<Int64> arr = itsNode->getArrayInt (rownr);
+      MArray<Int64> arr = itsNode->getArrayInt (rownr);
       Array<Short>& out = *static_cast<Array<Short>*>(dataPtr);
       out.resize (arr.shape());
-      convertArray (out, arr);
+      convertArray (out, arr.array());
       shp = out.shape();
       break;
     }
   case TpUShort:
     {
-      Array<Int64> arr = itsNode->getArrayInt (rownr);
+      MArray<Int64> arr = itsNode->getArrayInt (rownr);
       Array<uShort>& out = *static_cast<Array<uShort>*>(dataPtr);
       out.resize (arr.shape());
-      convertArray (out, arr);
+      convertArray (out, arr.array());
       shp = out.shape();
       break;
     }
   case TpInt:
     {
-      Array<Int64> arr = itsNode->getArrayInt (rownr);
+      MArray<Int64> arr = itsNode->getArrayInt (rownr);
       Array<Int>& out = *static_cast<Array<Int>*>(dataPtr);
       out.resize (arr.shape());
-      convertArray (out, arr);
+      convertArray (out, arr.array());
       shp = out.shape();
       break;
     }
   case TpUInt:
     {
-      Array<Int64> arr = itsNode->getArrayInt (rownr);
+      MArray<Int64> arr = itsNode->getArrayInt (rownr);
       Array<uInt>& out = *static_cast<Array<uInt>*>(dataPtr);
       out.resize (arr.shape());
-      convertArray (out, arr);
+      convertArray (out, arr.array());
       shp = out.shape();
       break;
     }
   case TpFloat:
     {
-      Array<Double> arr = itsNode->getArrayDouble (rownr);
+      MArray<Double> arr = itsNode->getArrayDouble (rownr);
       Array<Float>& out = *static_cast<Array<Float>*>(dataPtr);
       out.resize (arr.shape());
-      convertArray (out, arr);
+      convertArray (out, arr.array());
       shp = out.shape();
       break;
     }
   case TpDouble:
-    itsNode->get (rownr, *static_cast<Array<Double>*>(dataPtr));
-    shp = static_cast<Array<String>*>(dataPtr)->shape();
-    break;
+    {
+      MArray<Double> arr =itsNode->getArrayDouble (rownr);
+      Array<Double>& out = *static_cast<Array<Double>*>(dataPtr);
+      out.reference (arr.array());
+      shp = out.shape();
+      break;
+    }
   case TpComplex:
     {
-      Array<Double> arr = itsNode->getArrayDouble (rownr);
+      MArray<DComplex> arr = itsNode->getArrayDComplex (rownr);
       Array<Complex>& out = *static_cast<Array<Complex>*>(dataPtr);
       out.resize (arr.shape());
-      convertArray (out, arr);
+      convertArray (out, arr.array());
       shp = out.shape();
       break;
     }
   case TpDComplex:
-    itsNode->get (rownr, *static_cast<Array<DComplex>*>(dataPtr));
-    shp = static_cast<Array<String>*>(dataPtr)->shape();
-    break;
+    {
+      MArray<DComplex> arr =itsNode->getArrayDComplex (rownr);
+      Array<DComplex>& out = *static_cast<Array<DComplex>*>(dataPtr);
+      out.reference (arr.array());
+      shp = out.shape();
+      break;
+    }
   case TpString:
-    itsNode->get (rownr, *static_cast<Array<String>*>(dataPtr));
-    shp = static_cast<Array<String>*>(dataPtr)->shape();
-    break;
+    {
+      MArray<String> arr =itsNode->getArrayString (rownr);
+      Array<String>& out = *static_cast<Array<String>*>(dataPtr);
+      out.reference (arr.array());
+      shp = out.shape();
+      break;
+    }
   default:
     throw DataManError ("VirtualTaQLColumn::getResult - unknown data type");
   }

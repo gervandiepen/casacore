@@ -6,6 +6,7 @@ add_library (casa_casa
 Arrays/ArrayBase.cc
 Arrays/ArrayError.cc
 Arrays/ArrayOpsDiffShapes.cc
+Arrays/ArrayPartMath.cc
 Arrays/ArrayPosIter.cc
 Arrays/ArrayUtil2.cc
 Arrays/Array2.cc
@@ -15,6 +16,7 @@ Arrays/AxesSpecifier.cc
 Arrays/ExtendSpecifier.cc
 Arrays/IPosition.cc
 Arrays/IPosition2.cc
+Arrays/MArrayBase.cc
 Arrays/MaskArrMath2.cc
 Arrays/Matrix2Math.cc
 Arrays/Slice.cc
@@ -235,6 +237,7 @@ Arrays/ArrayIter.h
 Arrays/ArrayIter.tcc
 Arrays/ArrayLogical.h
 Arrays/ArrayLogical.tcc
+Arrays/ArrayMathBase.h
 Arrays/ArrayMath.h
 Arrays/ArrayMath.tcc
 Arrays/ArrayOpsDiffShapes.h
@@ -255,6 +258,11 @@ Arrays/LogiArray.h
 Arrays/LogiCube.h
 Arrays/LogiMatrix.h
 Arrays/LogiVector.h
+Arrays/MArrayBase.h
+Arrays/MArrayLogical.h
+Arrays/MArrayMath.h
+Arrays/MArrayUtil.h
+Arrays/MArray.h
 Arrays/MaskArrIO.h
 Arrays/MaskArrIO.tcc
 Arrays/MaskArrLogi.h

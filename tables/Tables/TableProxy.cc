@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: TableProxy.cc 21399 2013-11-12 07:55:35Z gervandiepen $
 
 
 #include <casacore/tables/Tables/TableProxy.h>
@@ -477,7 +477,9 @@ void TableProxy::printValueHolder (const ValueHolder& vh, ostream& os,
     break;
   case TpUChar:
   case TpShort:
+  case TpUShort:
   case TpInt:
+  case TpUInt:
   case TpInt64:
     os << vh.asInt64();
     break;
@@ -525,7 +527,9 @@ void TableProxy::printValueHolder (const ValueHolder& vh, ostream& os,
     break;
   case TpArrayUChar:
   case TpArrayShort:
+  case TpArrayUShort:
   case TpArrayInt:
+  case TpArrayUInt:
   case TpArrayInt64:
     {
       Array<Int64> arr = vh.asArrayInt64();
@@ -809,41 +813,41 @@ void TableProxy::calcValues (Record& rec, const TableExprNode& expr)
     switch (expr.dataType()) {
     case TpBool:
       for (uInt i=0; i<expr.nrow(); i++) {
-	Array<Bool> arr;
+	MArray<Bool> arr;
 	expr.get (i, arr);
-	res.define (String::toString(i), arr);
+	res.define (String::toString(i), arr.array());
         stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     case TpInt64:
       for (uInt i=0; i<expr.nrow(); i++) {
-	Array<Int64> arr;
+	MArray<Int64> arr;
 	expr.get (i, arr);
-	res.define (String::toString(i), arr);
+	res.define (String::toString(i), arr.array());
         stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     case TpDouble:
       for (uInt i=0; i<expr.nrow(); i++) {
-	Array<Double> arr;
+	MArray<Double> arr;
 	expr.get (i, arr);
-	res.define (String::toString(i), arr);
+	res.define (String::toString(i), arr.array());
         stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     case TpDComplex:
       for (uInt i=0; i<expr.nrow(); i++) {
-	Array<DComplex> arr;
+	MArray<DComplex> arr;
 	expr.get (i, arr);
-	res.define (String::toString(i), arr);
+	res.define (String::toString(i), arr.array());
         stillSameShape (sameShape, resShape, arr.shape());
       }
       break;
     case TpString:
       for (uInt i=0; i<expr.nrow(); i++) {
-	Array<String> arr;
+	MArray<String> arr;
 	expr.get (i, arr);
-	res.define (String::toString(i), arr);
+	res.define (String::toString(i), arr.array());
         stillSameShape (sameShape, resShape, arr.shape());
       }
       break;

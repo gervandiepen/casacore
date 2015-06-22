@@ -134,10 +134,10 @@ ValueHolderRep::ValueHolderRep (const Array<Short>& value)
 
 ValueHolderRep::ValueHolderRep (const Array<uShort>& value)
   : itsNdim (value.ndim()),
-    itsType (TpArrayInt),
-    itsPtr  (new Array<Int>(value.shape()))
+    itsType (TpArrayUInt),
+    itsPtr  (new Array<uInt>(value.shape()))
 {
-  convertArray (*static_cast<Array<Int>*>(itsPtr), value);
+  convertArray (*static_cast<Array<uInt>*>(itsPtr), value);
 }
 
 ValueHolderRep::ValueHolderRep (const Array<Int>& value)

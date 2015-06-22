@@ -22,7 +22,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: TableParse.cc 21399 2013-11-12 07:55:35Z gervandiepen $
 
 #include <casacore/tables/TaQL/TaQLNode.h>
 #include <casacore/tables/TaQL/TaQLNodeHandler.h>
@@ -494,6 +494,14 @@ TableExprNode TableParseSelect::handleSlice (const TableExprNode& array,
 					     const TableExprNodeSet& indices,
 					     const TaQLStyle& style)
 {
+  // Create a masked array if a single bool element is given.
+  if (indices.isSingle()  &&  indices.nelements() == 1  &&
+      indices.dataType() == TableExprNodeRep::NTBool) {
+    if (! indices.hasArrays()) {
+      throw TableInvExpr ("Second argument of a masked array must be an array");
+    }
+    return marray (array, TableExprNode(indices[0].start()));
+  }
   return TableExprNode::newArrayPartNode (array, indices, style);
 }
  
@@ -701,6 +709,8 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::arrayFUNC;
   } else if (funcName == "transpose") {
     ftype = TableExprFuncNode::transposeFUNC;
+  } else if (funcName == "diagonal"  ||  funcName == "diagonals") {
+    ftype = TableExprFuncNode::diagonalFUNC;
   } else if (funcName == "isnan") {
     ftype = TableExprFuncNode::isnanFUNC;
   } else if (funcName == "isinf") {
@@ -715,7 +725,7 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::ndimFUNC;
   } else if (funcName == "shape") {
     ftype = TableExprFuncNode::shapeFUNC;
-  } else if (funcName == "complex") {
+  } else if (funcName == "complex"  ||  funcName == "formcomplex") {
     ftype = TableExprFuncNode::complexFUNC;
   } else if (funcName == "abs"  ||  funcName == "amplitude") {
     ftype = TableExprFuncNode::absFUNC;
@@ -729,6 +739,8 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::imagFUNC;
   } else if (funcName == "int"  ||  funcName == "integer") {
     ftype = TableExprFuncNode::intFUNC;
+  } else if (funcName == "bool"  ||  funcName == "boolean") {
+    ftype = TableExprFuncNode::boolFUNC;
   } else if (funcName == "datetime") {
     ftype = TableExprFuncNode::datetimeFUNC;
   } else if (funcName == "mjdtodate") {
@@ -805,6 +817,12 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::angdistFUNC;
   } else if (funcName == "angdistx"  ||  funcName == "angulardistancex") {
     ftype = TableExprFuncNode::angdistxFUNC;
+  } else if (funcName == "arraydata") {
+    ftype = TableExprFuncNode::arrdataFUNC;
+  } else if (funcName == "mask"  ||  funcName == "arraymask") {
+    ftype = TableExprFuncNode::arrmaskFUNC;
+  } else if (funcName == "flatten"  ||  funcName == "arrayflatten") {
+    ftype = TableExprFuncNode::arrflatFUNC;
   } else if (funcName == "countall") {
     ftype = TableExprFuncNode::countallFUNC;
   } else if (funcName == "gcount") {
@@ -877,9 +895,9 @@ TableExprNode TableParseSelect::handleFunc (const String& name,
     if (commandType_p != PCALC) {
       throw TableInvExpr("No table given");
     }
-    return makeFuncNode (name, arguments, ignoreFuncs, Table(), style);
+    return makeFuncNode (this, name, arguments, ignoreFuncs, Table(), style);
   }
-  TableExprNode node = makeFuncNode (name, arguments, ignoreFuncs,
+  TableExprNode node = makeFuncNode (this, name, arguments, ignoreFuncs,
                                      fromTables_p[0].table(), style);
   // A rowid function node needs to be added to applySelNodes_p.
   const TableExprNodeRep* rep = node.getNodeRep();
@@ -889,9 +907,31 @@ TableExprNode TableParseSelect::handleFunc (const String& name,
   return node;
 }
 
+TableExprNode TableParseSelect::makeUDFNode (TableParseSelect* sel,
+                                             const String& name,
+                                             const TableExprNodeSet& arguments,
+                                             const Table& table,
+                                             const TaQLStyle& style)
+{
+  if (sel) {
+    Vector<String> parts = stringToVector (name, '.');
+    if (parts.size() > 2) {
+      // At least 3 parts; see if the first part is a table shorthand.
+      Table tab = sel->findTable (parts[0]);
+      if (! tab.isNull()) {
+        return TableExprNode::newUDFNode (name.substr(parts[0].size() + 1),
+                                          arguments, tab, style);
+      }
+    }
+  }
+  // Use the full name and given (i.e. first) table.
+  return TableExprNode::newUDFNode (name, arguments, table, style);
+}
+
 //# Parse the name of a function.
 TableExprNode TableParseSelect::makeFuncNode
-                                         (const String& name,
+                                         (TableParseSelect* sel,
+                                          const String& name,
 					  const TableExprNodeSet& arguments,
 					  const Vector<int>& ignoreFuncs,
 					  const Table& table,
@@ -903,7 +943,7 @@ TableExprNode TableParseSelect::makeFuncNode
 						    ignoreFuncs);
   if (ftype == TableExprFuncNode::NRFUNC) {
     // The function can be a user defined one (or unknown).
-    return TableExprNode::newUDFNode (name, arguments, table, style);
+    return makeUDFNode (sel, name, arguments, table, style);
   }
   // The axes of reduction functions like SUMS can be given as a set or as
   // individual values. Turn it into an Array object.
@@ -948,6 +988,7 @@ TableExprNode TableParseSelect::makeFuncNode
   case TableExprFuncNode::boxallFUNC:
   case TableExprFuncNode::arrayFUNC:
   case TableExprFuncNode::transposeFUNC:
+  case TableExprFuncNode::diagonalFUNC:
     if (arguments.nelements() >= axarg) {
       TableExprNodeSet parms;
       // Add first argument(s) to the parms.
@@ -958,10 +999,11 @@ TableExprNode TableParseSelect::makeFuncNode
       // The can be given as a set or as individual scalar values.
       Bool axesIsArray = False;
       if (arguments.nelements() == axarg) {
-        // No axes given. Add default one for transpose.
+        // No axes given. Add default one for transpose and diagonal.
         axesIsArray = True;
-        if (ftype == TableExprFuncNode::transposeFUNC) {
-          // Add an empty vector if no transpose arguments given.
+        if (ftype == TableExprFuncNode::transposeFUNC  ||
+            ftype == TableExprFuncNode::diagonalFUNC) {
+          // Add an empty vector if no transpose/diagonal arguments given.
           TableExprNodeSetElem arg((TableExprNode(Vector<Int>())));
           parms.add (arg);
         }
@@ -1990,13 +2032,13 @@ void TableParseSelect::updateValue1 (uInt row, const TableExprId& rowid,
   } else {
     // Only put an array if defined.
     if (node.isResultDefined (rowid)) {
-      Array<T> value;
+      MArray<T> value;
       node.get (rowid, value);
       ArrayColumn<T> acol(col);
       if (slicerPtr == 0) {
-        acol.put (row, value);
+        acol.put (row, value.array());
       } else if (acol.isDefined(row)) {
-        acol.putSlice (row, *slicerPtr, value);
+        acol.putSlice (row, *slicerPtr, value.array());
       }
     }
   }
@@ -2048,10 +2090,10 @@ void TableParseSelect::updateValue2 (uInt row, const TableExprId& rowid,
     // a slice of it. Note that putSlice takes care of possibly unbound slicers.
     // Only put if defined.
     if (node.isResultDefined(rowid)) {
-      Array<TNODE> val;
+      MArray<TNODE> val;
       node.get (rowid, val);
       Array<TCOL> value(val.shape());
-      convertArray (value, val);
+      convertArray (value, val.array());
       ArrayColumn<TCOL> acol(col);
       if (slicerPtr == 0) {
         acol.put (row, value);
@@ -3020,7 +3062,7 @@ void TableParseSelect::execute (Bool showTimings, Bool setInGiving,
   if (mustSelect  &&  commandType_p == PSELECT
   &&  node_p.isNull()  &&  sort_p.size() == 0
   &&  columnNames_p.nelements() == 0  &&  resultSet_p == 0
-  &&  limit_p == 0  &&  endrow_p == 0  &&  offset_p == 0) {
+  &&  limit_p == 0  &&  endrow_p == 0  &&  stride_p == 1  &&  offset_p == 0) {
     throw (TableError
 	   ("TableParse error: no projection, selection, sorting, "
 	    "limit, offset, or giving-set given in SELECT command"));

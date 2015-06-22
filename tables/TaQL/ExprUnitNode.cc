@@ -23,11 +23,12 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: ExprUnitNode.cc 21262 2012-09-07 12:38:36Z gervandiepen $
 
 #include <casacore/tables/TaQL/ExprUnitNode.h>
 #include <casacore/tables/Tables/TableError.h>
 #include <casacore/casa/Quanta/Quantum.h>
+#include <casacore/casa/Arrays/MArray.h>
 #include <casacore/casa/Arrays/ArrayMath.h>
 
 
@@ -162,11 +163,17 @@ TableExprNodeArrayUnit::~TableExprNodeArrayUnit()
 Double TableExprNodeArrayUnit::getUnitFactor() const
   { return factor_p; }
 
-Array<Double> TableExprNodeArrayUnit::getArrayDouble (const TableExprId& id)
-  { return factor_p * lnode_p->getArrayDouble(id); }
+MArray<Double> TableExprNodeArrayUnit::getArrayDouble (const TableExprId& id)
+{ 
+  MArray<Double> arr = lnode_p->getArrayDouble(id);
+  return MArray<Double> (factor_p * arr.array(), arr.mask());
+}
 
-Array<DComplex> TableExprNodeArrayUnit::getArrayDComplex(const TableExprId& id)
-  { return DComplex(factor_p) * lnode_p->getArrayDComplex(id); }
+MArray<DComplex> TableExprNodeArrayUnit::getArrayDComplex(const TableExprId& id)
+{
+  MArray<DComplex> arr = lnode_p->getArrayDComplex(id);
+  return MArray<DComplex> (DComplex(factor_p) * arr.array(), arr.mask());
+}
 
 
 

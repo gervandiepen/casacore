@@ -138,11 +138,12 @@ void checkArrBool (const String& str, TableExprId& exprid,
 {
   cout << "checkArrBool " << str << endl;
   AlwaysAssertExit (expr.dataType() == TpBool);
-  Array<Bool> val;
+  MArray<Bool> val;
   expr.get (exprid, val);
-  if (! allEQ (val, value)) {
+  if (! allEQ (val.array(), value)) {
     foundError = True;
-    cout << str << ": found value " << val << "; expected " << value << endl;
+    cout << str << ": found value " << val.array()
+         << "; expected " << value << endl;
   }
 }
 
@@ -152,10 +153,10 @@ void checkArrInt (const String& str, TableExprId& exprid,
 {
   cout << "checkArrInt " << str << endl;
   AlwaysAssertExit (expr.dataType() == TpInt);
-  Array<Int64> val64;
+  MArray<Int64> val64;
   expr.get (exprid, val64);
   Array<Int> val(val64.shape());
-  convertArray (val, val64);
+  convertArray (val, val64.array());
   if (! allEQ (val, value)) {
     foundError = True;
     cout << str << ": found value " << val << "; expected " << value << endl;
@@ -168,11 +169,12 @@ void checkArrDouble (const String& str, TableExprId& exprid,
 {
   cout << "checkArrDouble " << str << endl;
   AlwaysAssertExit (expr.dataType() == TpDouble);
-  Array<Double> val;
+  MArray<Double> val;
   expr.get (exprid, val);
-  if (! allNear (val, value, 1.e-10)) {
+  if (! allNear (val.array(), value, 1.e-10)) {
     foundError = True;
-    cout << str << ": found value " << val << "; expected " << value << endl;
+    cout << str << ": found value " << val.array()
+         << "; expected " << value << endl;
   }
 }
 
@@ -182,11 +184,12 @@ void checkArrDComplex (const String& str, TableExprId& exprid,
 {
   cout << "checkArrDComplex " << str << endl;
   AlwaysAssertExit (expr.dataType() == TpDComplex);
-  Array<DComplex> val;
+  MArray<DComplex> val;
   expr.get (exprid, val);
-  if (! allNear (val, value, 1.e-10)) {
+  if (! allNear (val.array(), value, 1.e-10)) {
     foundError = True;
-    cout << str << ": found value " << val << "; expected " << value << endl;
+    cout << str << ": found value " << val.array()
+         << "; expected " << value << endl;
   }
 }
 
@@ -196,11 +199,12 @@ void checkArrString (const String& str, TableExprId& exprid,
 {
   cout << "checkArrString " << str << endl;
   AlwaysAssertExit (expr.dataType() == TpString);
-  Array<String> val;
+  MArray<String> val;
   expr.get (exprid, val);
-  if (! allEQ (val, value)) {
+  if (! allEQ (val.array(), value)) {
     foundError = True;
-    cout << str << ": found value " << val << "; expected " << value << endl;
+    cout << str << ": found value " << val.array()
+         << "; expected " << value << endl;
   }
 }
 
