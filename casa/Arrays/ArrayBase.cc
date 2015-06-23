@@ -28,6 +28,7 @@
 #include <casacore/casa/Arrays/ArrayBase.h>
 #include <casacore/casa/Arrays/ArrayError.h>
 #include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/BasicMath/Math.h>
 
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
@@ -316,7 +317,7 @@ size_t ArrayBase::makeDiagonal (uInt firstAxis, Int64 diag)
     throw ArrayConformanceError("ArrayBase::diagonal() - "
                                 "non-square matrix");
   }
-  if (abs(diag) >= length_p[firstAxis])
+  if (std::abs(diag) >= length_p[firstAxis])
     throw ArrayConformanceError("ArrayBase::diagonal() - "
                                 "diagonal out of range");
   ///  cout<<length_p<<inc_p<<originalLength_p<<steps_p<<firstAxis<<endl;
@@ -336,7 +337,7 @@ size_t ArrayBase::makeDiagonal (uInt firstAxis, Int64 diag)
   inc_p.resize (ndimen_p);
   originalLength_p.resize (ndimen_p);
   // An off-diagonal 'diagonal' has a shorter length.
-  length_p[firstAxis] -= abs(diag);
+  length_p[firstAxis] -= std::abs(diag);
   nels_p = length_p.product();
   contiguous_p = isStorageContiguous();
   // Determine the offset of the first diagonal element (in original array).
