@@ -39,9 +39,11 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {
     if (! mask.empty()) {
       itsNValid = -1;
-      throw ArrayError ("MArrayBase - array size "
-                        + String::toString(itsSize) + " and mask size "
-                        + String::toString(mask.size()) + " mismatch");
+      if (size != Int64(mask.size())) {
+        throw ArrayError ("MArrayBase - array size "
+                          + String::toString(itsSize) + " and mask size "
+                          + String::toString(mask.size()) + " mismatch");
+      }
     }
   }
 

@@ -806,10 +806,15 @@ namespace casacore {
   T median(const MArray<T> &a, Bool sorted, Bool takeEvenMean,
            Bool inPlace=False)
   {
-    Int64 nv = a.nvalid();
-    if (nv == 0) return T();
+    // The normal median function needs at least one element, so shortcut.
+    if (a.empty()) return T();
     if (! a.hasMask()) return median(a.array(), sorted, takeEvenMean, inPlace);
-    return median (a.flatten(), sorted, takeEvenMean, True);
+    Block<T> buf(a.size());
+    Int64 nv = a.flatten (buf.storage(), buf.size());
+    if (nv == 0) return T();
+    Array<T> arr(IPosition(1, nv), buf.storage(), SHARE);
+    // Median can be taken in place.
+    return median (arr, sorted, takeEvenMean, True);
   }
   template<typename T>
   inline T median(const MArray<T> &a)
@@ -830,10 +835,14 @@ namespace casacore {
   T fractile(const MArray<T> &a, Float fraction, Bool sorted=False,
              Bool inPlace=False)
   {
-    Int64 nv = a.nvalid();
-    if (nv == 0) return T();
+    // The normal median function needs at least one element, so shortcut.
+    if (a.empty()) return T();
     if (! a.hasMask()) return fractile(a.array(), fraction, sorted, inPlace);
-    return fractile (a.flatten(), fraction, sorted, True);
+    Block<T> buf(a.size());
+    Int64 nv = a.flatten (buf.storage(), a.size());
+    if (nv == 0) return T();
+    Array<T> arr(IPosition(1, nv), buf.storage(), SHARE);
+    return fractile (arr, fraction, sorted, True);
   }
   // </group>
 
