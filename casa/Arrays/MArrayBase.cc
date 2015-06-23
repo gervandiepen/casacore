@@ -31,6 +31,20 @@
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
+  // Construct from a mask.
+  MArrayBase::MArrayBase (const Array<Bool>& mask, Int64 size)
+    : itsMask   (mask),
+      itsSize   (size),
+      itsNValid (size)
+  {
+    if (! mask.empty()) {
+      itsNValid = -1;
+      throw ArrayError ("MArrayBase - array size "
+                        + String::toString(itsSize) + " and mask size "
+                        + String::toString(mask.size()) + " mismatch");
+    }
+  }
+
   Array<Bool> MArrayBase::combineMask (const MArrayBase& other) const
   {
     if (itsMask.empty()) {

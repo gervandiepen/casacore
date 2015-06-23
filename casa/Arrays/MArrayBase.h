@@ -76,11 +76,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     {}
 
     // Construct from a mask.
-    MArrayBase (const Array<Bool>& mask, Int64 size)
-      : itsMask   (mask),
-        itsSize   (size),
-        itsNValid (-1)
-    {}
+    MArrayBase (const Array<Bool>& mask, Int64 size);
 
     // Set the size (i.e., total number of elements).
     void setSize (Int64 size)

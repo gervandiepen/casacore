@@ -163,16 +163,9 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   template<typename T>
   Vector<T> MArray<T>::flatten() const
   {
-    Vector<T> vec;
-    if (!hasMask()) {
-      vec.resize (itsArray.size());
-      Array<T> arr(itsArray.shape(), vec.data(), SHARE);
-      arr = itsArray;
-    } else {
-      vec.resize (nvalid());
-      // We lie about the size, because we know the buffer has the right size.
-      flatten (vec.data(), itsArray.size());
-    }
+    Vector<T> vec(nvalid());
+    // We lie about the size, because we know the buffer has the right size.
+    flatten (vec.data(), itsArray.size());
     return vec;
   }
 
@@ -184,19 +177,27 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
                         " of output buffer is too small");
     }
     size_t nr = 0;
-    if (itsArray.contiguousStorage() && mask().contiguousStorage()) {
-      typename Array<Bool>::const_contiter miter = mask().cbegin();
-      typename Array<T>::const_contiter iterEnd = itsArray.cend();
-      for (typename Array<T>::const_contiter iter=itsArray.cbegin();
-             iter!=iterEnd; ++iter, ++miter) {
-          if (!*miter) out[nr] = *iter;
-      }
+    if (!hasMask()) {
+      // No mask, so copy all elements.
+      Array<T> arr(itsArray.shape(), out, SHARE);
+      arr = itsArray;
+      nr  = arr.size();
     } else {
-      typename Array<Bool>::const_iterator miter = mask().begin();
-      typename Array<T>::const_iterator iterEnd = itsArray.end();
-      for (typename Array<T>::const_iterator iter=itsArray.begin();
-           iter!=iterEnd; ++iter, ++miter) {
-        if (!*miter) out[nr] = *iter;
+      // Copy only the valid elements.
+      if (itsArray.contiguousStorage() && mask().contiguousStorage()) {
+        typename Array<Bool>::const_contiter miter = mask().cbegin();
+        typename Array<T>::const_contiter iterEnd = itsArray.cend();
+        for (typename Array<T>::const_contiter iter=itsArray.cbegin();
+             iter!=iterEnd; ++iter, ++miter) {
+          if (!*miter) out[nr++] = *iter;
+        }
+      } else {
+        typename Array<Bool>::const_iterator miter = mask().begin();
+        typename Array<T>::const_iterator iterEnd = itsArray.end();
+        for (typename Array<T>::const_iterator iter=itsArray.begin();
+             iter!=iterEnd; ++iter, ++miter) {
+          if (!*miter) out[nr++] = *iter;
+        }
       }
     }
     return nr;
