@@ -22,17 +22,18 @@ To compile casacore you need to meet the following requirements:
 
 * cmake
 * gfortran
-* ncurses
 * flex 
 * bison
 * blas
 * lapack
 * cfitsio (3.181 or later)
 * wcslib (4.20 or later)
+* sofa (optional, only for testing casacore measures)
 * fftw3 (optional)
 * hdf5 (optional)
 * numpy (optional)
 * boost-python (optional)
+* ncursus (optional)
 
 On Debian / Ubuntu you can install these with:
  ``` 
@@ -77,6 +78,7 @@ $ cmake -DUSE_FFTW3=ON -DDATA_DIR=/usr/share/casacore/data -DUSE_OPENMP=ON \
 The `DATA_DIR` should point to the location where you extracted the measures
 data.
 
+If you run into problems with boost libraries, try setting `-DBoost_NO_BOOST_CMAKE=True`. This will be necessary if you have the libraries from NRAO casa in your PATH or LD_LIBRARY_PATH.
 
 ## Ubuntu 14.04 packages
 
@@ -93,7 +95,6 @@ sudo apt-get install casacore2 casacore-data
 ```
 
 
-
 # Documentation
 
 http://casacore.github.io/casacore
@@ -102,6 +103,14 @@ http://casacore.github.io/casacore
 # Problems & bugs
 
 If you have any issues compiling or using casacore, please open an issue on
-the issue tracker on github. If you have patches please open a pull request.
+the issue tracker on github.
+
+If you have patches please open a pull request. Your contributions are more
+than welcome! But to maintain a high code quality we have written a [contribution
+manual](https://github.com/casacore/casacore/blob/master/CONTRIB.md), please read
+that first.
 
 
+# travis
+
+[![Build Status](https://travis-ci.org/casacore/casacore.svg?branch=master)](https://travis-ci.org/casacore/casacore)
