@@ -35,6 +35,7 @@
 #include <casacore/casa/Utilities/Sort.h>
 #include <casacore/casa/Arrays/MArrayMath.h>
 #include <casacore/casa/Arrays/MArrayLogical.h>
+#include <vector>
 #include <limits>
 
 
@@ -329,16 +330,19 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       // All arrays have to be combined in a single vector.
       // Get first array to estimate the total size.
       size_t nr = 0;
-      MArray<Double> arr = itsOperand->getArrayDouble(ids[0]);
-      Block<Double> values(ids.size() * arr.size());
-      nr += arr.flatten (values.storage(), arr.size());
+      MArray<Double> arr0 = itsOperand->getArrayDouble(ids[0]);
+      std::vector<Double> values(ids.size() * arr0.size());
+      nr += arr0.flatten (&(values[0]), values.size());
       for (uInt i=1; i<ids.size(); ++i) {
         // Get value and make contiguous if needed.
         MArray<Double> arr = itsOperand->getArrayDouble(ids[i]);
-        nr += arr.flatten (values.storage() + nr, arr.size());
+        if (arr.size() > values.size()-nr) {
+          values.resize (values.size() + arr.size());
+        }
+        nr += arr.flatten (&(values[0]) + nr, values.size()-nr);
       }
       return GenSort<Double>::kthLargest
-        (values.storage(), nr,
+        (&(values[0]), nr,
          static_cast<Int64>((nr - 1)*itsFrac + 0.001));
     } catch (const std::exception& x) {
       throw TableInvExpr ("Cannot compute gfractile; "
