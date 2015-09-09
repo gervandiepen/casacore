@@ -200,6 +200,33 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     return MArray<T> (result, mares.combineMask (arrc));
   }
 
+  // Helper function to resize an array.
+  template<typename T>
+  MArray<T> TableExprFuncNodeArray::TEFResize (const MArray<T>& arr,
+                                               const TableExprId& id)
+  {
+    const IPosition& shp = getArrayShape(id);
+    const IPosition& alt = getAlternate(id);
+    if (alt.empty()) {
+      Array<T> res(shp, T());
+      res.copyMatchingPart (arr.array());
+      if (arr.hasMask()) {
+        Array<Bool> resm(shp, False);
+        resm.copyMatchingPart (arr.mask());
+        return MArray<T>(res, resm);
+      }
+      return MArray<T>(res);
+    }
+    Array<T> res(shp);
+    expandArray (res, arr.array(), alt);
+    if (arr.hasMask()) {
+      Array<Bool> resm(shp);
+      expandArray (resm, arr.mask(), alt);
+      return MArray<T>(res, resm);
+    }
+    return MArray<T>(res);
+  }
+
 
 TableExprFuncNodeArray::TableExprFuncNodeArray
                              (TableExprFuncNode::FunctionType ftype,
@@ -491,7 +518,7 @@ const IPosition& TableExprFuncNodeArray::getAlternate (const TableExprId& id)
         // The dimensionality is unknown, so make it very large to cover all.
         expandAlt_p = IPosition(20, operands()[2]->getInt(id));
       } else {
-        Array<Int64> arr(operands()[2]->getArrayInt(id));
+        Array<Int64> arr(operands()[2]->getArrayInt(id).array());
         expandAlt_p.resize (arr.size());
         if (isCOrder_p) {
           for (uInt i=0; i<arr.size(); ++i) {
@@ -712,18 +739,7 @@ MArray<Bool> TableExprFuncNodeArray::getArrayBool (const TableExprId& id)
         return MArray<Bool>(arr.array().diagonals(parms[0], parms[1]));
       }
     case TableExprFuncNode::resizeFUNC:
-      {
-	const IPosition& shp = getArrayShape(id);
-	Array<Bool> arr (operands()[0]->getArrayBool(id));
-        const IPosition& alt = getAlternate(id);
-        if (alt.empty()) {
-          arr.resize (shp, True, ArrayInitPolicy::INIT);
-          return arr;
-        }
-	Array<Bool> res(shp);
-	expandArray (res, arr, alt);
-        return res;
-      }
+        return TEFResize (operands()[0]->getArrayBool(id), id);
     case TableExprFuncNode::isnanFUNC:
 	if (argDataType() == NTComplex) {
             return isNaN (operands()[0]->getArrayDComplex(id));
@@ -1073,18 +1089,7 @@ MArray<Int64> TableExprFuncNodeArray::getArrayInt (const TableExprId& id)
         return MArray<Int64>(arr.array().diagonals(parms[0], parms[1]));
       }
     case TableExprFuncNode::resizeFUNC:
-      {
-	const IPosition& shp = getArrayShape(id);
-	Array<Int64> arr (operands()[0]->getArrayInt(id));
-        const IPosition& alt = getAlternate(id);
-        if (alt.empty()) {
-          arr.resize (shp, True, ArrayInitPolicy::INIT);
-          return arr;
-        }
-	Array<Int64> res(shp);
-	expandArray (res, arr, alt);
-        return res;
-      }
+        return TEFResize (operands()[0]->getArrayInt(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<Int64> (operands(), id);
     case TableExprFuncNode::marrayFUNC:
@@ -1480,18 +1485,7 @@ MArray<Double> TableExprFuncNodeArray::getArrayDouble (const TableExprId& id)
         return MArray<Double>(arr.array().diagonals(parms[0], parms[1]));
       }
     case TableExprFuncNode::resizeFUNC:
-      {
-	const IPosition& shp = getArrayShape(id);
-	Array<Double> arr (operands()[0]->getArrayDouble(id));
-        const IPosition& alt = getAlternate(id);
-        if (alt.empty()) {
-          arr.resize (shp, True, ArrayInitPolicy::INIT);
-          return arr;
-        }
-	Array<Double> res(shp);
-	expandArray (res, arr, alt);
-        return res;
-      }
+        return TEFResize (operands()[0]->getArrayDouble(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<Double> (operands(), id);
     case TableExprFuncNode::marrayFUNC:
@@ -1734,19 +1728,9 @@ MArray<DComplex> TableExprFuncNodeArray::getArrayDComplex
                                   arr.mask().diagonals(parms[0], parms[1]));
         }
         return MArray<DComplex>(arr.array().diagonals(parms[0], parms[1]));
-    case TableExprFuncNode::resizeFUNC:
-      {
-	const IPosition& shp = getArrayShape(id);
-	Array<DComplex> arr (operands()[0]->getArrayDComplex(id));
-        const IPosition& alt = getAlternate(id);
-        if (alt.empty()) {
-          arr.resize (shp, True, ArrayInitPolicy::INIT);
-          return arr;
-        }
-	Array<DComplex> res(shp);
-	expandArray (res, arr, alt);
-        return res;
       }
+    case TableExprFuncNode::resizeFUNC:
+        return TEFResize (operands()[0]->getArrayDComplex(id), id);
     case TableExprFuncNode::complexFUNC:
       {
         if (operands().size() == 1) {
@@ -2077,18 +2061,7 @@ MArray<String> TableExprFuncNodeArray::getArrayString (const TableExprId& id)
         return MArray<String>(arr.array().diagonals(parms[0], parms[1]));
       }
     case TableExprFuncNode::resizeFUNC:
-      {
-	const IPosition& shp = getArrayShape(id);
-	Array<String> arr (operands()[0]->getArrayString(id));
-        const IPosition& alt = getAlternate(id);
-        if (alt.empty()) {
-          arr.resize (shp, True, ArrayInitPolicy::INIT);
-          return arr;
-        }
-	Array<String> res(shp);
-	expandArray (res, arr, alt);
-        return res;
-      }
+        return TEFResize (operands()[0]->getArrayString(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<String> (operands(), id);
     case TableExprFuncNode::marrayFUNC:
@@ -2191,18 +2164,7 @@ MArray<MVTime> TableExprFuncNodeArray::getArrayDate (const TableExprId& id)
         return MArray<MVTime>(arr.array().diagonals(parms[0], parms[1]));
       }
     case TableExprFuncNode::resizeFUNC:
-      {
-	const IPosition& shp = getArrayShape(id);
-	Array<MVTime> arr (operands()[0]->getArrayDate(id));
-        const IPosition& alt = getAlternate(id);
-        if (alt.empty()) {
-          arr.resize (shp, True, ArrayInitPolicy::INIT);
-          return arr;
-        }
-	Array<MVTime> res(shp);
-	expandArray (res, arr, alt);
-        return res;
-      }
+        return TEFResize (operands()[0]->getArrayDate(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<MVTime> (operands(), id);
     case TableExprFuncNode::marrayFUNC:

@@ -154,6 +154,10 @@ private:
     // Set the alternate value expandAlt_p for array expand and return it.
     const IPosition& getAlternate (const TableExprId& id);
 
+    // Templated fucntion to resize/expand an array.
+    template<typename T>
+    MArray<T> TEFResize (const MArray<T>& arr, const TableExprId& id);
+
 
     //# Data members
     TableExprFuncNode node_p;
