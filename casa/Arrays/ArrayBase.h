@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: ArrayBase.h 21521 2014-12-10 08:06:42Z gervandiepen $
 
 #ifndef CASA_ARRAYBASE_H
 #define CASA_ARRAYBASE_H
@@ -33,6 +33,7 @@
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/IPosition.h>
 #include <casacore/casa/Utilities/CountedPtr.h>
+#include <casacore/casa/Containers/Allocator.h>
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
@@ -145,6 +146,10 @@ public:
   // <br>The default implementation in ArrayBase throws an exception.
   virtual void resize(const IPosition &newShape, Bool copyValues=False);
 
+  // Resize the array and optionally copy the values.
+  // <br>The default implementation in ArrayBase throws an exception.
+  virtual void resize(const IPosition &newShape, Bool copyValues, ArrayInitPolicy policy);
+
   // Create an ArrayIterator object of the correct type.
   // This is implemented in the derived Array classes.
   // <br>The default implementation in ArrayBase throws an exception.
@@ -177,6 +182,16 @@ protected:
   void baseCopy (const ArrayBase& that)
     { operator= (that); }
 
+  // Either reforms the array if size permits or resizes it to the new shape.
+  // Implementation of Array<T>::reformOrResize (slightly different signature).
+
+  Bool reformOrResize (const IPosition & newShape,
+                       Bool resizeIfNeeded,
+		       uInt nReferences,
+		       Int64 nElementsAllocated,
+                       Bool copyDataIfNeeded,
+		       uInt resizePercentage);
+
   // Determine if the storage of a subset is contiguous.
   Bool isStorageContiguous() const;
 
@@ -190,8 +205,9 @@ protected:
   // Check if the shape of a cube is correct. Adjust it if smaller.
   void checkCubeShape();
 
-  // Reform the array to a shape with the same nr of elements.
-  void baseReform (ArrayBase& tmp, const IPosition& shape) const;
+  // Reform the array to a shape with the same nr of elements.  If nonStrict then
+  // caller assumes responsibility for not overrunning storage (avoid or use with extreme care).
+  void baseReform (ArrayBase& tmp, const IPosition& shape, Bool strict=True) const;
 
   // Remove the degenerate axes from the Array object.
   // This is the implementation of the nonDegenerate functions.

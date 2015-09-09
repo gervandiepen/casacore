@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: tMSMetaData.cc 21578 2015-03-18 15:01:43Z gervandiepen $
 
 #include <casacore/casa/aips.h>
 
@@ -351,6 +351,17 @@ void testIt(MSMetaData& md) {
 			AlwaysAssert(md.getSpwsForField(i) == exp, AipsError);
 			AlwaysAssert(md.getSpwsForField(names[i]) == exp, AipsError);
 			cout << "*** cache size " << md.getCache() << endl;
+
+		}
+		cout << "*** test phaseDirFromFieldIDAndTime()" << endl;
+		{
+
+		  MDirection phasCen=md.phaseDirFromFieldIDAndTime(2);
+		  
+		  AlwaysAssert(
+				near(phasCen.getAngle().getValue()[0], -2.72554329 , 5e-7),
+				AipsError
+			);
 
 		}
 		cout << "*** test getFieldIDsForSpw()" << endl;
@@ -875,20 +886,20 @@ void testIt(MSMetaData& md) {
 			std::set<Int> expec2;
 			std::set<Int> curScanSet;
 			for (
-					std::set<Int>::const_iterator curScan=scans.begin();
-					curScan!=scans.end(); ++curScan
+				std::set<Int>::const_iterator curScan=scans.begin();
+				curScan!=scans.end(); ++curScan
 			) {
 				std::set<Int> expec;
 				curScanSet.insert(*curScan);
-				if (*curScan<=4) {
+				if (*curScan <= 4) {
 					expec.insert(0);
 					expec2.insert(0);
 				}
-				else if (*curScan==5) {
+				else if (*curScan == 5) {
 					expec.insert(1);
 					expec2.insert(1);
 				}
-				else if (*curScan<=7) {
+				else if (*curScan <= 7) {
 					expec.insert(2);
 					expec2.insert(2);
 				}
@@ -920,14 +931,29 @@ void testIt(MSMetaData& md) {
 				scanKey.arrayID = 0;
 				scanKey.scan = *curScan;
 				AlwaysAssert(
-						md.getFieldsForScan(scanKey) == expec,
-						AipsError
+					md.getFieldsForScan(scanKey) == expec,
+					AipsError
 				);
 				AlwaysAssert(
-						md.getFieldsForScans(curScanSet, 0, 0) == expec2,
-						AipsError
+					md.getFieldsForScans(curScanSet, 0, 0) == expec2,
+					AipsError
 				);
 			}
+			std::set<Int> expec3;
+			expec3.insert(3);
+			expec3.insert(4);
+			std::set<ScanKey> scanKeys;
+			ScanKey x;
+			x.obsID = 0;
+			x.arrayID = 0;
+			x.scan = 19;
+			scanKeys.insert(x);
+			x.scan = 31;
+			scanKeys.insert(x);
+			AlwaysAssert(
+				md.getFieldsForScans(scanKeys) == expec3,
+				AipsError
+			);
 		}
 		{
 			cout << "*** test getFieldsForIntent() and getIntentToFieldsMap()" << endl;
@@ -1444,14 +1470,649 @@ void testIt(MSMetaData& md) {
 			}
 			{
 				cout << "*** test getSummary()" << endl;
-				cout << "summary " << md.getSummary() << endl;
+				//cout << "summary " << md.getSummary() << endl;
+			}
+			{
+				cout << "*** test getProjects()" << endl;
+				vector<String> projects = md.getProjects();
+				AlwaysAssert(projects.size() == 1, AipsError);
+				AlwaysAssert(projects[0] == "T.B.D.", AipsError);
+			}
+			{
+				cout << "*** test getObservers()" << endl;
+				vector<String> observers = md.getObservers();
+				AlwaysAssert(observers.size() == 1, AipsError);
+				AlwaysAssert(observers[0] == "csalyk", AipsError);
+			}
+			{
+				cout << "*** test getSchedules()" << endl;
+				vector<vector<String> > schedules = md.getSchedules();
+				AlwaysAssert(schedules.size() == 1, AipsError);
+				AlwaysAssert(schedules[0].size() == 2, AipsError);
+				AlwaysAssert(schedules[0][0] == "SchedulingBlock uid://A002/X391d0b/X5e", AipsError);
+				AlwaysAssert(schedules[0][1] == "ExecBlock uid://A002/X3f6a86/X5da", AipsError);
+			}
+			{
+				// 4842824633.4720001
+				// 4842830031.632
+				cout << "*** test getTimeRangesOfObservations()" << endl;
+				vector<std::pair<MEpoch, MEpoch> > timers = md.getTimeRangesOfObservations();
+				AlwaysAssert(timers.size() == 1, AipsError);
+				AlwaysAssert(timers[0].first.getRefString() == "UTC", AipsError);
+				AlwaysAssert(timers[0].second.getRefString() == "UTC", AipsError);
+				AlwaysAssert(timers[0].first.getUnit() == Unit("s"), AipsError);
+				AlwaysAssert(timers[0].second.getUnit() == Unit("s"), AipsError);
+				AlwaysAssert(
+					near(timers[0].first.get("s").getValue(), 4842824633.472), AipsError
+				);
+				AlwaysAssert(
+					near(timers[0].second.get("s").getValue(), 4842830031.632), AipsError
+				);
+			}
+			{
+				cout << "*** test getRefFreqs()" << endl;
+				Double expec[] = {
+					1.83300000e+11, 2.15250000e+11, 2.15250000e+11,
+					2.17250000e+11, 2.17250000e+11, 2.29250000e+11,
+					2.29250000e+11, 2.31250000e+11, 2.31250000e+11,
+					2.30471730e+11, 2.30471730e+11, 2.32352270e+11,
+					2.32352270e+11, 2.20465062e+11, 2.20465062e+11,
+					2.19610562e+11, 2.19610562e+11, 2.30471730e+11,
+					2.30471730e+11, 2.32352270e+11, 2.32352270e+11,
+					2.20465062e+11, 2.20465062e+11, 2.19610562e+11,
+					2.19610562e+11, 1.83310000e+11, 1.83320000e+11,
+					1.83330000e+11, 1.83340000e+11, 1.83350000e+11,
+					1.83360000e+11, 1.83370000e+11, 1.83380000e+11,
+					1.83390000e+11, 1.83400000e+11, 1.83410000e+11,
+					1.83420000e+11, 1.83430000e+11, 1.83440000e+11,
+					1.83450000e+11
+				};
+				uInt n = md.nSpw(True);
+				vector<MFrequency> rf = md.getRefFreqs();
+				for (uInt i=0; i<n; ++i) {
+					AlwaysAssert(rf[i].getRefString() == "TOPO", AipsError);
+                    cout << "*** unit " << rf[i].getUnit().getName() << endl;
+                    AlwaysAssert(rf[i].getUnit() == Unit("Hz"), AipsError);
+					cout << std::setprecision(20) << "got " << rf[i].get("Hz").getValue() << " exp " << expec[i] << endl;
+					AlwaysAssert(near(rf[i].get("Hz").getValue(), expec[i], 1e-8), AipsError);
+				}
 			}
 		}
 		{
+			cout << "*** test getCorrTypes" << endl;
+			vector<vector<Int> > corrTypes = md.getCorrTypes();
+			AlwaysAssert(corrTypes[0].size() == 2, AipsError);
+			AlwaysAssert(corrTypes[0][0] == 9, AipsError);
+			AlwaysAssert(corrTypes[0][1] == 12, AipsError);
+			AlwaysAssert(corrTypes[1].size() == 1, AipsError);
+			AlwaysAssert(corrTypes[1][0] == 1, AipsError);
+		}
+		{
+			cout << "*** test getCorrProducts" << endl;
+			vector<Array<Int> > corrProds = md.getCorrProducts();
+			AlwaysAssert(corrProds[0].size() == 4, AipsError);
+			AlwaysAssert(corrProds[0](IPosition(2, 0, 0)) == 0, AipsError);
+			AlwaysAssert(corrProds[0](IPosition(2, 0, 1)) == 1, AipsError);
+			AlwaysAssert(corrProds[0](IPosition(2, 1, 0)) == 0, AipsError);
+			AlwaysAssert(corrProds[0](IPosition(2, 1, 1)) == 1, AipsError);
+			AlwaysAssert(corrProds[1].size() == 2, AipsError);
+			AlwaysAssert(allTrue(corrProds[1] == 0), AipsError);
+		}
+		{
+			cout << "*** test getSourceTableSourceIDs" << endl;
+			vector<Int> sourceIDs = md.getSourceTableSourceIDs();
+			AlwaysAssert(sourceIDs.size() == 200, AipsError);
+			for (uInt i=0; i<200; ++i) {
+				Int expec = 0;
+				if (
+					(i >= 40 && i <= 63)
+					|| (i >= 80 && i <= 95)
+				) {
+					expec = 1;
+				}
+				else if (
+					(i >= 64 && i <= 79)
+					|| (i >= 112 && i <= 135)
+				) {
+					expec = 2;
+				}
+				else if (
+					(i >= 96 && i <= 111)
+					|| (i >= 152 && i <= 167)
+				) {
+					expec = 3;
+				}
+				else if (
+					(i >= 136 && i <= 151)
+					|| (i >= 184 && i <= 199)
+				) {
+					expec = 4;
+				}
+				else if (i >= 168 && i <= 183) {
+					expec = 5;
+				}
+				AlwaysAssert(sourceIDs[i] == expec, AipsError);
+			}
+		}
+		{
+			cout << "*** test getPhaseDirs()" << endl;
+			vector<MDirection> phaseDirs = md.getPhaseDirs();
+			AlwaysAssert(phaseDirs.size() == md.nFields(), AipsError);
+			Double elong[] = {
+				-2.8964345 , -2.71545722, -2.72554329,
+				-1.98190197, -2.04411602, -1.94537525
+			};
+			Double elat[] = {
+				-0.10104256, -0.22613985, -0.1219181,
+				-0.44437211, -0.32533384, -0.27584353
+			};
+			for (uInt i=0; i<phaseDirs.size(); ++i) {
+				AlwaysAssert(phaseDirs[i].getRefString() == "J2000", AipsError);
+				Vector<Double> angle = phaseDirs[i].getAngle("rad").getBaseValue();
+				AlwaysAssert(near(angle[0], elong[i], 1e-7), AipsError);
+				AlwaysAssert(near(angle[1], elat[i], 1e-7), AipsError);
+			}
+		}
+		{
+			cout << "*** test getFieldTableSourceIDs" << endl;
+			vector<Int> sourceIDs = md.getFieldTableSourceIDs();
+			AlwaysAssert(sourceIDs.size() == md.nFields(), AipsError);
+			for (uInt i=0; i<sourceIDs.size(); ++i) {
+				AlwaysAssert(sourceIDs[i] == (Int)i, AipsError);
+			}
+		}
+		{
+			cout << "*** test getAntennasForScan()" << endl;
+			std::set<Int> scans = md.getScanNumbers(0, 0);
+			std::set<Int>::const_iterator iter = scans.begin();
+			std::set<Int>::const_iterator end = scans.end();
+			ScanKey key;
+			key.obsID = 0;
+			key.arrayID = 0;
+			while (iter != end) {
+				key.scan = *iter;
+				std::set<Int> ants = md.getAntennasForScan(key);
+				uInt n = *iter == 9 ? 12 : 13;
+				AlwaysAssert(ants.size() == n, AipsError);
+				std::set<Int>::const_iterator aIter = ants.begin();
+				for (Int i=0; i<14; ++i, ++aIter) {
+					if (i == 12 || (*iter == 9 && i == 7)) {
+						++i;
+						continue;
+					}
+					else {
+						AlwaysAssert(*aIter == i, AipsError);
+					}
+				}
+				++iter;
+			}
+		}
+		{
+			cout << "*** test getSourceNames()" << endl;
+			vector<String> sourceNames = md.getSourceNames();
+			String expec[] = {
+				"3C279", "3C279", "3C279", "3C279", "3C279", "3C279", "3C279",
+				"3C279", "3C279", "3C279", "3C279", "3C279", "3C279", "3C279",
+				"3C279", "3C279", "3C279", "3C279", "3C279", "3C279", "3C279",
+				"3C279", "3C279", "3C279", "3C279", "3C279", "3C279", "3C279",
+				"3C279", "3C279", "3C279", "3C279", "3C279", "3C279", "3C279",
+				"3C279", "3C279", "3C279", "3C279", "3C279", "J1337-129",
+				"J1337-129", "J1337-129", "J1337-129", "J1337-129", "J1337-129",
+				"J1337-129", "J1337-129", "J1337-129", "J1337-129", "J1337-129",
+				"J1337-129", "J1337-129", "J1337-129", "J1337-129", "J1337-129",
+				"J1337-129", "J1337-129", "J1337-129", "J1337-129", "J1337-129",
+				"J1337-129", "J1337-129", "J1337-129", "Titan", "Titan", "Titan",
+				"Titan", "Titan", "Titan", "Titan", "Titan", "Titan", "Titan",
+				"Titan", "Titan", "Titan", "Titan", "Titan", "Titan", "Titan",
+				"Titan", "Titan", "Titan", "Titan", "Titan", "Titan", "Titan",
+				"Titan", "Titan", "Titan", "Titan", "Titan", "Titan", "Titan",
+				"Titan", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "J1625-254", "J1625-254", "J1625-254", "J1625-254",
+				"J1625-254", "V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco",
+				"V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco",
+				"V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco",
+				"V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco",
+				"V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco",
+				"V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco", "V866 Sco",
+				"V866 Sco", "V866 Sco", "V866 Sco", "RNO 90", "RNO 90", "RNO 90",
+				"RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90",
+				"RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90",
+				"RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90",
+				"RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90",
+				"RNO 90", "RNO 90", "RNO 90", "RNO 90", "RNO 90"
+			};
+			for (uInt i=0; i<sourceNames.size(); ++i) {
+				AlwaysAssert(sourceNames[i] == expec[i], AipsError);
+			}
+		}
+		{
+			cout << "*** test getSourceDirections()" << endl;
+			vector<MDirection> dirs = md.getSourceDirections();
+			AlwaysAssert(dirs.size() == 200, AipsError);
+			Double elong[] = {
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 , -2.8964345 ,
+				-2.71545722, -2.71545722, -2.71545722, -2.71545722, -2.71545722,
+				-2.71545722, -2.71545722, -2.71545722, -2.71545722, -2.71545722,
+				-2.71545722, -2.71545722, -2.71545722, -2.71545722, -2.71545722,
+				-2.71545722, -2.71545722, -2.71545722, -2.71545722, -2.71545722,
+				-2.71545722, -2.71545722, -2.71545722, -2.71545722, -2.72554329,
+				-2.72554329, -2.72554329, -2.72554329, -2.72554329, -2.72554329,
+				-2.72554329, -2.72554329, -2.72554329, -2.72554329, -2.72554329,
+				-2.72554329, -2.72554329, -2.72554329, -2.72554329, -2.72554329,
+				-2.72554329, -2.72554329, -2.72554329, -2.72554329, -2.72554329,
+				-2.72554329, -2.72554329, -2.72554329, -2.72554329, -2.72554329,
+				-2.72554329, -2.72554329, -2.72554329, -2.72554329, -2.72554329,
+				-2.72554329, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -1.98190197, -1.98190197, -1.98190197, -1.98190197,
+				-1.98190197, -2.04411602, -2.04411602, -2.04411602, -2.04411602,
+				-2.04411602, -2.04411602, -2.04411602, -2.04411602, -2.04411602,
+				-2.04411602, -2.04411602, -2.04411602, -2.04411602, -2.04411602,
+				-2.04411602, -2.04411602, -2.04411602, -2.04411602, -2.04411602,
+				-2.04411602, -2.04411602, -2.04411602, -2.04411602, -2.04411602,
+				-2.04411602, -2.04411602, -2.04411602, -2.04411602, -2.04411602,
+				-2.04411602, -2.04411602, -2.04411602, -1.94537525, -1.94537525,
+				-1.94537525, -1.94537525, -1.94537525, -1.94537525, -1.94537525,
+				-1.94537525, -1.94537525, -1.94537525, -1.94537525, -1.94537525,
+				-1.94537525, -1.94537525, -1.94537525, -1.94537525, -1.94537525,
+				-1.94537525, -1.94537525, -1.94537525, -1.94537525, -1.94537525,
+				-1.94537525, -1.94537525, -1.94537525, -1.94537525, -1.94537525,
+				-1.94537525, -1.94537525, -1.94537525, -1.94537525, -1.94537525
+			};
+			Double elat[] = {
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.10104256, -0.10104256, -0.10104256, -0.10104256, -0.10104256,
+				-0.22613985, -0.22613985, -0.22613985, -0.22613985, -0.22613985,
+				-0.22613985, -0.22613985, -0.22613985, -0.22613985, -0.22613985,
+				-0.22613985, -0.22613985, -0.22613985, -0.22613985, -0.22613985,
+				-0.22613985, -0.22613985, -0.22613985, -0.22613985, -0.22613985,
+				-0.22613985, -0.22613985, -0.22613985, -0.22613985, -0.1219181 ,
+				-0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 ,
+				-0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 ,
+				-0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 ,
+				-0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 ,
+				-0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 ,
+				-0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 , -0.1219181 ,
+				-0.1219181 , -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.44437211, -0.44437211, -0.44437211, -0.44437211,
+				-0.44437211, -0.32533384, -0.32533384, -0.32533384, -0.32533384,
+				-0.32533384, -0.32533384, -0.32533384, -0.32533384, -0.32533384,
+				-0.32533384, -0.32533384, -0.32533384, -0.32533384, -0.32533384,
+				-0.32533384, -0.32533384, -0.32533384, -0.32533384, -0.32533384,
+				-0.32533384, -0.32533384, -0.32533384, -0.32533384, -0.32533384,
+				-0.32533384, -0.32533384, -0.32533384, -0.32533384, -0.32533384,
+				-0.32533384, -0.32533384, -0.32533384, -0.27584353, -0.27584353,
+				-0.27584353, -0.27584353, -0.27584353, -0.27584353, -0.27584353,
+				-0.27584353, -0.27584353, -0.27584353, -0.27584353, -0.27584353,
+				-0.27584353, -0.27584353, -0.27584353, -0.27584353, -0.27584353,
+				-0.27584353, -0.27584353, -0.27584353, -0.27584353, -0.27584353,
+				-0.27584353, -0.27584353, -0.27584353, -0.27584353, -0.27584353,
+				-0.27584353, -0.27584353, -0.27584353, -0.27584353, -0.27584353
+			};
+			for (uInt i=0; i<dirs.size(); ++i) {
+				AlwaysAssert(dirs[i].getRefString() == "J2000", AipsError);
+				Vector<Double> angle = dirs[i].getAngle("rad").getBaseValue();
+				AlwaysAssert(near(angle[0], elong[i], 1e-7), AipsError);
+				AlwaysAssert(near(angle[1], elat[i], 1e-7), AipsError);
+			}
+		}
+		{
+			cout << "*** test getProperMotions()" << endl;
+			vector<std::pair<Quantity, Quantity> > pm = md.getProperMotions();
+			AlwaysAssert(pm.size() == 200, AipsError);
+			for (uInt i=0; i<200; ++i) {
+				AlwaysAssert(pm[0].first.getValue() == 0, AipsError);
+				AlwaysAssert(pm[0].second.getValue() == 0, AipsError);
+				AlwaysAssert(pm[0].first.getUnit() == "rad/s", AipsError);
+				AlwaysAssert(pm[0].second.getUnit() == "rad/s", AipsError);
+			}
+		}
+		{
+			cout << "test getSpwToTimesForScan()" << endl;
+			ScanKey scan;
+			scan.obsID = 0;
+			scan.arrayID = 0;
+			scan.scan = 5;
+			std::map<uInt, std::set<Double> > times = md.getSpwToTimesForScan(scan);
+			AlwaysAssert(times.size() == 9, AipsError);
+			std::set<Double> expec;
+			for (uInt i=0; i<9; ++i) {
+				if(i == 0) {
+					Double z[] = {
+						4842825782.3999996185, 4842825800.8319997787, 4842825807.7440004349,
+						4842825826.1760005951, 4842825844.6079998016, 4842825861.8879995346,
+						4842825869.9519996643
+					};
+					expec = std::set<Double>(z, z+7);
+				}
+				else if (i == 1) {
+					Double z[] = {
+						4842825778.6560001373, 4842825780.6719999313, 4842825782.6879997253,
+						4842825784.704000473,  4842825786.720000267,  4842825799.3920001984,
+						4842825801.4079999924, 4842825803.4239997864, 4842825805.4400005341,
+						4842825807.4560003281, 4842825820.1280002594, 4842825822.1440000534,
+						4842825824.1599998474, 4842825826.1760005951, 4842825828.1920003891,
+						4842825840.8640003204, 4842825842.8800001144, 4842825844.8959999084,
+						4842825846.9119997025, 4842825848.9279994965, 4842825861.6000003815,
+						4842825863.6159992218, 4842825865.6319999695, 4842825867.6479997635,
+						4842825869.6639995575
+					};
+					expec = std::set<Double>(z, z+25);
+				}
+				else if (i == 2) {
+					Double z[] = {
+						4842825778.1519994736, 4842825779.1600008011, 4842825780.1679992676,
+						4842825781.1760005951, 4842825782.1839990616, 4842825783.1920003891,
+						4842825784.1999998093, 4842825785.2080001831, 4842825786.2159996033,
+						4842825787.2240009308, 4842825798.8879995346, 4842825799.8960008621,
+						4842825800.9039993286, 4842825801.9120006561, 4842825802.9199991226,
+						4842825803.9280004501, 4842825804.9359998703, 4842825805.9440002441,
+						4842825806.9519996643, 4842825807.9600009918, 4842825819.6239995956,
+						4842825820.6320009232, 4842825821.6399993896, 4842825822.6480007172,
+						4842825823.6560001373, 4842825824.6640005112, 4842825825.6719999313,
+						4842825826.6800003052, 4842825827.6879997253, 4842825828.6960010529,
+						4842825840.3599996567, 4842825841.3680009842, 4842825842.3759994507,
+						4842825843.3840007782, 4842825844.3920001984, 4842825845.4000005722,
+						4842825846.4079990387, 4842825847.4160003662, 4842825848.4239988327,
+						4842825849.4320001602, 4842825861.0959997177, 4842825862.1040010452,
+						4842825863.1119995117, 4842825864.1200008392, 4842825865.1279993057,
+						4842825866.1360006332, 4842825867.1439990997, 4842825868.1520004272,
+						4842825869.1599998474, 4842825870.1680002213
+					};
+					expec = std::set<Double>(z, z+50);
+				}
+				else if (i == 3) {
+					Double z[] = {
+						4842825778.6560001373, 4842825780.6719999313, 4842825782.6879997253,
+						4842825784.704000473,  4842825786.720000267,  4842825799.3920001984,
+						4842825801.4079999924, 4842825803.4239997864, 4842825805.4400005341,
+						4842825807.4560003281, 4842825820.1280002594, 4842825822.1440000534,
+						4842825824.1599998474, 4842825826.1760005951, 4842825828.1920003891,
+						4842825840.8640003204, 4842825842.8800001144, 4842825844.8959999084,
+						4842825846.9119997025, 4842825848.9279994965, 4842825861.6000003815,
+						4842825863.6159992218, 4842825865.6319999695, 4842825867.6479997635,
+						4842825869.6639995575
+					};
+					expec = std::set<Double>(z, z+25);
+				}
+				else if (i == 4) {
+					Double z[] = {
+						4842825778.1519994736, 4842825779.1600008011, 4842825780.1679992676,
+						4842825781.1760005951, 4842825782.1839990616, 4842825783.1920003891,
+						4842825784.1999998093, 4842825785.2080001831, 4842825786.2159996033,
+						4842825787.2240009308, 4842825798.8879995346, 4842825799.8960008621,
+						4842825800.9039993286, 4842825801.9120006561, 4842825802.9199991226,
+						4842825803.9280004501, 4842825804.9359998703, 4842825805.9440002441,
+						4842825806.9519996643, 4842825807.9600009918, 4842825819.6239995956,
+						4842825820.6320009232, 4842825821.6399993896, 4842825822.6480007172,
+						4842825823.6560001373, 4842825824.6640005112, 4842825825.6719999313,
+						4842825826.6800003052, 4842825827.6879997253, 4842825828.6960010529,
+						4842825840.3599996567, 4842825841.3680009842, 4842825842.3759994507,
+						4842825843.3840007782, 4842825844.3920001984, 4842825845.4000005722,
+						4842825846.4079990387, 4842825847.4160003662, 4842825848.4239988327,
+						4842825849.4320001602, 4842825861.0959997177, 4842825862.1040010452,
+						4842825863.1119995117, 4842825864.1200008392, 4842825865.1279993057,
+						4842825866.1360006332, 4842825867.1439990997, 4842825868.1520004272,
+						4842825869.1599998474, 4842825870.1680002213
+					};
+					expec = std::set<Double>(z, z+50);
+				}
+				else if (i == 5) {
+					Double z[] = {
+						4842825778.6560001373, 4842825780.6719999313, 4842825782.6879997253,
+						4842825784.704000473,  4842825786.720000267,  4842825799.3920001984,
+						4842825801.4079999924, 4842825803.4239997864, 4842825805.4400005341,
+						4842825807.4560003281, 4842825820.1280002594, 4842825822.1440000534,
+						4842825824.1599998474, 4842825826.1760005951, 4842825828.1920003891,
+						4842825840.8640003204, 4842825842.8800001144, 4842825844.8959999084,
+						4842825846.9119997025, 4842825848.9279994965, 4842825861.6000003815,
+						4842825863.6159992218, 4842825865.6319999695, 4842825867.6479997635,
+						4842825869.6639995575
+					};
+					expec = std::set<Double>(z, z+25);
+				}
+				else if (i == 6) {
+					Double z[] = {
+						4842825778.1519994736, 4842825779.1600008011, 4842825780.1679992676,
+						4842825781.1760005951, 4842825782.1839990616, 4842825783.1920003891,
+						4842825784.1999998093, 4842825785.2080001831, 4842825786.2159996033,
+						4842825787.2240009308, 4842825798.8879995346, 4842825799.8960008621,
+						4842825800.9039993286, 4842825801.9120006561, 4842825802.9199991226,
+						4842825803.9280004501, 4842825804.9359998703, 4842825805.9440002441,
+						4842825806.9519996643, 4842825807.9600009918, 4842825819.6239995956,
+						4842825820.6320009232, 4842825821.6399993896, 4842825822.6480007172,
+						4842825823.6560001373, 4842825824.6640005112, 4842825825.6719999313,
+						4842825826.6800003052, 4842825827.6879997253, 4842825828.6960010529,
+						4842825840.3599996567, 4842825841.3680009842, 4842825842.3759994507,
+						4842825843.3840007782, 4842825844.3920001984, 4842825845.4000005722,
+						4842825846.4079990387, 4842825847.4160003662, 4842825848.4239988327,
+						4842825849.4320001602, 4842825861.0959997177, 4842825862.1040010452,
+						4842825863.1119995117, 4842825864.1200008392, 4842825865.1279993057,
+						4842825866.1360006332, 4842825867.1439990997, 4842825868.1520004272,
+						4842825869.1599998474, 4842825870.1680002213
+					};
+					expec = std::set<Double>(z, z+50);
+				}
+				else if (i == 7) {
+					Double z[] = {
+						4842825778.6560001373, 4842825780.6719999313, 4842825782.6879997253,
+						4842825784.704000473,  4842825786.720000267,  4842825799.3920001984,
+						4842825801.4079999924, 4842825803.4239997864, 4842825805.4400005341,
+						4842825807.4560003281, 4842825820.1280002594, 4842825822.1440000534,
+						4842825824.1599998474, 4842825826.1760005951, 4842825828.1920003891,
+						4842825840.8640003204, 4842825842.8800001144, 4842825844.8959999084,
+						4842825846.9119997025, 4842825848.9279994965, 4842825861.6000003815,
+						4842825863.6159992218, 4842825865.6319999695, 4842825867.6479997635,
+						4842825869.6639995575
+					};
+					expec = std::set<Double>(z, z+25);
+				}
+				else if (i == 8) {
+					Double z[] = {
+						4842825778.1519994736, 4842825779.1600008011, 4842825780.1679992676,
+						4842825781.1760005951, 4842825782.1839990616, 4842825783.1920003891,
+						4842825784.1999998093, 4842825785.2080001831, 4842825786.2159996033,
+						4842825787.2240009308, 4842825798.8879995346, 4842825799.8960008621,
+						4842825800.9039993286, 4842825801.9120006561, 4842825802.9199991226,
+						4842825803.9280004501, 4842825804.9359998703, 4842825805.9440002441,
+						4842825806.9519996643, 4842825807.9600009918, 4842825819.6239995956,
+						4842825820.6320009232, 4842825821.6399993896, 4842825822.6480007172,
+						4842825823.6560001373, 4842825824.6640005112, 4842825825.6719999313,
+						4842825826.6800003052, 4842825827.6879997253, 4842825828.6960010529,
+						4842825840.3599996567, 4842825841.3680009842, 4842825842.3759994507,
+						4842825843.3840007782, 4842825844.3920001984, 4842825845.4000005722,
+						4842825846.4079990387, 4842825847.4160003662, 4842825848.4239988327,
+						4842825849.4320001602, 4842825861.0959997177, 4842825862.1040010452,
+						4842825863.1119995117, 4842825864.1200008392, 4842825865.1279993057,
+						4842825866.1360006332, 4842825867.1439990997, 4842825868.1520004272,
+						4842825869.1599998474, 4842825870.1680002213
+					};
+					expec = std::set<Double>(z, z+50);
+				}
+				else {
+					cout << "found channel " << i << " which shouldn't be in this set" << endl;
+					AlwaysAssert(False, AipsError);
+				}
+				AlwaysAssert(times[i].size() == expec.size(), AipsError);
+				std::set<Double>::const_iterator iter = times[i].begin();
+				std::set<Double>::const_iterator end = times[i].end();
+				std::set<Double>::const_iterator eIter = expec.begin();
+				while (iter != end) {
+					AlwaysAssert(near(*iter, *eIter), AipsError);
+					++iter;
+					++eIter;
+				}
+			}
+		}
+		{
+			cout << "*** test nUniqueSourceIDsFromSourceTable()" << endl;
+			uInt n = md.nUniqueSourceIDsFromSourceTable();
+			AlwaysAssert(n == 6, AipsError);
+		}
+        {
+            cout << "*** test getFieldNames()" << endl;
+            vector<String> fnames = md.getFieldNames();
+            String z[] = {"3C279", "J1337-129", "Titan", "J1625-254", "V866 Sco", "RNO 90"};
+            vector<String> expec(z, z+6);
+            vector<String>::const_iterator iter = fnames.begin();
+            vector<String>::const_iterator end = fnames.end();
+            vector<String>::const_iterator eIter = expec.begin();
+            while (iter != end) {
+                AlwaysAssert(*iter == *eIter, AipsError);
+                ++iter;
+                ++eIter;
+            }
+        }
+        {
+            cout << "*** test getNetSidebands()" << endl;
+            vector<Int> netsb = md.getNetSidebands();
+            Int expec[] = {
+                3, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 2, 2, 2,
+                2, 1, 1, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
+            };
+            uInt n = netsb.size();
+            for(uInt i=0; i<n; ++i) {
+                AlwaysAssert(netsb[i] == expec[i], AipsError);
+            }
+        }
+        {
+            cout << "*** test getReferenceDirection()" << endl;
+            uInt nfields = md.nFields();
+            for (uInt i=0; i<nfields; ++i) {
+                MDirection dir = md.getReferenceDirection(i);
+                Vector<Double> angle = dir.getAngle().getValue();
+                switch(i) {
+                case 0:
+                    AlwaysAssert(near(angle[0], -2.8964345, 1e-6), AipsError);
+                    AlwaysAssert(near(angle[1], -0.10104256, 1e-6), AipsError);
+                    break;
+                case 1:
+                    AlwaysAssert(near(angle[0], -2.71545722, 1e-6), AipsError);
+                    AlwaysAssert(near(angle[1], -0.22613985, 1e-6), AipsError);
+                    break;
+                case 2:
+                    AlwaysAssert(near(angle[0], -2.72554329, 1e-6), AipsError);
+                    AlwaysAssert(near(angle[1], -0.1219181, 1e-6), AipsError);
+                    break;
+                case 3:
+                    AlwaysAssert(near(angle[0], -1.98190197, 1e-6), AipsError);
+                    AlwaysAssert(near(angle[1], -0.44437211, 1e-6), AipsError);
+                    break;
+                case 4:
+                    AlwaysAssert(near(angle[0], -2.04411602, 1e-6), AipsError);
+                    AlwaysAssert(near(angle[1], -0.32533384, 1e-6), AipsError);
+                    break;
+                case 5:
+                    AlwaysAssert(near(angle[0], -1.94537525, 1e-6), AipsError);
+                    AlwaysAssert(near(angle[1], -0.27584353, 1e-6), AipsError);
+                    break;
+                default:
+                    break;
+                }
+            }
+        }
+        {
+            cout << "*** test getChanEffectiveBWs()" << endl;
+            vector<QVector<Double> > ebw = md.getChanEffectiveBWs(False);
+            vector<QVector<Double> >::const_iterator iter = ebw.begin();
+            vector<QVector<Double> >::const_iterator end = ebw.end();
+            Double expec = 0;
+            while (iter != end) {
+                size_t nchans = iter->size();
+                if (nchans == 1) {
+                    ++iter;
+                    continue;
+                }
+                else if (nchans == 4) {
+                    expec = 7.5e9;
+                }
+                else if (nchans == 128) {
+                    expec = 1.5625e7;
+                }
+                else if (nchans == 3840) {
+                    expec = 30517.578125;
+                }
+                Vector<Double> vals = iter->getValue();
+                Vector<Double>::const_iterator jiter = vals.begin();
+                Vector<Double>::const_iterator jend = vals.end();
+                while (jiter != jend) {
+                    AlwaysAssert(*jiter == expec, AipsError);
+                    ++jiter;
+                }
+                ++iter;
+            }
+            vector<QVector<Double> > ebwv = md.getChanEffectiveBWs(True);
+            AlwaysAssert(near(ebwv[9].getValue()[0], 20.23684342, 1e-8), AipsError);
+            AlwaysAssert(ebwv[9].getUnit() == "km/s", AipsError);
+        }
+        {
+            cout << "*** test getChanResolutions()" << endl;
+            vector<QVector<Double> > ebw = md.getChanResolutions(False);
+            vector<QVector<Double> >::const_iterator iter = ebw.begin();
+            vector<QVector<Double> >::const_iterator end = ebw.end();
+            Double expec = 0;
+            while (iter != end) {
+                size_t nchans = iter->size();
+                if (nchans == 1) {
+                    ++iter;
+                    continue;
+                }
+                else if (nchans == 4) {
+                    expec = 7.5e9;
+                }
+                else if (nchans == 128) {
+                    expec = 1.5625e7;
+                }
+                else if (nchans == 3840) {
+                    expec = 30517.578125;
+                }
+                Vector<Double> vals = iter->getValue();
+                Vector<Double>::const_iterator jiter = vals.begin();
+                Vector<Double>::const_iterator jend = vals.end();
+                while (jiter != jend) {
+                    AlwaysAssert(*jiter == expec, AipsError);
+                    ++jiter;
+                }
+                ++iter;
+            }
+            vector<QVector<Double> > ebwv = md.getChanResolutions(True);
+            AlwaysAssert(near(ebwv[9].getValue()[0], 20.23684342, 1e-8), AipsError);
+            AlwaysAssert(ebwv[9].getUnit() == "km/s", AipsError);
+        }
+        {
 			cout << "*** cache size " << md.getCache() << endl;
 		}
 	}
-
 }
 
 int main() {

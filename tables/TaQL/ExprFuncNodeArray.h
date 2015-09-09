@@ -151,14 +151,19 @@ private:
     const IPosition& getDiagonalArg (const TableExprId& id,
                                      const IPosition& shp);
 
+    // Set the alternate value expandAlt_p for array expand and return it.
+    const IPosition& getAlternate (const TableExprId& id);
+
 
     //# Data members
     TableExprFuncNode node_p;
     Int               origin_p;        //# axes origin
     Bool              isCOrder_p;      //# axes order
     Bool              constAxes_p;     //# True = collapse axes are constant
+    Bool              constAlt_p;      //# True = expandAlt_p is constant
     IPosition         ipos_p;          //# the (maybe constant) axes or shape
     IPosition         iposN_p;         //# the non-reversed axes or shape
+    IPosition         expandAlt_p;     //# alternate for expand/resize
 };
 
 

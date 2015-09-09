@@ -23,7 +23,7 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id$
+//# $Id: LatticeStatistics.tcc 21586 2015-03-25 13:46:25Z gervandiepen $
 
 #ifndef LATTICES_LATTICESTATISTICS_TCC
 #define LATTICES_LATTICESTATISTICS_TCC
@@ -285,7 +285,9 @@ Bool LatticeStatistics<T>::setAxes (const Vector<Int>& axes)
 //
       for (uInt i=0; i<cursorAxes_p.nelements(); i++) {
          if (cursorAxes_p(i) < 0 || cursorAxes_p(i) > Int(pInLattice_p->ndim()-1)) {
-            error_p = "Invalid cursor axes";
+            ostringstream oss;
+            oss << "Invalid cursor axes: " << axes;
+             error_p = oss.str();
             return False;
          }
       }
@@ -376,7 +378,6 @@ Bool LatticeStatistics<T>::setList (const Bool& doList)
       return False;
    }
    doList_p = doList;
-
    return True;
 } 
 
@@ -658,7 +659,6 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
     else if (type==RMS) {
        retrieveStorageStatistic (sumSq, SUMSQ, dropDeg);
        ReadOnlyVectorIterator<AccumType> sumSqIt(sumSq);
-//
        while (!nPtsIt.pastEnd()) {
           for (uInt i=0; i<n1; i++) {
              sliceIt.vector()(i) = 
@@ -669,12 +669,12 @@ Bool LatticeStatistics<T>::calculateStatistic (Array<AccumType>& slice,
           sumSqIt.next();
           sliceIt.next();
        }
-    } else {
+    }
+    else {
        if (haveLogger_p) os_p << LogIO::SEVERE << "Internal error" << endl << LogIO::POST;
        slice.resize(IPosition(0,0));
        return False;
     }
-
    return True;
 }
 
@@ -831,7 +831,6 @@ Bool LatticeStatistics<T>::generateStorageLattice() {
         _doStatsLoop(nsets, pProgressMeter);
     }
     pProgressMeter = NULL;
-
     // Do robust statistics separately as required.
     generateRobust();
     needStorageLattice_p = False;
@@ -936,15 +935,15 @@ void LatticeStatistics<T>::_doStatsLoop(
 		if (fixedMinMax_p && ! noInclude_p) {
 			currentMax = range_p[1];
 		}
-		else if (! stats.max.null()) {
-			currentMax = *stats.max;
+		else {
+			currentMax = stats.max.null() ? 0 : *stats.max;
 		}
 		pStoreLattice_p->putAt(currentMax, posMax);
 		if (fixedMinMax_p && ! noInclude_p) {
 			currentMin = range_p[0];
 		}
-		else if (! stats.min.null()) {
-			currentMin = *stats.min;
+		else {
+			currentMin = stats.min.null() ? 0 : *stats.min;
 		}
 		pStoreLattice_p->putAt(currentMin, posMin);
 		if (isReal) {
@@ -992,7 +991,6 @@ void LatticeStatistics<T>::_doStatsLoop(
 		}
 	}
 }
-
 
 template <class T>
 void LatticeStatistics<T>::generateRobust () {
