@@ -30,8 +30,7 @@
 
 //# Includes
 #include <casacore/casa/aips.h>
-#include <casacore/casa/Arrays/MArrayMath.h>
-#include <casacore/casa/Arrays/ArrayMathBase.h>
+#include <casacore/casa/Arrays/MArrayMathBase.h>
 #include <casacore/casa/Arrays/ArrayLogical.h>
 #include <casacore/casa/Arrays/ArrayPartMath.h>
 #include <casacore/casa/BasicMath/Functors.h>

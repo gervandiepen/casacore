@@ -34,7 +34,6 @@ namespace casacore {
 
   // Forward declarations.
   template<typename T> class Array;
-  template<typename T> class MArray;
 
 
   // <summary>
@@ -52,8 +51,7 @@ namespace casacore {
   // iterators with a mask.
   //
   // Furthermore, abstract base classes are defined for functors to be used
-  // in functions like slidingXXX. They are defined for both an Array and
-  // an MArray object.
+  // in functions like slidingXXX.
   // Virtual functions instead of templated functions are used to avoid
   // code bloat when used in functions like partialArrayMath. Because a
   // reduction operation usually takes much more time than the call, using
@@ -136,7 +134,7 @@ namespace casacore {
   {
     for (; first1!=last1; ++first1, ++first2, ++mask1, ++mask2) {
       if (!*mask1 && !*mask2) {
-        if (!op(*first1, *first2)) return false;
+        if (!op(*first1, *first2)) return False;
       }
     }
     return true;
@@ -150,7 +148,7 @@ namespace casacore {
   {
     for (; first1!=last1; ++first1, ++first2, ++mask1) {
       if (!*mask1) {
-        if (!op(*first1, *first2)) return false;
+        if (!op(*first1, *first2)) return False;
       }
     }
     return true;
@@ -166,7 +164,7 @@ namespace casacore {
   {
     for (; first1!=last1; ++first1, ++mask1) {
       if (!*mask1) {
-        if (!op(left, *first1)) return false;
+        if (!op(left, *first1)) return False;
       }
     }
     return true;
@@ -182,7 +180,7 @@ namespace casacore {
   {
     for (; first1!=last1; ++first1, ++mask1) {
       if (!*mask1) {
-        if (!op(*first1, right)) return false;
+        if (!op(*first1, right)) return False;
       }
     }
     return true;
@@ -191,7 +189,7 @@ namespace casacore {
 
   // Define a function to compare the unmasked elements of two sequences.
   // It returns true if any element compares true.
-  // If there are no unmasked elements, it returns false.
+  // If there are no unmasked elements, it returns False.
   // An example compare operator is <src>std::equal_to</src>.
   // <group>
   template<typename InputIterator1, typename InputIterator2,
@@ -206,7 +204,7 @@ namespace casacore {
         if (op(*first1, *first2)) return true;
       }
     }
-    return false;
+    return False;
   }
   template<typename InputIterator1, typename InputIterator2,
            typename MaskIterator, typename CompareOperator>
@@ -220,7 +218,7 @@ namespace casacore {
         if (op(*first1, *first2)) return true;
       }
     }
-    return false;
+    return False;
   }
   // For use with a constant left value.
   // This avoids use of bind1st or bind2nd which can fail for gcc-4.3.
@@ -236,7 +234,7 @@ namespace casacore {
         if (op(left, *first1)) return true;
       }
     }
-    return false;
+    return False;
   }
   // For use with a constant right value.
   // This avoids use of bind1st or bind2nd which can fail for gcc-4.3.
@@ -252,7 +250,7 @@ namespace casacore {
         if (op(*first1, right)) return true;
       }
     }
-    return false;
+    return False;
   }
   // </group>
 
@@ -263,14 +261,6 @@ namespace casacore {
   public:
     virtual ~ArrayFunctorBase() {}
     virtual RES operator() (const Array<T>&) const = 0;
-  };
-
-  // Define the base class for functors to perform a reduction function on an
-  // MArray object. The functors themselves are defined elsewhere.
-  template<typename T, typename RES=T> class MArrayFunctorBase {
-  public:
-    virtual ~MArrayFunctorBase() {}
-    virtual RES operator() (const MArray<T>&) const = 0;
   };
 
   // </group>

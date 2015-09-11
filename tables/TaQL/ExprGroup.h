@@ -624,8 +624,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
-    Bool checkShape (const ArrayBase& arr, const String& func);
-    Array<Bool> itsValue;
+    Bool checkShape (const MArrayBase& arr, const String& func);
+    MArray<Bool> itsValue;
   };
 
   // <summary>
@@ -652,8 +652,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
-    Bool checkShape (const ArrayBase& arr, const String& func);
-    Array<Int64> itsValue;
+    Bool checkShape (const MArrayBase& arr, const String& func);
+    MArray<Int64> itsValue;
   };
 
   // <summary>
@@ -680,8 +680,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
-    Bool checkShape (const ArrayBase& arr, const String& func);
-    Array<Double> itsValue;
+    Bool checkShape (const MArrayBase& arr, const String& func);
+    MArray<Double> itsValue;
   };
 
   // <summary>
@@ -708,8 +708,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
-    Bool checkShape (const ArrayBase& arr, const String& func);
-    Array<DComplex> itsValue;
+    Bool checkShape (const MArrayBase& arr, const String& func);
+    MArray<DComplex> itsValue;
   };
 
   // <summary>
@@ -736,8 +736,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
-    Bool checkShape (const ArrayBase& arr, const String& func);
-    Array<MVTime> itsValue;
+    Bool checkShape (const MArrayBase& arr, const String& func);
+    MArray<MVTime> itsValue;
   };
 
   // <summary>
@@ -764,8 +764,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   protected:
     // If not empty, check if the shape matches that of <src>itsValue</src>.
     // If <src>itsValue</src> is still empty, it is sized.
-    Bool checkShape (const ArrayBase& arr, const String& func);
-    Array<String> itsValue;
+    Bool checkShape (const MArrayBase& arr, const String& func);
+    MArray<String> itsValue;
   };
 
 

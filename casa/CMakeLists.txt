@@ -269,6 +269,7 @@ Arrays/LogiMatrix.h
 Arrays/LogiVector.h
 Arrays/MArrayBase.h
 Arrays/MArrayLogical.h
+Arrays/MArrayMathBase.h
 Arrays/MArrayMath.h
 Arrays/MArrayUtil.h
 Arrays/MArray.h

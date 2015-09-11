@@ -69,24 +69,35 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   public:
     // Default constructor creates empty array.
     MArray()
+      : MArrayBase()
     {}
 
     // Construct from an array.
     explicit MArray (const Array<T>& array)
-      : MArrayBase (array.size()),
-        itsArray   (array)
-    {}
+      : MArrayBase(),
+        itsArray  (array)
+    {
+      resizeBase (array, False);
+    }
 
     // Construct from an array with mask.
     MArray (const Array<T>& array, const Array<Bool>& mask)
-      : MArrayBase (mask, array.size()),
+      : MArrayBase (mask, array),
         itsArray   (array)
     {}
 
     // Reference another array.
-    void reference (const MArray<T>& other) {
+    void reference (const MArray<T>& other)
+    {
       itsArray.reference (other.itsArray);
       referenceBase (other);
+    }
+
+    // Resize the array and optionally the mask.
+    void resize (const IPosition& shape, Bool useMask)
+    {
+      itsArray.resize (shape);
+      resizeBase (itsArray, useMask);
     }
 
     // Fill the array data and mask from another one.
@@ -95,8 +106,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     {
       itsArray.resize (from.shape());
       convertArray (itsArray, from.array());
-      setMask (from.mask());
-      setSize (itsArray.size());
+      setBase (from.mask(), itsArray);
     }
 
     // Fill the array from a normal Array. The possible mask is removed.
@@ -105,8 +115,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     {
       itsArray.resize (from.shape());
       convertArray (itsArray, from);
-      removeMask();
-      setSize (itsArray.size());
+      resizeBase (itsArray, False);
     }
 
     // Get the number of elements.

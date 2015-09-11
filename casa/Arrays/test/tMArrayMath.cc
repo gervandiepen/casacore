@@ -247,7 +247,7 @@ void doTestReduce()
   Vector<Double> vec = ma.flatten();
   AlwaysAssertExit (allEQ(v, vec));
   m[0] = m[18] = True;
-  ma.setMask(m);
+  ma.setMask (m);
   Vector<Double> v1(18);
   indgen (v1, 1.);
   v1[17] = 19;

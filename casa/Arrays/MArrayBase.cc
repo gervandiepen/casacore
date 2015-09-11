@@ -28,22 +28,66 @@
 //# Includes
 #include <casacore/casa/Arrays/ArrayMath.h>  //# needed for correct build
 #include <casacore/casa/Arrays/MArray.h>
+#include <casacore/casa/Utilities/Assert.h>
+#include <casacore/casa/Exceptions/Error.h>
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // Construct from a mask.
-  MArrayBase::MArrayBase (const Array<Bool>& mask, Int64 size)
+  MArrayBase::MArrayBase (const Array<Bool>& mask, const ArrayBase& arr)
     : itsMask   (mask),
-      itsSize   (size),
-      itsNValid (size)
+      itsShape  (arr.shape()),
+      itsSize   (arr.size()),
+      itsNValid (arr.size())
   {
     if (! mask.empty()) {
       itsNValid = -1;
-      if (size != Int64(mask.size())) {
+      if (! itsShape.isEqual (mask.shape())) {
         throw ArrayError ("MArrayBase - array size "
                           + String::toString(itsSize) + " and mask size "
                           + String::toString(mask.size()) + " mismatch");
       }
+    }
+  }
+
+  void MArrayBase::resizeBase (const ArrayBase& arr, Bool useMask)
+  {
+    itsShape.resize (arr.ndim());
+    itsShape = arr.shape();
+    itsSize  = arr.size();
+    if (useMask) {
+      itsMask.resize (arr.shape());
+      itsNValid = -1;
+    } else {
+      removeMask();
+    }
+  }
+
+  void MArrayBase::referenceBase (const MArrayBase& other)
+  {
+    itsMask.reference (other.itsMask);
+    itsShape.resize (other.itsShape.size());
+    itsShape  = other.itsShape;
+    itsSize   = other.itsSize;
+    itsNValid = other.itsNValid;
+  }
+
+  void MArrayBase::setBase (const Array<Bool>& mask, const ArrayBase& arr)
+  {
+    itsShape.resize (arr.ndim());
+    itsShape = arr.shape();
+    itsSize  = arr.size();
+    setMask (mask);
+  }
+
+  void MArrayBase::setMask (const Array<Bool>& mask)
+  {
+    if (mask.empty()) {
+      removeMask();
+    } else {
+      AlwaysAssert (itsShape.isEqual (mask.shape()), AipsError);
+      itsMask.reference (mask);
+      itsNValid = -1;
     }
   }
 

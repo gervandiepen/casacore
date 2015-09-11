@@ -33,6 +33,7 @@
 #include <casacore/tables/TaQL/ExprUDFNode.h>
 #include <casacore/tables/Tables/TableError.h>
 #include <casacore/casa/Utilities/Sort.h>
+#include <casacore/casa/Utilities/Assert.h>
 #include <limits>
 
 
@@ -102,7 +103,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   void TableExprGroupKeySet::fill (const vector<TableExprNode>& nodes,
                                    const TableExprId& id)
   {
-    DebugAssert (nodes.size() == itsKeys.size(), AipsError);
+    AlwaysAssert (nodes.size() == itsKeys.size(), AipsError);
     for (uInt i=0; i<itsKeys.size(); ++i) {
       switch (itsKeys[i].dataType()) {
       case TableExprNodeRep::NTBool:
@@ -376,17 +377,18 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {}
   MArray<Bool> TableExprGroupFuncArrayBool::getArrayBool (const vector<TableExprId>&)
     { return MArray<Bool>(itsValue); }
-  Bool TableExprGroupFuncArrayBool::checkShape (const ArrayBase& arr,
+  Bool TableExprGroupFuncArrayBool::checkShape (const MArrayBase& arr,
                                                 const String& func)
   {
     if (itsValue.empty()) {
-      itsValue.resize (arr.shape());
+      itsValue.resize (arr.shape(), arr.hasMask());
       return True;    // first time itsValue is used
     }
     if (! itsValue.shape().isEqual (arr.shape())) {
       throw TableInvExpr ("Mismatching array shapes in aggregate function " +
                           func);
     }
+    AlwaysAssert (arr.hasMask() == itsValue.hasMask(), AipsError);
     return False;
   }
 
@@ -394,17 +396,18 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {}
   MArray<Int64> TableExprGroupFuncArrayInt::getArrayInt (const vector<TableExprId>&)
     { return MArray<Int64>(itsValue); }
-  Bool TableExprGroupFuncArrayInt::checkShape (const ArrayBase& arr,
+  Bool TableExprGroupFuncArrayInt::checkShape (const MArrayBase& arr,
                                                const String& func)
   {
     if (itsValue.empty()) {
-      itsValue.resize (arr.shape());
+      itsValue.resize (arr.shape(), arr.hasMask());
       return True;    // first time itsValue is used
     }
     if (! itsValue.shape().isEqual (arr.shape())) {
       throw TableInvExpr ("Mismatching array shapes in aggregate function " +
                           func);
     }
+    AlwaysAssert (arr.hasMask() == itsValue.hasMask(), AipsError);
     return False;
   }
 
@@ -412,17 +415,18 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {}
   MArray<Double> TableExprGroupFuncArrayDouble::getArrayDouble (const vector<TableExprId>&)
     { return MArray<Double>(itsValue); }
-  Bool TableExprGroupFuncArrayDouble::checkShape (const ArrayBase& arr,
+  Bool TableExprGroupFuncArrayDouble::checkShape (const MArrayBase& arr,
                                                   const String& func)
   {
     if (itsValue.empty()) {
-      itsValue.resize (arr.shape());
+      itsValue.resize (arr.shape(), arr.hasMask());
       return True;    // first time itsValue is used
     }
     if (! itsValue.shape().isEqual (arr.shape())) {
       throw TableInvExpr ("Mismatching array shapes in aggregate function " +
                           func);
     }
+    AlwaysAssert (arr.hasMask() == itsValue.hasMask(), AipsError);
     return False;
   }
 
@@ -430,17 +434,18 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {}
   MArray<DComplex> TableExprGroupFuncArrayDComplex::getArrayDComplex (const vector<TableExprId>&)
     { return MArray<DComplex>(itsValue); }
-  Bool TableExprGroupFuncArrayDComplex::checkShape (const ArrayBase& arr,
+  Bool TableExprGroupFuncArrayDComplex::checkShape (const MArrayBase& arr,
                                                     const String& func)
   {
     if (itsValue.empty()) {
-      itsValue.resize (arr.shape());
+      itsValue.resize (arr.shape(), arr.hasMask());
       return True;    // first time itsValue is used
     }
     if (! itsValue.shape().isEqual (arr.shape())) {
       throw TableInvExpr ("Mismatching array shapes in aggregate function " +
                           func);
     }
+    AlwaysAssert (arr.hasMask() == itsValue.hasMask(), AipsError);
     return False;
   }
 
@@ -448,17 +453,18 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {}
   MArray<MVTime> TableExprGroupFuncArrayDate::getArrayDate (const vector<TableExprId>&)
     { return MArray<MVTime>(itsValue); }
-  Bool TableExprGroupFuncArrayDate::checkShape (const ArrayBase& arr,
+  Bool TableExprGroupFuncArrayDate::checkShape (const MArrayBase& arr,
                                                 const String& func)
   {
     if (itsValue.empty()) {
-      itsValue.resize (arr.shape());
+      itsValue.resize (arr.shape(), arr.hasMask());
       return True;    // first time itsValue is used
     }
     if (! itsValue.shape().isEqual (arr.shape())) {
       throw TableInvExpr ("Mismatching array shapes in aggregate function " +
                           func);
     }
+    AlwaysAssert (arr.hasMask() == itsValue.hasMask(), AipsError);
     return False;
   }
 
@@ -466,17 +472,18 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {}
   MArray<String> TableExprGroupFuncArrayString::getArrayString (const vector<TableExprId>&)
     { return MArray<String>(itsValue); }
-  Bool TableExprGroupFuncArrayString::checkShape (const ArrayBase& arr,
+  Bool TableExprGroupFuncArrayString::checkShape (const MArrayBase& arr,
                                                   const String& func)
   {
     if (itsValue.empty()) {
-      itsValue.resize (arr.shape());
+      itsValue.resize (arr.shape(), arr.hasMask());
       return True;    // first time itsValue is used
     }
     if (! itsValue.shape().isEqual (arr.shape())) {
       throw TableInvExpr ("Mismatching array shapes in aggregate function " +
                           func);
     }
+    AlwaysAssert (arr.hasMask() == itsValue.hasMask(), AipsError);
     return False;
   }
 

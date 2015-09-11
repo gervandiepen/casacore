@@ -68,29 +68,26 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   class MArrayBase
   {
-  public:
+  protected:
     // The default constructor creates an empty mask.
-    explicit MArrayBase (Int64 size=0)
-      : itsSize   (size),
-        itsNValid (size)
+    explicit MArrayBase()
+      : itsSize   (0),
+        itsNValid (0)
     {}
 
-    // Construct from a mask.
-    MArrayBase (const Array<Bool>& mask, Int64 size);
+    // Construct from a given mask.
+    MArrayBase (const Array<Bool>& mask, const ArrayBase& arr);
 
-    // Set the size (i.e., total number of elements).
-    void setSize (Int64 size)
-      { itsSize = size; }
+    // Reference the mask and set the shape.
+    void setBase (const Array<Bool>& mask, const ArrayBase& arr);
 
-    // Set the mask.
-    void setMask (const Array<Bool>& mask)
-      { itsMask.reference (mask); itsNValid = -1; }
+    // Reference another MArray.
+    void referenceBase (const MArrayBase& other);
 
-    void referenceBase (const MArrayBase& other)
-      { itsMask.reference (other.itsMask);
-        itsSize   = other.itsSize;
-        itsNValid = other.itsNValid; }
+    // Set the array shape and resize the mask.
+    void resizeBase (const ArrayBase& arr, Bool useMask);
 
+  public:
     // Remove the mask.
     void removeMask()
       { itsMask.resize(); itsNValid = itsSize; }
@@ -99,10 +96,13 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     Bool hasMask() const
       { return !itsMask.empty(); }
 
+    // Set the mask. It checks if it matches the array shape.
+    void setMask (const Array<Bool>& mask);
+
     // Get the mask. The returned array is empty if there is no mask.
     const Array<Bool>& mask() const
       { return itsMask; }
-    Array<Bool>& mask()
+    Array<Bool>& wmask()
       { return itsMask; }
 
     // Return the number of valid array values, thus unflagged elements.
@@ -111,6 +111,14 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       if (itsNValid < 0) fillNValid();
       return itsNValid;
     }
+
+    // Get the shape.
+    const IPosition& shape() const
+      { return itsShape; }
+
+    // Get the size.
+    Int64 size() const
+      { return itsSize; }
 
     // Combine this and the other mask.
     Array<Bool> combineMask (const MArrayBase& other) const;
@@ -121,6 +129,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
     //# Data members.
     Array<Bool>   itsMask;
+    IPosition     itsShape;
     Int64         itsSize;
     mutable Int64 itsNValid;
   };

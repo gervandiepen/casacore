@@ -31,7 +31,7 @@
 //# Includes
 #include <casacore/casa/aips.h>
 #include <casacore/casa/Arrays/MArray.h>
-#include <casacore/casa/Arrays/ArrayMathBase.h>
+#include <casacore/casa/Arrays/MArrayMathBase.h>
 #include <casacore/casa/Arrays/ArrayPartMath.h>
 #include <casacore/casa/Arrays/ArrayIter.h>
 
@@ -214,10 +214,10 @@ namespace casacore {
     }
     */
     ///IPosition shape(a.array().shape().removeAxes (collapseAxes));
-    res.array().resize (shape);
-    res.mask().resize (shape);
+    res.resize (shape, False);
+    Array<Bool> resMask(shape);
     RES* data = res.array().data();
-    Bool* mask = res.mask().data();
+    Bool* mask = resMask.data();
     while (!aiter.pastEnd()) {
       if (allTrue(miter.array())) {
         *mask++ = True;
@@ -229,6 +229,7 @@ namespace casacore {
       aiter.next();
       miter.next();
     }
+    res.setMask (resMask);
   }
   // </group>
 
@@ -252,10 +253,10 @@ namespace casacore {
     uInt ndim = shape.size();
     IPosition fullBoxShape, resShape;
     fillBoxedShape (shape, boxShape, fullBoxShape, resShape);
-    res.array().resize (resShape);
-    res.mask().resize (resShape);
+    res.resize (resShape, False);
+    Array<Bool> resMask(resShape);
     RES* data = res.array().data();
-    Bool* mask = res.mask().data();
+    Bool* mask = resMask.data();
     // Loop through all data and assemble as needed.
     IPosition blc(ndim, 0);
     IPosition trc(fullBoxShape-1);
@@ -285,6 +286,7 @@ namespace casacore {
         break;
       }
     }
+    res.setMask (resMask);
   }
 
   template <typename T>
@@ -309,13 +311,12 @@ namespace casacore {
     IPosition boxEnd, resShape;
     Bool empty = fillSlidingShape (shape, halfBoxShape, boxEnd, resShape);
     if (fillEdge) {
-      res.array().resize (shape);
-      res.mask().resize (shape);
+      res.resize (shape, False);
       res.array() = RES();
-      res.mask() = True;
+      Array<Bool> mask(shape, True);
+      res.setMask (mask);
     } else {
-      res.array().resize (resShape);
-      res.mask().resize (resShape);
+      res.resize (resShape, True);
     }
     if (!empty) {
       Array<RES>  resa (res.array());
