@@ -247,7 +247,7 @@ namespace casacore {
       // Make sure the unit is rad.
       // Turn the array into a vector.
       TableExprNodeUnit::adaptUnit (operand, "rad");
-      Array<Double> dirs(operand->getArrayDouble(0));
+      Array<Double> dirs(operand->getArrayDouble(0).array());
       if (dirs.size() != 2) {
         throw AipsError ("Argument to MSCAL function is not an array "
                          "of 2 values");
@@ -743,7 +743,7 @@ namespace casacore {
     }
   }
 
-  Array<Bool> UDFMSCal::getArrayBool (const TableExprId& id)
+  MArray<Bool> UDFMSCal::getArrayBool (const TableExprId& id)
   {
     DebugAssert (id.byRow(), AipsError);
     switch (itsType) {
@@ -751,8 +751,8 @@ namespace casacore {
       {
         Array<Bool> out;
         // Combine the flags.
-        itsStokesConv.convert (out, itsDataNode.getArrayBool (id));
-        return out;
+        itsStokesConv.convert (out, itsDataNode.getArrayBool (id).array());
+        return MArray<Bool>(out);
       }
     case GETVALUE:
       return itsDataNode.getArrayBool (getRowNr(id));
@@ -761,7 +761,7 @@ namespace casacore {
     }
   }
 
-  Array<Int64> UDFMSCal::getArrayInt (const TableExprId& id)
+  MArray<Int64> UDFMSCal::getArrayInt (const TableExprId& id)
   {
     switch (itsType) {
     case GETVALUE:
@@ -771,48 +771,49 @@ namespace casacore {
     }
   }
 
-  Array<Double> UDFMSCal::getArrayDouble (const TableExprId& id)
+  MArray<Double> UDFMSCal::getArrayDouble (const TableExprId& id)
   {
     DebugAssert (id.byRow(), AipsError);
     switch (itsType) {
     case HADEC:
       itsEngine.getHaDec (itsArg, id.rownr(), itsTmpVector);
-      return itsTmpVector;
+      return MArray<Double>(itsTmpVector);
     case AZEL:
       itsEngine.getAzEl (itsArg, id.rownr(), itsTmpVector);
-      return itsTmpVector;
+      return MArray<Double>(itsTmpVector);
     case NEWUVW:
       itsEngine.getUVWJ2000 (id.rownr(), itsTmpVector);
-      return itsTmpVector;
+      return MArray<Double>(itsTmpVector);
     case UVWWVL:
       itsUvwCol.get (id.rownr(), itsTmpVector);
       itsTmpVector *= itsWavel[itsDDIds[itsIdNode.getInt(id)]];
-      return itsTmpVector;
+      return MArray<Double>(itsTmpVector);
     case UVWWVLS:
       itsUvwCol.get (id.rownr(), itsTmpVector);
-      return toWvls (id);
+      return MArray<Double>(toWvls (id));
     case NEWUVWWVL:
       itsEngine.getUVWJ2000 (id.rownr(), itsTmpVector);
       itsTmpVector *= itsWavel[itsDDIds[itsIdNode.getInt(id)]];
-      return itsTmpVector;
+      return MArray<Double>(itsTmpVector);
     case NEWUVWWVLS:
       itsEngine.getUVWJ2000 (id.rownr(), itsTmpVector);
-      return toWvls (id);
+      return MArray<Double>(toWvls (id));
     case STOKES:
       {
         // Unfortunately stokes weight conversion is only defined for Float,
         // while TableExprNode only has Double.
         // So conversions are necessary for the time being.
         // In the future we can add Double support to StokesConverter.
-        Array<Float> outf, dataf;
-        Array<Double> outd, datad;
+        MArray<Double> datad;
+        Array<Float>  dataf, outf;
+        Array<Double> outd;
         itsDataNode.get (id, datad);
         dataf.resize (datad.shape());
-        convertArray (dataf, datad);
+        convertArray (dataf, datad.array());
         itsStokesConv.convert (outf, dataf);
         outd.resize (outf.shape());
         convertArray (outd, outf);
-        return outd;
+        return MArray<Double>(outd);
       }
     case GETVALUE:
       return itsDataNode.getArrayDouble (getRowNr(id));
@@ -821,7 +822,7 @@ namespace casacore {
     }
   }
 
-  Array<DComplex> UDFMSCal::getArrayDComplex (const TableExprId& id)
+  MArray<DComplex> UDFMSCal::getArrayDComplex (const TableExprId& id)
   {
     switch (itsType) {
     case STOKES:
@@ -831,15 +832,16 @@ namespace casacore {
         // So conversions are necessary for the time being.
         // In the future we can add DComplex support to StokesConverter
         // or Complex support to TableExprNode.
+        MArray<DComplex> datad;
         Array<Complex> outf, dataf;
-        Array<DComplex> outd, datad;
+        Array<DComplex> outd;
         itsDataNode.get (id, datad);
         dataf.resize (datad.shape());
-        convertArray (dataf, datad);
+        convertArray (dataf, datad.array());
         itsStokesConv.convert (outf, dataf);
         outd.resize (outf.shape());
         convertArray (outd, outf);
-        return outd;
+        return MArray<DComplex>(outd);
       }
     case GETVALUE:
       return itsDataNode.getArrayDComplex (getRowNr(id));
@@ -848,7 +850,7 @@ namespace casacore {
     }
   }
 
-  Array<String> UDFMSCal::getArrayString (const TableExprId& id)
+  MArray<String> UDFMSCal::getArrayString (const TableExprId& id)
   {
     switch (itsType) {
     case GETVALUE:

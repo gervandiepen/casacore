@@ -546,6 +546,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableExprGroupMinsArrayInt (TableExprNodeRep* node);
     virtual ~TableExprGroupMinsArrayInt();
     virtual void apply (const TableExprId& id);
+    virtual void finish();
   };
 
   // <summary>
@@ -563,6 +564,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableExprGroupMaxsArrayInt (TableExprNodeRep* node);
     virtual ~TableExprGroupMaxsArrayInt();
     virtual void apply (const TableExprId& id);
+    virtual void finish();
   };
 
   // <summary>
@@ -597,6 +599,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableExprGroupProductsArrayInt (TableExprNodeRep* node);
     virtual ~TableExprGroupProductsArrayInt();
     virtual void apply (const TableExprId& id);
+    virtual void finish();
   };
 
   // <summary>
@@ -633,6 +636,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableExprGroupMinsArrayDouble (TableExprNodeRep* node);
     virtual ~TableExprGroupMinsArrayDouble();
     virtual void apply (const TableExprId& id);
+    virtual void finish();
   };
 
   // <summary>
@@ -650,6 +654,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableExprGroupMaxsArrayDouble (TableExprNodeRep* node);
     virtual ~TableExprGroupMaxsArrayDouble();
     virtual void apply (const TableExprId& id);
+    virtual void finish();
   };
 
   // <summary>
@@ -684,6 +689,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableExprGroupProductsArrayDouble (TableExprNodeRep* node);
     virtual ~TableExprGroupProductsArrayDouble();
     virtual void apply (const TableExprId& id);
+    virtual void finish();
   };
 
   // <summary>
@@ -821,6 +827,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableExprGroupProductsArrayDComplex (TableExprNodeRep* node);
     virtual ~TableExprGroupProductsArrayDComplex();
     virtual void apply (const TableExprId& id);
+    virtual void finish();
   };
 
   // <summary>

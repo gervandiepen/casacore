@@ -125,21 +125,21 @@ namespace casacore {
 
   Double DirectionUDF::getDouble (const TableExprId& id)
   {
-    return getArrayDouble (id).data()[0];
+    return getArrayDouble(id).array().data()[0];
   }
 
-  Array<Double> DirectionUDF::getArrayDouble (const TableExprId& id)
+  MArray<Double> DirectionUDF::getArrayDouble (const TableExprId& id)
   {
-    return itsEngine.getArrayDouble (id, itsRiseSet);
+    return MArray<Double>(itsEngine.getArrayDouble (id, itsRiseSet));
   }
-  Array<MVTime> DirectionUDF::getArrayDate (const TableExprId& id)
+  MArray<MVTime> DirectionUDF::getArrayDate (const TableExprId& id)
   {
     Array<Double> res = itsEngine.getArrayDouble (id, itsRiseSet);
     Array<MVTime> dates(res.shape());
     for (uInt i=0; i<res.size(); ++i) {
       dates.data()[i] = MVTime(res.data()[i]);
     }
-    return dates;
+    return MArray<MVTime>(dates);
   }
 
 } //end namespace

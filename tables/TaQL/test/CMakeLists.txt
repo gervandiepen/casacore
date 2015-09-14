@@ -33,6 +33,7 @@ tTaQLNode
 set (testscripts
 tTableGramGroupAggr
 tTableGramGroupAggrAll
+tTableGramGroupAggrMaskAll
 )
 
 # Some test sources include a test .h file.

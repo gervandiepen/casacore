@@ -151,6 +151,7 @@ using namespace casacore;
 %type <nodelist> elemlist
 %type <nodelist> elems
 %type <node> elem
+%type <node> subsingle
 %type <node> subsrange
 %type <node> colonrange
 %type <node> colonrangeinterval
@@ -1301,11 +1302,21 @@ subscripts: subscripts COMMA subsrange {
 	       $$->add (new TaQLIndexNodeRep(0, 0, 0));
 	       $$->add (*$2);
 	   }
-         | subsrange {
+         | subsingle {
 	       $$ = new TaQLMultiNode(False);
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	       $$->setPPFix ("[", "]");
 	       $$->add (*$1);
+	   }
+         ;
+
+subsingle: orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLIndexNodeRep (*$1, 0, 0));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | colonrangeindex {
+               $$ = $1;
 	   }
          ;
 

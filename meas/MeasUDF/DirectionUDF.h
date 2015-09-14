@@ -118,8 +118,8 @@ namespace casacore {
 
     // Get the value.
     virtual Double getDouble (const TableExprId& id);
-    virtual Array<Double> getArrayDouble (const TableExprId& id);
-    virtual Array<MVTime> getArrayDate (const TableExprId& id);
+    virtual MArray<Double> getArrayDouble (const TableExprId& id);
+    virtual MArray<MVTime> getArrayDate (const TableExprId& id);
 
   private:
     //# Data members.

@@ -41,6 +41,19 @@
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
+  // Clear value is masked off.
+  template<typename T>
+  void TEGClearMasked (MArray<T>& arr)
+  {
+    if (arr.hasMask()) {
+      Array<Bool>::const_contiter m = arr.mask().cbegin();
+      for (typename Array<T>::contiter p = arr.array().cbegin();
+           p != arr.array().cend(); ++p, ++m) {
+        if (*m) *p = T();
+      }
+    }
+  }
+
   template<typename T>
   void TEGMin (const MArray<T>& src, MArray<T>& dst)
   {
@@ -156,7 +169,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       for (typename Array<T>::contiter out = dst.cbegin();
            out != dst.cend(); ++in, ++min, ++out, ++itn) {
         if (! *min) {
-          *out += *in * *in;
+          *out += *in;
           (*itn)++;
         }
       }
@@ -371,7 +384,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     MArray<Double> arr = itsOperand->getArrayDouble(id);
     itsValue += sum(arr);
     if (arr.hasMask()) {
-      itsNr += nfalse(arr);
+      itsNr += nfalse(arr.mask());
     } else {
       itsNr += arr.size();
     }
@@ -401,7 +414,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       Double m2    = 0;
       Int64  nr    = arr.size();
       if (arr.hasMask()) {
-        nr = nfalse(arr);
+        nr = nfalse(arr.mask());
       }
       if (nr > 1) {
         m2 = variance(arr, meanv) * (nr-1);
@@ -443,7 +456,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     MArray<Double> arr = itsOperand->getArrayDouble(id);
     itsValue += sum(arr*arr);
     if (arr.hasMask()) {
-      itsNr += nfalse(arr);
+      itsNr += nfalse(arr.mask());
     } else  {
       itsNr += arr.size();
     }
@@ -542,7 +555,11 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {
     MArray<DComplex> arr = itsOperand->getArrayDComplex(id);
     itsValue += sum(arr);
-    itsNr    += arr.size();
+    if (arr.hasMask()) {
+      itsNr += nfalse(arr.mask());
+    } else {
+      itsNr += arr.size();
+    }
   }
   void TableExprGroupMeanArrayDComplex::finish()
   {
@@ -711,6 +728,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       TEGMin (arr, itsValue);
     }
   }
+  void TableExprGroupMinsArrayInt::finish()
+  {
+    TEGClearMasked (itsValue);
+  }
 
   TableExprGroupMaxsArrayInt::TableExprGroupMaxsArrayInt(TableExprNodeRep* node)
     : TableExprGroupFuncArrayInt (node)
@@ -727,6 +748,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       }
       TEGMax (arr, itsValue);
     }
+  }
+  void TableExprGroupMaxsArrayInt::finish()
+  {
+    TEGClearMasked (itsValue);
   }
 
   TableExprGroupSumsArrayInt::TableExprGroupSumsArrayInt(TableExprNodeRep* node)
@@ -761,6 +786,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       }
       TEGProduct (arr, itsValue);
     }
+  }
+  void TableExprGroupProductsArrayInt::finish()
+  {
+    TEGClearMasked (itsValue);
   }
 
   TableExprGroupSumSqrsArrayInt::TableExprGroupSumSqrsArrayInt(TableExprNodeRep* node)
@@ -797,6 +826,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       TEGMin (arr, itsValue);
     }
   }
+  void TableExprGroupMinsArrayDouble::finish()
+  {
+    TEGClearMasked (itsValue);
+  }
 
   TableExprGroupMaxsArrayDouble::TableExprGroupMaxsArrayDouble(TableExprNodeRep* node)
     : TableExprGroupFuncArrayDouble (node)
@@ -813,6 +846,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       }
       TEGMax (arr, itsValue);
     }
+  }
+  void TableExprGroupMaxsArrayDouble::finish()
+  {
+    TEGClearMasked (itsValue);
   }
 
   TableExprGroupSumsArrayDouble::TableExprGroupSumsArrayDouble(TableExprNodeRep* node)
@@ -847,6 +884,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       }
       TEGProduct (arr, itsValue);
     }
+  }
+  void TableExprGroupProductsArrayDouble::finish()
+  {
+    TEGClearMasked (itsValue);
   }
 
   TableExprGroupSumSqrsArrayDouble::TableExprGroupSumSqrsArrayDouble(TableExprNodeRep* node)
@@ -1046,6 +1087,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       itsValue.wmask() = True;
     }
     TEGProduct (arr, itsValue);
+  }
+  void TableExprGroupProductsArrayDComplex::finish()
+  {
+    TEGClearMasked (itsValue);
   }
 
   TableExprGroupSumSqrsArrayDComplex::TableExprGroupSumSqrsArrayDComplex(TableExprNodeRep* node)

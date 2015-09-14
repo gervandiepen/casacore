@@ -292,8 +292,13 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     const TableExprNode* se = start.isValid() ? &(getHR(start).getExpr()) : 0;
     const TableExprNode* ee =   end.isValid() ? &(getHR(  end).getExpr()) : 0;
     const TableExprNode* ie =  incr.isValid() ? &(getHR( incr).getExpr()) : 0;
-    TableExprNodeSetElem* elem = new TableExprNodeSetElem
-                                 (se, ee, ie, node.style().isEndExcl());
+    TableExprNodeSetElem* elem = 0;
+    // A single boolean node indicates a mask.
+    if (se && !ee && !ie && se->dataType() == TpBool) {
+      elem = new TableExprNodeSetElem (*se);
+    } else {
+      elem = new TableExprNodeSetElem (se, ee, ie, node.style().isEndExcl());
+    }
     hrval->setElem (elem);
     hrval->setExpr (TableExprNode(elem));  // Takes care of deleting elem
     return res;
