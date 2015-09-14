@@ -945,6 +945,18 @@ void TaQLQueryNodeRep::restoreSuper (AipsIO& aio)
 }
 
 TaQLSelectNodeRep::TaQLSelectNodeRep (const TaQLNode& columns,
+                                      const TaQLNode& where,
+                                      const TaQLNode& groupby,
+                                      const TaQLNode& having,
+                                      const TaQLNode& sort,
+                                      const TaQLNode& limitoff,
+                                      const TaQLNode& giving)
+  : TaQLQueryNodeRep (TaQLNode_Select),
+    itsColumns(columns),
+    itsWhere(where), itsGroupby(groupby), itsHaving(having),
+    itsSort(sort), itsLimitOff(limitoff), itsGiving(giving)
+{} 
+TaQLSelectNodeRep::TaQLSelectNodeRep (const TaQLNode& columns,
                                       const TaQLMultiNode& tables,
                                       const TaQLNode& join,
                                       const TaQLNode& where,
@@ -968,15 +980,16 @@ void TaQLSelectNodeRep::showDerived (std::ostream& os) const
 {
   os << "SELECT";
   itsColumns.show (os);
-  os << " FROM ";
-  itsTables.show (os);
+  if (itsTables.isValid()) {
+    os << " FROM ";
+    itsTables.show (os);
+  }
   itsJoin.show (os);
   if (itsWhere.isValid()) {
     os << " WHERE ";
     itsWhere.show (os);
   }
   if (itsGroupby.isValid()) {
-    os << " GROUPBY ";
     itsGroupby.show (os);
   }
   if (itsHaving.isValid()) {
@@ -1006,8 +1019,8 @@ TaQLSelectNodeRep* TaQLSelectNodeRep::restore (AipsIO& aio)
   TaQLMultiNode tables = TaQLNode::restoreMultiNode (aio);
   TaQLNode join = TaQLNode::restoreMultiNode (aio);
   TaQLNode where = TaQLNode::restoreNode (aio);
-  TaQLNode groupby = TaQLNode::restoreMultiNode (aio);
-  TaQLNode having = TaQLNode::restoreMultiNode (aio);
+  TaQLNode groupby = TaQLNode::restoreNode (aio);
+  TaQLNode having = TaQLNode::restoreNode (aio);
   TaQLNode sort = TaQLNode::restoreNode (aio);
   TaQLNode limitoff = TaQLNode::restoreNode (aio);
   TaQLNode giving = TaQLNode::restoreNode (aio);

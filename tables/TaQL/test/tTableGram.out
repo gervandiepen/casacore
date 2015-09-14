@@ -1,4 +1,22 @@
 testing select ...
+select 3+4
+    has been executed
+    select result of 1 rows
+1 selected columns:  Col_1
+ 7
+select 3+4 where 1>2
+    has been executed
+    select result of 0 rows
+1 selected columns:  Col_1
+select gsum(3+4) as C having C > 12
+    has been executed
+    select result of 0 rows
+1 selected columns:  C
+select gsum(3+4) as C where 1<2 having C<12 orderby C giving as memory
+    has been executed
+    select result of 1 rows
+1 selected columns:  C
+ 7
 select ab,ac,ad,ae,af,ag into tTableGram_tmp.data2 from tTableGram_tmp.tab sh where all(ab>2) && (ae<10 || ae>11.0) && ag!= 10 + 1i orderby ac desc,ab
     has been executed
     select result of 5 rows

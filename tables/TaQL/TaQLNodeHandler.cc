@@ -484,11 +484,20 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     // Handle WHERE before SELECT because WHERE cannot use columns in a
     // table resulting from SELECT, while the other clauses can.
     // The reason is that selection has to be done before projection.
-    // Furthermore, handle GIVING first, because projection needs to known
+    // Furthermore, handle GIVING first, because projection needs to know
     // the resulting table name.
     Bool outer = itsStack.empty();
     TableParseSelect* curSel = pushStack (TableParseSelect::PSELECT);
-    handleTables  (node.itsTables);
+    if (node.itsTables.isValid()) {
+      handleTables (node.itsTables);
+    } else {
+      // A select without a FROM means that a single row is created.
+      // Thus use a temp table with no columns and a single row.
+      Table tab(Table::Memory);
+      tab.addRow();
+      topStack()->addTable (-1, String(), tab, String(),
+                            std::vector<const Table*>(), itsStack);
+    }
     visitNode     (node.itsGiving);
     visitNode     (node.itsJoin);
     handleWhere   (node.itsWhere);

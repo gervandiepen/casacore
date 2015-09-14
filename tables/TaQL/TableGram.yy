@@ -278,7 +278,6 @@ subquery:  LPAREN selcomm RPAREN {
 selcomm:   SELECT selrow {
                $$ = $2;
            }
-         ;
 
 selrow:    selcol FROM tables whexpr groupby having order limitoff given {
                $$ = new TaQLQueryNode(
@@ -290,6 +289,18 @@ selrow:    selcol FROM tables whexpr groupby having order limitoff given {
                $$ = new TaQLQueryNode(
 		    new TaQLSelectNodeRep (*$1, *$4, 0, *$5, *$6, *$7,
 					   *$8, *$9, *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | selcol whexpr groupby having order limitoff given {
+               $$ = new TaQLQueryNode(
+                    new TaQLSelectNodeRep (*$1, *$2, *$3, *$4,
+					   *$5, *$6, *$7));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | selcol into whexpr groupby having order limitoff {
+               $$ = new TaQLQueryNode(
+		    new TaQLSelectNodeRep (*$1, *$3, *$4, *$5,
+					   *$6, *$7, *$2));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          ;

@@ -864,6 +864,10 @@ private:
 class TaQLSelectNodeRep: public TaQLQueryNodeRep
 {
 public:
+  TaQLSelectNodeRep (const TaQLNode& columns, const TaQLNode& where,
+		     const TaQLNode& groupby, const TaQLNode& having,
+		     const TaQLNode& sort, const TaQLNode& limitoff,
+		     const TaQLNode& giving);
   TaQLSelectNodeRep (const TaQLNode& columns, const TaQLMultiNode& tables,
 		     const TaQLNode& join, const TaQLNode& where,
 		     const TaQLNode& groupby, const TaQLNode& having,

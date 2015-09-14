@@ -162,6 +162,8 @@ TaQLNode TaQLNode::restoreNode (AipsIO& aio)
     return TaQLRegexNodeRep::restore (aio);
   case TaQLNode_Count:
     return TaQLCountNodeRep::restore (aio);
+  case TaQLNode_Groupby:
+    return TaQLGroupNodeRep::restore (aio);
   default:
     throw AipsError ("TaQLNode::restoreNode - unknown node type");
   }

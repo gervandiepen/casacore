@@ -31,7 +31,16 @@ fi
 $casa_checktool ./tTableGram 0
 
 # Now execute all kind of commands.
+
 echo "testing select ..."
+$casa_checktool ./tTableGram 'select 3+4'
+
+$casa_checktool ./tTableGram 'select 3+4 where 1>2'
+
+$casa_checktool ./tTableGram 'select gsum(3+4) as C having C > 12'
+
+$casa_checktool ./tTableGram 'select gsum(3+4) as C where 1<2 having C<12 orderby C giving as memory'
+
 $casa_checktool ./tTableGram 'select ab,ac,ad,ae,af,ag into tTableGram_tmp.data2 from tTableGram_tmp.tab sh where all(ab>2) && (ae<10 || ae>11.0) && ag!= 10 + 1i orderby ac desc,ab'
 
 $casa_checktool ./tTableGram 'select distinct ab+1,ac as ac2 from tTableGram_tmp.tab'
