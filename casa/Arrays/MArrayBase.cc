@@ -30,6 +30,8 @@
 #include <casacore/casa/Arrays/MArray.h>
 #include <casacore/casa/Utilities/Assert.h>
 #include <casacore/casa/Exceptions/Error.h>
+#include <iostream>
+#include <sstream>
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
@@ -43,9 +45,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     if (! mask.empty()) {
       itsNValid = -1;
       if (! itsShape.isEqual (mask.shape())) {
-        throw ArrayError ("MArrayBase - array size "
-                          + String::toString(itsSize) + " and mask size "
-                          + String::toString(mask.size()) + " mismatch");
+        std::ostringstream os;
+        os << "MArrayBase - array shape " << itsShape 
+           << " and mask shape " << mask.shape() << " mismatch";
+        throw ArrayError (os.str());
       }
     }
   }
