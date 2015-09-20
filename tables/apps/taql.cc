@@ -44,6 +44,7 @@
 #include <casacore/casa/Exceptions/Error.h>
 #include <map>
 #include <vector>
+#include <fstream>
 #include <casacore/casa/iostream.h>
 #include <casacore/casa/iomanip.h>
 
@@ -61,6 +62,76 @@ using namespace std;
 
 // Define the type for the map of name to (resulttable,command).
 typedef map<String, pair<Table,String> > TableMap;
+
+
+uInt lskipws (const String& value, uInt st, uInt end)
+{
+  for (; st<end && isspace(value[st]); ++st)
+    ;
+  return st;
+}
+  
+uInt rskipws (const String& value, uInt st, uInt end)
+{
+  for (; end>st && isspace(value[end-1]); --end)
+    ;
+  return end;
+}
+
+uInt skipQuoted (const String& str, uInt st, uInt end)
+{
+  // Skip until the matching end quote is found.
+  char ch = str[st++];
+  for (; st<end; ++st) {
+    if (str[st] == ch) return st+1;
+    if (str[st] == '\\') st++;   // skip escaped char
+  }
+  throw AipsError ("Unbalanced quoted string at position "
+                   + String::toString(st) + " in " + str);
+}
+
+// Split a line using ; as separator.
+// Skip comments indicated by #.
+// Ignore those characters if in a quoted string.
+// An empty string is added where a separator is used.
+// In this way it is clear if the first part of the next line
+// has to be added to the last part of this line.
+vector<String> splitLine (const String& line)
+{
+  vector<String> parts;
+  // Skip leading and trailing whitespace.
+  uInt st = lskipws (line, 0, line.size());
+  if (!line.empty()  &&  line[st] != '#') {         // skip if only comment
+    uInt end = rskipws (line, st, line.size());
+    uInt stcmd = st;                   // first non-blank character
+    while (st<end) {
+      if (line[st] == '"'  ||  line[st] == '\'') {
+        st = skipQuoted (line, st, end);
+      } else if (line[st] == '#') {
+        end = rskipws(line, stcmd, st);     // A comment ends the line
+      } else if (line[st] == ';') {
+        // Save the command.
+        uInt endcmd = rskipws(line, stcmd, st);
+        if (stcmd < endcmd) {
+          parts.push_back (line.substr(stcmd, endcmd-stcmd));
+          parts.push_back (string());
+        }
+        st = lskipws (line, st+1, end);
+        stcmd = st;
+      } else {
+        st++;
+      }
+    }
+    // Handle possible last command.
+    if (stcmd < end) {
+      uInt endcmd = rskipws(line, stcmd, st);
+      if (stcmd < endcmd) {
+        parts.push_back (line.substr(stcmd, endcmd-stcmd));
+      }
+    }
+  }
+  return parts;
+}
 
 
 #ifdef HAVE_READLINE
@@ -81,32 +152,22 @@ bool readLine (String& line, const String& prompt)
 }
 #endif
 
-bool readLineSkip (String& line, const String& prompt,
-                   const String& commentChars)
+bool readLineSkip (String& line, const String& prompt)
 {
-  Regex lwhiteRE("^[ \t]*");
-  Regex rwhiteRE("[ \t]*$");
   bool fnd = false;
   while (!fnd  &&  readLine (line, prompt)) {
-    // Skip leading and trailing whitespace.
-    line.del (lwhiteRE);
-    line.del (rwhiteRE);
-    if (line.empty()) {                            
+    vector<String> parts = splitLine(line);
+    // Remove last part if empty.
+    if (! parts.empty()  &&  parts[parts.size()-1].empty()) {
+      parts.resize (parts.size() - 1);
+    }
+    if (parts.size() > 1) {
+      cerr << "A single TaQL command must be given" << endl;
+    } else if (parts.empty()) {                            
       cerr << "h or help gives help info" << endl;
     } else {
-      // non-empty line.
-      if (commentChars.empty()  ||  commentChars.size() > line.size()) {
-        // Do not test for comment
-        fnd = true;
-      } else {
-        for (uInt i=0; i<commentChars.size(); ++i) {
-          if (commentChars[i] != line[i]) {
-            // non-comment
-            fnd = true;
-            break;
-          }
-        }
-      }
+      line = parts[0];
+      fnd  = true;
     }
   }
 #ifdef HAVE_READLINE
@@ -540,7 +601,10 @@ void showHelp()
   cerr << "  http://casacore.github.io/casacore-notes/199.html" << endl;
   cerr << "taql can be started with multiple arguments containing options and" << endl;
   cerr << "an optional TaQL command as the last argument(s)." << endl;
-  cerr << "It will run interactively if no TaQL command is given. `If possible," << endl;
+  cerr << "Using the -f option commands are taken from a file. The commands can be" << endl;
+  cerr << "split over multiple lines. Therefore a ; has to be used to delimite a command" << endl;
+  cerr << "After a # a line can contain comments." << endl;
+  cerr << "It will run interactively if command nor file is given. If possible," << endl;
   cerr << "interactive commands are kept in $HOME/.taql_history for later reuse." << endl;
   cerr << "Use q, quit, exit, or ^D to exit." << endl;
   cerr << endl;
@@ -571,6 +635,7 @@ void showHelp()
   cerr << " -s or --style defines the TaQL style." << endl;
   cerr << "  The default style is python; if no value is given after -s it defaults to glish" << endl;
   cerr << " -h  or --help          show this help and exits." << endl;
+  cerr << " -f filename            name of file containing TaQL commands." << endl;
   cerr << " -ps or --printselect   show the values of selected columns." << endl;
   cerr << " -pm or --printmeasure  if possible, show values as formatted measures" << endl;
   cerr << " -pc or --printcommand  show the (expanded) TaQL command." << endl;
@@ -717,14 +782,17 @@ vector<const Table*> replaceVars (String& str, const TableMap& tables)
 
 // Ask and execute commands till quit or ^D is given.
 void askCommands (bool printCommand, bool printSelect, bool printMeas,
-                  bool printRows, const String& prefix)
+                  bool printRows, const String& prefix,
+                  const vector<String>& commands)
 {
 #ifdef HAVE_READLINE
   string histFile;
-  String homeDir = EnvironmentVariable::get("HOME");
-  if (! homeDir.empty()) {
-    histFile = homeDir + "/.taql_history";
-    read_history(histFile.c_str());
+  if (commands.empty()) {
+    String homeDir = EnvironmentVariable::get("HOME");
+    if (! homeDir.empty()) {
+      histFile = homeDir + "/.taql_history";
+      read_history(histFile.c_str());
+    }
   }
 #endif
   Regex varassRE("^[a-zA-Z_][a-zA-Z0-9_]*[ \t]*=");
@@ -732,11 +800,19 @@ void askCommands (bool printCommand, bool printSelect, bool printMeas,
   Regex lwhiteRE("^[ \t]*");
   Regex rwhiteRE("[ \t]*$");
   TableMap tables;
+  uInt inx=0;
   while (True) {
     String str;
-    if (! readLineSkip (str, "TaQL> ", "#")) {
-      cerr << endl;
-      break;
+    if (commands.empty()) {
+      if (! readLineSkip (str, "TaQL> ")) {
+        cerr << endl;
+        break;
+      }
+    } else {
+      if (inx >= commands.size()) {
+        break;
+      }
+      str = commands[inx++];
     }
     if (str == "h"  ||  str == "help") {
       showHelp();
@@ -802,11 +878,40 @@ void askCommands (bool printCommand, bool printSelect, bool printMeas,
 #endif
 }
 
+vector<String> fileCommands (const string& fname)
+{
+  vector<String> commands;
+  bool appendLast = false;
+  std::ifstream ifs(fname.c_str());
+  if (! ifs) {
+    throw AipsError("Cannot open file " + fname);
+  }
+  String line;
+  getline (ifs, line);
+  while (ifs) {
+    vector<String> parts = splitLine(line);
+    for (size_t i=0; i<parts.size(); ++i) {
+      if (! parts[i].empty()) {
+        if (appendLast) {
+          commands[commands.size() - 1].append (' '+ parts[i]);
+          appendLast = false;
+        } else {
+          commands.push_back (parts[i]);
+        }
+      }
+    }
+    appendLast = !parts.empty()  &&  !parts[parts.size()-1].empty();
+    getline (ifs, line);
+  }
+  return commands;
+}
+
 
 int main (int argc, const char* argv[])
 {
   try {
     string style = "python";
+    string fname;
     int printCommand = -1;
     int printSelect  = 1;
     int printMeas    = 1;
@@ -842,6 +947,13 @@ int main (int argc, const char* argv[])
         printMeas = 0;
       } else if (arg == "-nopr"  ||  arg == "--noprintrows") {
         printRows = 0;
+      } else if (arg == "-f") {
+        if (st < argc-1) {
+          st++;
+          fname = argv[st];
+        } else {
+          throw AipsError("No file name given after -f");
+        }
       } else if (arg == "-h"  ||  arg == "--help") {
         showHelp();
         return 0;
@@ -857,7 +969,13 @@ int main (int argc, const char* argv[])
       style = "glish";
     }
     prefix = "using style " + style + ' ';
-    if (st < argc) {
+    if (! fname.empty()) {
+      vector<String> commands = fileCommands (fname);
+      if (! commands.empty()) {
+        askCommands (printCommand!=0, printSelect!=0, printMeas!=0,
+                     printRows!=0, prefix, commands);
+      }
+    } else if (st < argc) {
       // A command can be given as multiple parameters to make tab-completion
       // easier. Thus combine it all.
       String command(argv[st]);
@@ -871,7 +989,7 @@ int main (int argc, const char* argv[])
     // Ask the user for commands.
       cout << "Using default TaQL style " << style << endl;
       askCommands (printCommand!=0, printSelect!=0, printMeas!=0,
-                   printRows!=0, prefix);
+                   printRows!=0, prefix, vector<String>());
     }
   } catch (AipsError& x) {
     cerr << "\nCaught an exception: " << x.getMesg() << endl;

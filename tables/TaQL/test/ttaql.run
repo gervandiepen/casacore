@@ -1,0 +1,15 @@
+#!/bin/sh
+
+test "$testsrcdir" = ""  &&  testsrcdir=.
+echo "tsd="$testsrcdir
+
+../../apps/taql '1+2'
+echo
+
+../../apps/taql <<EOF
+  1  +  2  ;  
+(7km)m 
+EOF
+echo
+
+../../apps/taql -nopc -f $testsrcdir/ttaql.cmd 
