@@ -200,6 +200,56 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     return MArray<T> (result, mares.combineMask (arrc));
   }
 
+  template<typename T>
+  MArray<T> TEFMASKneg (const MArray<T>& arr)
+  {
+    if (!arr.hasMask()) {
+      return MArray<T> (arr.array(), Array<Bool>(arr.shape(), True));
+    }
+    return MArray<T> (arr.array(), !arr.mask());
+  }
+
+  template<typename T>
+  MArray<T> TEFMASKiif (const MArray<T>& arr, TableExprNodeRep* operand2,
+                        const TableExprId& id)
+  {
+    if (!arr.hasMask()) {
+      return arr;
+    }
+    MArray<T> res(arr);
+    MArray<T> arr2;
+    T val2;
+    T* data1;
+    const T* data2 = &val2;
+    const Bool* mask1;
+    size_t incr2 = 0;
+    Bool del1, del2, delm;
+    if (operand2->valueType() == TableExprNodeRep::VTScalar) {
+      operand2->get(id, val2);
+    } else {
+      operand2->get(id, arr2);
+      if (! arr.shape().isEqual (arr2.shape())) {
+        throw TableInvExpr ("TableExprFuncNodeArray::get<T>, "
+                            "array shapes mismatch in function IIFMASK");
+      }
+      data2 = arr2.array().getStorage (del2);
+      incr2 = 1;
+    }
+    data1 = res.array().getStorage (del1);
+    mask1 = arr.mask().getStorage (delm);
+    for (size_t i=0; i<arr.size(); ++i, data2+=incr2) {
+      if (mask1[i]) {
+        data1[i] = *data2;
+      }
+    }
+    res.array().putStorage (data1, del1);
+    arr.mask().freeStorage (mask1, delm);
+    if (incr2 > 0) {
+      arr2.array().freeStorage (data2, del2);
+    }
+    return res;
+  }
+
   // Helper function to resize an array.
   template<typename T>
   MArray<T> TableExprFuncNodeArray::TEFResize (const MArray<T>& arr,
@@ -339,6 +389,8 @@ void TableExprFuncNodeArray::tryToConst()
     case TableExprFuncNode::marrayFUNC:
     case TableExprFuncNode::arrdataFUNC:
     case TableExprFuncNode::arrmaskFUNC:
+    case TableExprFuncNode::negatemaskFUNC:
+    case TableExprFuncNode::iifmaskFUNC:
     case TableExprFuncNode::arrflatFUNC:
         if (operands()[0]->valueType() == VTScalar) {
             ipos_p = IPosition(1,1);
@@ -765,6 +817,10 @@ MArray<Bool> TableExprFuncNodeArray::getArrayBool (const TableExprId& id)
                              operands()[1]->getBoolAS(id).array());
     case TableExprFuncNode::arrdataFUNC:
         return MArray<Bool> (operands()[0]->getBoolAS(id).array());
+    case TableExprFuncNode::negatemaskFUNC:
+        return TEFMASKneg (operands()[0]->getBoolAS(id));
+    case TableExprFuncNode::iifmaskFUNC:
+        return TEFMASKiif (operands()[0]->getBoolAS(id), operands()[1], id);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<Bool> (operands()[0]->getBoolAS(id).flatten());
     case TableExprFuncNode::arrmaskFUNC:
@@ -1097,6 +1153,10 @@ MArray<Int64> TableExprFuncNodeArray::getArrayInt (const TableExprId& id)
                               operands()[1]->getBoolAS(id).array());
     case TableExprFuncNode::arrdataFUNC:
         return MArray<Int64> (operands()[0]->getIntAS(id).array());
+    case TableExprFuncNode::negatemaskFUNC:
+        return TEFMASKneg (operands()[0]->getIntAS(id));
+    case TableExprFuncNode::iifmaskFUNC:
+        return TEFMASKiif (operands()[0]->getIntAS(id), operands()[1], id);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<Int64> (operands()[0]->getIntAS(id).flatten());
     default:
@@ -1493,6 +1553,10 @@ MArray<Double> TableExprFuncNodeArray::getArrayDouble (const TableExprId& id)
                                operands()[1]->getBoolAS(id).array());
     case TableExprFuncNode::arrdataFUNC:
         return MArray<Double> (operands()[0]->getDoubleAS(id).array());
+    case TableExprFuncNode::negatemaskFUNC:
+        return TEFMASKneg (operands()[0]->getDoubleAS(id));
+    case TableExprFuncNode::iifmaskFUNC:
+        return TEFMASKiif (operands()[0]->getDoubleAS(id), operands()[1], id);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<Double> (operands()[0]->getDoubleAS(id).flatten());
     case TableExprFuncNode::angdistFUNC:
@@ -1764,6 +1828,10 @@ MArray<DComplex> TableExprFuncNodeArray::getArrayDComplex
                                  operands()[1]->getBoolAS(id).array());
     case TableExprFuncNode::arrdataFUNC:
         return MArray<DComplex> (operands()[0]->getDComplexAS(id).array());
+    case TableExprFuncNode::negatemaskFUNC:
+        return TEFMASKneg (operands()[0]->getDComplexAS(id));
+    case TableExprFuncNode::iifmaskFUNC:
+        return TEFMASKiif (operands()[0]->getDComplexAS(id), operands()[1], id);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<DComplex> (operands()[0]->getDComplexAS(id).flatten());
     default:
@@ -2069,7 +2137,11 @@ MArray<String> TableExprFuncNodeArray::getArrayString (const TableExprId& id)
                                operands()[1]->getBoolAS(id).array());
     case TableExprFuncNode::arrdataFUNC:
         return MArray<String> (operands()[0]->getStringAS(id).array());
-    case TableExprFuncNode::arrflatFUNC:
+    case TableExprFuncNode::negatemaskFUNC:
+        return TEFMASKneg (operands()[0]->getStringAS(id));
+    case TableExprFuncNode::iifmaskFUNC:
+        return TEFMASKiif (operands()[0]->getStringAS(id), operands()[1], id); 
+   case TableExprFuncNode::arrflatFUNC:
         return MArray<String> (operands()[0]->getStringAS(id).flatten());
     default:
       break;
@@ -2172,6 +2244,10 @@ MArray<MVTime> TableExprFuncNodeArray::getArrayDate (const TableExprId& id)
                                operands()[1]->getBoolAS(id).array());
     case TableExprFuncNode::arrdataFUNC:
         return MArray<MVTime> (operands()[0]->getDateAS(id).array());
+    case TableExprFuncNode::negatemaskFUNC:
+        return TEFMASKneg (operands()[0]->getDateAS(id));
+    case TableExprFuncNode::iifmaskFUNC:
+        return TEFMASKiif (operands()[0]->getDateAS(id), operands()[1], id);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<MVTime> (operands()[0]->getDateAS(id).flatten());
     default:

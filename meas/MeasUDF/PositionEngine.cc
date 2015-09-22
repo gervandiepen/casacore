@@ -53,23 +53,22 @@ namespace casacore {
       // Position is given by observatory name.
       handleObservatory (args[argnr]);
     } else {
-      if (args[argnr]->dataType() != TableExprNodeRep::NTDouble) {
-        throw AipsError ("Invalid or integer position given in a MEAS function");
+      if (!args[argnr]->isReal()) {
+        throw AipsError ("Invalid position given in a MEAS function");
       }
     // Normally positions must be given in an array, but a single one
     // can be 2 or 3 scalars.
       if (args.size() > nargnr  &&
-          args[argnr]->dataType() == TableExprNodeRep::NTDouble  &&
+          args[argnr]->isReal()  &&
           args[argnr]->valueType() == TableExprNodeRep::VTScalar  &&
-          args[nargnr]->dataType() == TableExprNodeRep::NTDouble  &&
+          args[nargnr]->isReal()  &&
           args[nargnr]->valueType() == TableExprNodeRep::VTScalar) {
         asScalar = True;
         nargnr++;
       }
       // See if there is a node giving height(s).
       TableExprNodeRep* heightNode=0;
-      if (args.size() > nargnr  &&
-          args[nargnr]->dataType() == TableExprNodeRep::NTDouble) {
+      if (args.size() > nargnr  &&  args[nargnr]->isReal()) {
         heightNode = args[nargnr];
         nargnr++;
       }
@@ -260,7 +259,7 @@ namespace casacore {
 
   void PositionEngine::handlePosArray (TableExprNodeRep*& operand)
   {
-    if (operand->dataType() != TableExprNodeRep::NTDouble  ||
+    if (!operand->isReal()  ||
         operand->valueType() != TableExprNodeRep::VTArray) {
       throw AipsError ("A single double argument given as position in a "
                        "MEAS function must be a double array of values "
@@ -342,10 +341,10 @@ namespace casacore {
   void PositionEngine::handlePosArray (TableExprNodeRep* anglesNode,
                                        TableExprNodeRep* heightNode)
   {
-    if (anglesNode->dataType() != TableExprNodeRep::NTDouble  ||
+    if (!anglesNode->isReal()  ||
         anglesNode->valueType() != TableExprNodeRep::VTArray  ||
         !anglesNode->isConstant()  ||
-        heightNode->dataType() != TableExprNodeRep::NTDouble  ||
+        !heightNode->isReal()  ||
         heightNode->valueType() != TableExprNodeRep::VTArray  ||
         !heightNode->isConstant()) {
       throw AipsError ("Positions given as angles,heights in a MEAS "

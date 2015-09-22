@@ -67,12 +67,12 @@ namespace casacore {
       handleNames (args[argnr]);
     } else {
       if (args[argnr]->dataType() != TableExprNodeRep::NTDouble) {
-        throw AipsError("Invalid or integer direction given in a MEAS function");
+        throw AipsError("Invalid direction given in a MEAS function");
       }
       if (args.size() > nargnr  &&
-          args[argnr]->dataType() == TableExprNodeRep::NTDouble  &&
+          args[argnr]->isReal()  &&
           args[argnr]->valueType() == TableExprNodeRep::VTScalar  &&
-          args[nargnr]->dataType() == TableExprNodeRep::NTDouble  &&
+          args[nargnr]->isReal()  &&
           args[nargnr]->valueType() == TableExprNodeRep::VTScalar) {
         asScalar = True;
         nargnr++;
@@ -164,7 +164,7 @@ namespace casacore {
 
   void DirectionEngine::handleDirArray (TableExprNodeRep*& operand)
   {
-    if (operand->dataType() != TableExprNodeRep::NTDouble  ||
+    if (!operand->isReal()  ||
         operand->valueType() != TableExprNodeRep::VTArray) {
       throw AipsError ("A single double argument given as direction in a "
                        "MEAS function must be a double array of values");

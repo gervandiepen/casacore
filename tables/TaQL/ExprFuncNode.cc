@@ -1296,6 +1296,7 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
         return nodes[0]->dataType();
         break;
     case arrdataFUNC:
+    case negatemaskFUNC:
     case arrflatFUNC:
         checkNumOfArg (1, 1, nodes);
         resVT = VTArray;
@@ -1305,6 +1306,12 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
         checkNumOfArg (1, 1, nodes);
         resVT = VTArray;
 	return checkDT (dtypeOper, NTAny, NTBool, nodes);
+        break;
+    case iifmaskFUNC:
+        checkNumOfArg (2, 2, nodes);
+        resVT = VTArray;
+	checkDT (dtypeOper, NTAny, NTAny, nodes);
+        return nodes[0]->dataType();
         break;
     default:
 	break;

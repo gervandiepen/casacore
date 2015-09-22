@@ -262,15 +262,17 @@ public:
         marrayFUNC,       //# 146
         arrdataFUNC,      //# 147
         arrmaskFUNC,      //# 148
-        arrflatFUNC,      //# 149
+        negatemaskFUNC,   //# 149
+        iifmaskFUNC,      //# 150
+        arrflatFUNC,      //# 151
         //# AGGREGATE functions must be the last ones.
-        FirstAggrFunc,    //# 150
+        FirstAggrFunc,    //# 152
         countallFUNC = FirstAggrFunc,
         gcountFUNC,
         gfirstFUNC,
         glastFUNC,
         //# Grouping doing aggregation on the fly; reducing to a scalar per group
-        gminFUNC,         //# 154
+        gminFUNC,         //# 156
         gmaxFUNC,
         gsumFUNC,
         gproductFUNC,
@@ -284,7 +286,7 @@ public:
         gntrueFUNC,
         gnfalseFUNC,
         //# Grouping doing aggregation on the fly; reducing to an array per group
-        FirstAggrArrayFunc,//# 167
+        FirstAggrArrayFunc,//# 169
         gminsFUNC = FirstAggrArrayFunc,
         gmaxsFUNC,
         gsumsFUNC,
@@ -298,10 +300,10 @@ public:
         gallsFUNC,
         gntruesFUNC,
         gnfalsesFUNC,
-        LastAggrArrayFunc,//# 180
+        LastAggrArrayFunc,//# 182
         ghistFUNC = LastAggrArrayFunc,
         //# Grouping requiring aggregation of rows when getting result
-        gaggrFUNC,        //# 181
+        gaggrFUNC,        //# 183
         growidFUNC,
         gmedianFUNC,
         gfractileFUNC,

@@ -61,9 +61,9 @@ namespace casacore {
       args[argnr] = const_cast<TableExprNodeRep*>(dNode.getNodeRep())->link();
     }
     // Check if the value is a date or double.
-    if (args[argnr]->dataType() != TableExprNodeRep::NTDouble  &&
+    if (!args[argnr]->isReal()  &&
         args[argnr]->dataType() != TableExprNodeRep::NTDate) {
-      throw AipsError ("Invalid or integer epoch given in a MEAS function");
+      throw AipsError ("Invalid epoch given in a MEAS function");
     }
     // Values can be given as [t1,t2,...],reftype
     uInt nargnr = argnr+1;
@@ -115,12 +115,12 @@ namespace casacore {
 
   void EpochEngine::handleEpochArray (TableExprNodeRep* operand)
   {
-    if ((operand->dataType() != TableExprNodeRep::NTDouble  &&
+    if ((!operand->isReal()  &&
          operand->dataType() != TableExprNodeRep::NTDate)  ||
         (operand->valueType() != TableExprNodeRep::VTScalar  &&
          operand->valueType() != TableExprNodeRep::VTArray)) {
       throw AipsError ("An epoch given in a MEAS function "
-                       "must be a double, string, or datetime scalar or array");
+                       "must be a numeric, string, or datetime scalar or array");
     }
     if (operand->isConstant()) {
       handleConstant (operand);
@@ -203,7 +203,7 @@ namespace casacore {
     }
     // Get values (as doubles or dates).
     Array<Double> epochs;
-    if (operand->dataType() == TableExprNodeRep::NTDouble) {
+    if (operand->isReal()) {
       epochs.reference (operand->getDoubleAS(0).array());
     } else {
       unit = "s";

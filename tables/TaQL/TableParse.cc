@@ -824,6 +824,10 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::arrdataFUNC;
   } else if (funcName == "mask"  ||  funcName == "arraymask") {
     ftype = TableExprFuncNode::arrmaskFUNC;
+  } else if (funcName == "negatemask") {
+    ftype = TableExprFuncNode::negatemaskFUNC;
+  } else if (funcName == "iifmask") {
+    ftype = TableExprFuncNode::iifmaskFUNC;
   } else if (funcName == "flatten"  ||  funcName == "arrayflatten") {
     ftype = TableExprFuncNode::arrflatFUNC;
   } else if (funcName == "countall") {
