@@ -818,13 +818,13 @@ TaQLGivingNodeRep::TaQLGivingNodeRep (const String& name, const String& type)
     } else if (typel == "plain_local") {
       itsType = 6;
     } else {
-      throw TableParseError ("AS " + type + " in GIVING table " + name +
+      throw TableParseError ("AS " + type + " after table name " + name +
 			     " is invalid; "
-			     "use MEMORY or PLAIN[_BIG,LITTLE,LOCAL]");
+			     "use MEMORY, SCRATCH or PLAIN[_BIG,LITTLE,LOCAL]");
     }
   }
   if (itsName.empty()  &&  itsType > 2) {
-    throw TableParseError ("table name in GIVING can only be omitted if "
+    throw TableParseError ("output table name can only be omitted if "
                            "AS MEMORY or AS SCRATCH is given");
   }
 }
@@ -836,7 +836,6 @@ TaQLNodeResult TaQLGivingNodeRep::visit (TaQLNodeVisitor& visitor) const
 }
 void TaQLGivingNodeRep::show (std::ostream& os) const
 {
-  os << " GIVING ";
   if (itsType < 0) {
     itsExprList.show (os);
   } else {
@@ -998,7 +997,10 @@ void TaQLSelectNodeRep::showDerived (std::ostream& os) const
   }
   itsSort.show (os);
   itsLimitOff.show (os);
-  itsGiving.show (os);
+  if (itsGiving.isValid()) {
+    os << " GIVING ";
+    itsGiving.show (os);
+  }
 }
 void TaQLSelectNodeRep::save (AipsIO& aio) const
 {
@@ -1246,16 +1248,32 @@ TaQLCalcNodeRep* TaQLCalcNodeRep::restore (AipsIO& aio)
   return new TaQLCalcNodeRep (tables, expr, where, sort, limitoff);
 }
 
+TaQLCreTabNodeRep::TaQLCreTabNodeRep (const TaQLNode& giving,
+                                      const TaQLMultiNode& cols,
+                                      const TaQLNode& limit,
+                                      const TaQLMultiNode& dataMans)
+  : TaQLQueryNodeRep (TaQLNode_CreTab),
+    itsGiving   (giving),
+    itsColumns  (cols),
+    itsLimit    (limit),
+    itsDataMans (dataMans)
+{}
 TaQLCreTabNodeRep::~TaQLCreTabNodeRep()
 {}
 TaQLNodeResult TaQLCreTabNodeRep::visit (TaQLNodeVisitor& visitor) const
 {
   return visitor.visitCreTabNode (*this);
 }
-void TaQLCreTabNodeRep::show (std::ostream& os) const
+void TaQLCreTabNodeRep::showDerived (std::ostream& os) const
 {
-  os << "CREATE TABLE " << itsName << ' ';
+  os << "CREATE TABLE ";
+  itsGiving.show (os);
+  os << ' ';
   itsColumns.show (os);
+  if (itsLimit.isValid()) {
+    os << " LIMIT ";
+    itsLimit.show (os);
+  }
   if (itsDataMans.isValid()) {
     os << " DMINFO ";
     itsDataMans.show (os);
@@ -1263,17 +1281,22 @@ void TaQLCreTabNodeRep::show (std::ostream& os) const
 }
 void TaQLCreTabNodeRep::save (AipsIO& aio) const
 {
-  aio << itsName;
+  itsGiving.saveNode (aio);
   itsColumns.saveNode (aio);
+  itsLimit.saveNode (aio);
   itsDataMans.saveNode (aio);
+  saveSuper (aio);
 }
 TaQLCreTabNodeRep* TaQLCreTabNodeRep::restore (AipsIO& aio)
 {
-  String name;
-  aio >> name;
+  TaQLNode giving = TaQLNode::restoreNode (aio);
   TaQLMultiNode columns = TaQLNode::restoreMultiNode (aio);
+  TaQLNode limit = TaQLNode::restoreNode (aio);
   TaQLMultiNode datamans = TaQLNode::restoreMultiNode (aio);
-  return new TaQLCreTabNodeRep (name, columns, datamans);
+  TaQLCreTabNodeRep* node = new TaQLCreTabNodeRep (giving, columns,
+                                                   limit, datamans);
+  node->restoreSuper (aio);
+  return node;
 }
 
 TaQLColSpecNodeRep::~TaQLColSpecNodeRep()

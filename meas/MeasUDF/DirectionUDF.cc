@@ -52,6 +52,8 @@ namespace casacore {
     { return new DirectionUDF (GALACTIC); }
   UDFBase* DirectionUDF::makeSGAL (const String&)
     { return new DirectionUDF (SUPERGALACTIC); }
+  UDFBase* DirectionUDF::makeITRF (const String&)
+    { return new DirectionUDF (ITRF); }
   UDFBase* DirectionUDF::makeRISESET (const String&)
     { return new DirectionUDF (HADEC, True); }
 
@@ -79,6 +81,8 @@ namespace casacore {
       itsRefType = MDirection::GALACTIC;
     } else if (itsType == SUPERGALACTIC) {
       itsRefType = MDirection::SUPERGAL;
+    } else if (itsType == ITRF) {
+      itsRefType = MDirection::ITRF;
     } else {
       itsEngine.handleDirType (operands()[0]);
       itsRefType = itsEngine.refType();

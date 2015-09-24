@@ -1331,6 +1331,34 @@ void TableParseSelect::handleColumnFinish (Bool distinct)
   }
 }
 
+Table TableParseSelect::createTable (const TableDesc& td,
+                                     Int64 nrow, const Record& dmInfo)
+{
+  AlwaysAssert (resultType_p >= 0, AipsError);
+  // Create the table.
+  // The types are defined in class TaQLGivingNodeRep.
+  Table::TableType    ttype = Table::Plain;
+  Table::TableOption  topt  = Table::New;
+  Table::EndianFormat tendf = Table::AipsrcEndian;
+  // Use default Memory if no name or 'memory' has been given.
+  if (resultName_p.empty()) {
+    ttype = Table::Memory;
+  } else if (resultType_p == 1) {
+    ttype = Table::Memory;
+  } else if (resultType_p == 2) {
+    topt  = Table::Scratch;
+  } else if (resultType_p == 4) {
+    tendf = Table::BigEndian;
+  } else if (resultType_p == 5) {
+    tendf = Table::LittleEndian;
+  } else if (resultType_p == 6) {
+    tendf = Table::LocalEndian;
+  }
+  SetupNewTable newtab(resultName_p, td, topt);
+  newtab.bindCreate (dmInfo);
+  return Table(newtab, ttype, nrow, False, tendf);
+}
+
 void TableParseSelect::makeProjectExprTable()
 {
   // Make a column description for all expressions.
@@ -1371,26 +1399,7 @@ void TableParseSelect::makeProjectExprTable()
 		   columnExpr_p[i].unit().getName());
   }
   // Create the table.
-  // The types are defined in class TaQLGivingNodeRep.
-  Table::TableType    ttype = Table::Plain;
-  Table::TableOption  topt  = Table::New;
-  Table::EndianFormat tendf = Table::AipsrcEndian;
-  // Use default Memory if no name or 'memory' has been given.
-  if (resultName_p.empty()) {
-    ttype = Table::Memory;
-  } else if (resultType_p == 1) {
-    ttype = Table::Memory;
-  } else if (resultType_p == 2) {
-    topt  = Table::Scratch;
-  } else if (resultType_p == 4) {
-    tendf = Table::BigEndian;
-  } else if (resultType_p == 5) {
-    tendf = Table::LittleEndian;
-  } else if (resultType_p == 6) {
-    tendf = Table::LocalEndian;
-  }
-  SetupNewTable newtab(resultName_p, td, topt);
-  projectExprTable_p = Table(newtab, ttype, 0, False, tendf);
+  projectExprTable_p = createTable (td, 0, Record());
 }
 
 void TableParseSelect::makeProjectExprSel()
@@ -1494,12 +1503,9 @@ void TableParseSelect::handleHaving (const TableExprNode& node)
   }
 }
 
-void TableParseSelect::handleCreTab (const String& tableName,
-				     const Record& dmInfo)
+void TableParseSelect::handleCreTab (const Record& dmInfo)
 {
-  SetupNewTable newtab(tableName, tableDesc_p, Table::New);
-  newtab.bindCreate (dmInfo);
-  table_p = Table(newtab);
+  table_p = createTable (tableDesc_p, limit_p, dmInfo);
 }
 
 void TableParseSelect::handleWhere (const TableExprNode& node)

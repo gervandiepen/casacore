@@ -110,8 +110,8 @@ using namespace casacore;
 %type <node> inscomm
 %type <node> delcomm
 %type <node> calccomm
-%type <node> cretabcomm
-%type <nodeselect> subselcnt
+%type <nodeselect> cretabcomm
+%type <nodeselect> tfcommand
 %type <nodeselect> subquery
 %type <nodeselect> selrow
 %type <node> selcol
@@ -123,10 +123,12 @@ using namespace casacore;
 %type <node> having
 %type <node> order
 %type <node> limitoff
+%type <node> tabnmtyp
 %type <node> given
 %type <node> into
 %type <node> colexpr
 %type <node> wildcol
+%type <node> nrowspec
 %type <node> colspec
 %type <nodelist> columns
 %type <nodelist> nmcolumns
@@ -252,8 +254,16 @@ command:   selcomm
              { TaQLNode::theirNode = *$1; }
          ;
 
-subselcnt: subquery {
+tfcommand: subquery {
                $$ = $1;
+	   }
+         | LPAREN cretabcomm RPAREN {
+               $$ = $2;
+	       $$->setBrackets();
+	   }
+         | LBRACKET cretabcomm RBRACKET {
+               $$ = $2;
+	       $$->setBrackets();
 	   }
          | LPAREN countcomm RPAREN {
                $$ = $2;
@@ -452,19 +462,19 @@ calccomm:  CALC FROM tables CALC orexpr {
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
 
-cretabcomm: CREATETAB tabname colspecs dminfo {
-	       $$ = new TaQLNode(
-                    new TaQLCreTabNodeRep ($2->getString(), *$3, *$4));
+cretabcomm: CREATETAB tabnmtyp colspecs nrowspec dminfo {
+	       $$ = new TaQLQueryNode(
+                    new TaQLCreTabNodeRep (*$2, *$3, *$4, *$5));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-          | CREATETAB tabname LPAREN colspecs RPAREN dminfo {
-	       $$ = new TaQLNode(
-                    new TaQLCreTabNodeRep ($2->getString(), *$4, *$6));
+          | CREATETAB tabnmtyp LPAREN colspecs RPAREN nrowspec dminfo {
+	       $$ = new TaQLQueryNode(
+                    new TaQLCreTabNodeRep (*$2, *$4, *$6, *$7));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-          | CREATETAB tabname LBRACKET colspecs RBRACKET dminfo {
-	       $$ = new TaQLNode(
-                    new TaQLCreTabNodeRep ($2->getString(), *$4, *$6));
+          | CREATETAB tabnmtyp LBRACKET colspecs RBRACKET nrowspec dminfo {
+	       $$ = new TaQLQueryNode(
+                    new TaQLCreTabNodeRep (*$2, *$4, *$6, *$7));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          ;
@@ -591,24 +601,29 @@ limitoff:  {         /* no limit,offset */
 	   }
          ;
 
+tabnmtyp:  tabname {
+	       $$ = new TaQLNode(
+                    new TaQLGivingNodeRep ($1->getString(), ""));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | tabname AS NAME {
+	       $$ = new TaQLNode(
+                    new TaQLGivingNodeRep ($1->getString(), $3->getString()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | AS NAME {
+	       $$ = new TaQLNode(
+                    new TaQLGivingNodeRep ("", $2->getString()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         ;
+
 given:     {          /* no result */
 	       $$ = new TaQLNode();
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
-         | GIVING tabname {
-	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ($2->getString(), ""));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	   }
-         | GIVING tabname AS NAME {
-	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ($2->getString(), $4->getString()));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	   }
-         | GIVING AS NAME {
-	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ("", $3->getString()));
-	       TaQLNode::theirNodesCreated.push_back ($$);
+         | GIVING tabnmtyp {
+               $$ = $2;
 	   }
          | GIVING LBRACKET elems RBRACKET {
 	       $$ = new TaQLNode(
@@ -617,20 +632,8 @@ given:     {          /* no result */
 	   }
          ;
 
-into:      INTO tabname {
-	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ($2->getString(), ""));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	   }
-         | INTO tabname AS NAME {
-	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ($2->getString(), $4->getString()));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	   }
-         | INTO AS NAME {
-	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ("", $3->getString()));
-	       TaQLNode::theirNodesCreated.push_back ($$);
+into:      INTO tabnmtyp {
+               $$ = $2;
 	   }
          ;
 
@@ -688,6 +691,15 @@ nmcolumns: NAME {
          | nmcolumns COMMA NAME {
 	       $$ = $1;
                $$->add (new TaQLKeyColNodeRep ($3->getString()));
+	   }
+         ;
+
+nrowspec:  {          /* no nrows given means 0 */
+               $$ = new TaQLNode();
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | LIMIT arithexpr {
+               $$ = $2;
 	   }
          ;
 
@@ -782,7 +794,7 @@ tfnamen:   tfname {
            }
          ;
 
-tfname:    subselcnt {
+tfname:    tfcommand {
 	       theFromQueryDone = True;
 	       $1->setFromExecute();
                $$ = $1;

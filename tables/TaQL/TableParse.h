@@ -414,7 +414,7 @@ public:
   void handleCalcComm (const TableExprNode&);
 
   // Keep the create table command.
-  void handleCreTab (const String& tableName, const Record& dmInfo);
+  void handleCreTab (const Record& dmInfo);
 
   // Keep the column specification in a create table command.
   void handleColSpec (const String& columnName, const String& dataType,
@@ -559,6 +559,11 @@ private:
   // Use the selected or unselected columns depending on <src>useSel</src>.
   Table doProjectExpr (Bool useSel,
                        const CountedPtr<TableExprGroupResult>& groups);
+
+  // Create a table using the given parameters.
+  // The variables set by handleGiven are used for name and type.
+  Table createTable (const TableDesc& td,
+                     Int64 nrow, const Record& dmInfo);
 
   // Make the (empty) table for the epxression in the SELECT clause.
   void makeProjectExprTable();

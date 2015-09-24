@@ -33,6 +33,16 @@
 #include <casacore/casa/Arrays/Array.h>
 #include <casacore/casa/Arrays/ArrayLogical.h>
 
+//# Define the mask value indicating a valid value.
+//# In this way it is easy to change it to another value (if ever needed).
+//# The current setting is the same as used in numpy's masked_array and
+//# in the MeasurementSet's FLAG column.
+//# But the opposite value sounds somewhat better (same as MaskedArray)
+//# because something like DATA[isnan(DATA)] = 0 is much more intuitive.
+#define MArrayValid False
+#define MArrayInvalid True
+
+
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // <summary>

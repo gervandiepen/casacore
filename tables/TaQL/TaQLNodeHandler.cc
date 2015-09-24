@@ -643,9 +643,14 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   TaQLNodeResult TaQLNodeHandler::visitCreTabNode (const TaQLCreTabNodeRep& node)
   {
     TableParseSelect* curSel = pushStack (TableParseSelect::PCRETAB);
+    visitNode (node.itsGiving);
     handleColSpec (node.itsColumns);
     Record datamans = handleRecord (node.itsDataMans.getMultiRep());
-    curSel->handleCreTab (node.itsName, datamans);
+    if (node.itsLimit.isValid()) {
+      TaQLNodeResult res = visitNode (node.itsLimit);
+      curSel->handleLimit (getHR(res).getExpr());
+    }
+    curSel->handleCreTab (datamans);
     TaQLNodeHRValue* hrval = new TaQLNodeHRValue();
     TaQLNodeResult res(hrval);
     hrval->setTable (curSel->getTable());

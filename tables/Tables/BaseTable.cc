@@ -1014,7 +1014,9 @@ void BaseTable::showStructure (ostream& os, Bool showDataMans, Bool showColumns,
     os << " (" << info_p.subType() << ')';
   }
   os << endl;
-  os << nrow() << " rows, " << tdesc.ncolumn() << " columns (using "
+  os << nrow() << " rows, " << tdesc.ncolumn() << " columns in ";
+  os << (asBigEndian() ? "big" : "little") << " endian format";
+  os << " (using "
      << dminfo.nfields() << " data managers)" <<endl;
   const StorageOption& stopt = storageOption();
   if (stopt.option() == StorageOption::MultiFile) {

@@ -1083,21 +1083,20 @@ public:
 // This class is a TaQLNodeRep holding the parts of the create table command.
 // </synopsis> 
 
-class TaQLCreTabNodeRep: public TaQLNodeRep
+class TaQLCreTabNodeRep: public TaQLQueryNodeRep
 {
 public:
-  TaQLCreTabNodeRep (const String& name, const TaQLMultiNode& cols,
-		     const TaQLMultiNode& dataMans)
-    : TaQLNodeRep (TaQLNode_CreTab),
-      itsName(name), itsColumns(cols), itsDataMans(dataMans) {}
+  TaQLCreTabNodeRep (const TaQLNode& giving, const TaQLMultiNode& cols,
+		     const TaQLNode& limit, const TaQLMultiNode& dataMans);
   virtual ~TaQLCreTabNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
-  virtual void show (std::ostream& os) const;
+  virtual void showDerived (std::ostream& os) const;
   virtual void save (AipsIO& aio) const;
   static TaQLCreTabNodeRep* restore (AipsIO& aio);
 
-  String        itsName;
+  TaQLNode      itsGiving;
   TaQLMultiNode itsColumns;
+  TaQLNode      itsLimit;
   TaQLMultiNode itsDataMans;
 };
 

@@ -299,3 +299,6 @@ COUNT  min(ab),(ac)+(1) FROM tTaQLnode_tmp.tab WHERE (ac)>(1)
 create table tTaQLNode_tmp.tab col1 i4, col2 r4 ndim=1, c3 r8 [ndim=2, shape=[3,4]] dminfo [name="ISM1",type="IncrementalStMan"], [name="SSM1",type="StandardStMan", bucketsize=1000]
 CREATE TABLE tTaQLNode_tmp.tab col1 I4,col2 R4 ndim=1,c3 R8 [ndim=2,shape=[3,4]] DMINFO [name='ISM1',type='IncrementalStMan'],[name='SSM1',type='StandardStMan',bucketsize=1000]
 
+create table tTaQLNode_tmp.tab limit 10*10
+CREATE TABLE tTaQLNode_tmp.tab  LIMIT (10)*(10)
+

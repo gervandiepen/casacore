@@ -95,7 +95,7 @@ namespace casacore {
   public:
     // Define the possible function types.
     enum FuncType {DIRECTION, HADEC, AZEL, APP, J2000, B1950,
-                   ECLIPTIC, GALACTIC, SUPERGALACTIC};
+                   ECLIPTIC, GALACTIC, SUPERGALACTIC, ITRF};
 
     // Create for the given function type.
     // The Bools tell if rise/set times have to be calculated.
@@ -111,6 +111,7 @@ namespace casacore {
     static UDFBase* makeECL     (const String&);
     static UDFBase* makeGAL     (const String&);
     static UDFBase* makeSGAL    (const String&);
+    static UDFBase* makeITRF    (const String&);
     static UDFBase* makeRISESET (const String&);
 
     // Setup the object.

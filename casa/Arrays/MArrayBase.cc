@@ -101,13 +101,22 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     } else if (other.itsMask.empty()) {
       return itsMask;
     }
-    return itsMask || other.itsMask;
+    // Combine the flags of masked-off values.
+    if (MArrayInvalid) {
+      return itsMask || other.itsMask;
+    } else {
+      return itsMask && other.itsMask;
+    }
   }
 
   void MArrayBase::fillNValid() const
   {
     if (hasMask()) {
-      itsNValid = nfalse(itsMask);
+      if (MArrayInvalid) {
+        itsNValid = nfalse(itsMask);
+      } else {
+        itsNValid = ntrue(itsMask);
+      }
     } else {
       itsNValid = itsSize;
     }

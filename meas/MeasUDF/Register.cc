@@ -37,7 +37,6 @@ void register_meas()
   // Register the TaQL Meas UDFs.
   UDFBase::registerUDF ("meas.POSITION",      PositionUDF::makePOS);
   UDFBase::registerUDF ("meas.POS",           PositionUDF::makePOS);
-  UDFBase::registerUDF ("meas.ITRF",          PositionUDF::makeITRFXYZ);
   UDFBase::registerUDF ("meas.ITRFXYZ",       PositionUDF::makeITRFXYZ);
   UDFBase::registerUDF ("meas.ITRFLL",        PositionUDF::makeITRFLL);
   UDFBase::registerUDF ("meas.ITRFLONLAT",    PositionUDF::makeITRFLL);
@@ -67,5 +66,8 @@ void register_meas()
   UDFBase::registerUDF ("meas.SUPERGALACTIC", DirectionUDF::makeSGAL);
   UDFBase::registerUDF ("meas.SUPERGAL",      DirectionUDF::makeSGAL);
   UDFBase::registerUDF ("meas.SGAL",          DirectionUDF::makeSGAL);
+  UDFBase::registerUDF ("meas.ITRFD",         DirectionUDF::makeITRF);
+  UDFBase::registerUDF ("meas.ITRFDIR",       DirectionUDF::makeITRF);
+  UDFBase::registerUDF ("meas.ITRFDIRECTION", DirectionUDF::makeITRF);
   UDFBase::registerUDF ("meas.RISESET",       DirectionUDF::makeRISESET);
 }

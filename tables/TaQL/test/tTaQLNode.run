@@ -167,3 +167,4 @@ $casa_checktool ./tTaQLNode 'count ab,ac+1 from tTaQLnode_tmp.tab'
 $casa_checktool ./tTaQLNode 'count min(ab),ac+1 from tTaQLnode_tmp.tab where ac>1'
 
 $casa_checktool ./tTaQLNode 'create table tTaQLNode_tmp.tab col1 i4, col2 r4 ndim=1, c3 r8 [ndim=2, shape=[3,4]] dminfo [name="ISM1",type="IncrementalStMan"], [name="SSM1",type="StandardStMan", bucketsize=1000]'
+$casa_checktool ./tTaQLNode 'create table tTaQLNode_tmp.tab limit 10*10'
