@@ -1110,3 +1110,17 @@ select ab,ac from tTableGram_tmp.tab
  8 3
  9 2
  10 1
+update [create table tTableGram_tmp.tst as plain_big col1 int limit 3 ] set col1=rowid()
+    has been executed
+    update result of 3 rows
+1 selected columns:  col1
+ 0
+ 1
+ 2
+select * from tTableGram_tmp.tst
+    has been executed
+    select result of 3 rows
+1 selected columns:  col1
+ 0
+ 1
+ 2

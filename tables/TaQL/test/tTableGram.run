@@ -276,3 +276,7 @@ $casa_checktool ./tTableGram 'update tTableGram_tmp.tab t1, tTableGram_tmp.rev t
 $casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab'
 $casa_checktool ./tTableGram 'delete from tTableGram_tmp.tab t1, tTableGram_tmp.rev t2 where ab=t2.ab'
 $casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab'
+
+# Do an update of a nested create.
+$casa_checktool ./tTableGram 'update [create table tTableGram_tmp.tst as plain_big col1 int limit 3 ] set col1=rowid()'
+$casa_checktool ./tTableGram 'select * from tTableGram_tmp.tst'
