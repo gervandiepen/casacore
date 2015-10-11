@@ -451,14 +451,15 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   TaQLNodeResult TaQLNodeHandler::visitGivingNode (const TaQLGivingNodeRep& node)
   {
-    if (node.itsType < 0) {
+    if (node.itsExprList.isValid()) {
       // Expressions in Giving clause.
       TaQLNodeResult result = visitNode (node.itsExprList);
       const TaQLNodeHRValue& res = getHR(result);
       topStack()->handleGiving (res.getExprSet());
     } else {
       // Table in Giving clause.
-      topStack()->handleGiving (node.itsName, node.itsType);
+      Record type = handleRecord (node.itsType.getMultiRep());
+      topStack()->handleGiving (node.itsName, type);
     }
     return TaQLNodeResult();
   }
@@ -498,6 +499,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       topStack()->addTable (-1, String(), tab, String(),
                             std::vector<const Table*>(), itsStack);
     }
+    curSel->setDMInfo (handleRecord (node.itsDMInfo.getMultiRep()));
     visitNode     (node.itsGiving);
     visitNode     (node.itsJoin);
     handleWhere   (node.itsWhere);
@@ -645,12 +647,12 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableParseSelect* curSel = pushStack (TableParseSelect::PCRETAB);
     visitNode (node.itsGiving);
     handleColSpec (node.itsColumns);
-    Record datamans = handleRecord (node.itsDataMans.getMultiRep());
+    Record dminfo = handleRecord (node.itsDMInfo.getMultiRep());
     if (node.itsLimit.isValid()) {
       TaQLNodeResult res = visitNode (node.itsLimit);
       curSel->handleLimit (getHR(res).getExpr());
     }
-    curSel->handleCreTab (datamans);
+    curSel->handleCreTab (dminfo);
     TaQLNodeHRValue* hrval = new TaQLNodeHRValue();
     TaQLNodeResult res(hrval);
     hrval->setTable (curSel->getTable());
@@ -700,36 +702,40 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {
     AlwaysAssert (node.nodeType() == TaQLNode_RecFld, AipsError);
     const TaQLRecFldNodeRep& fld = *(const TaQLRecFldNodeRep*)(node.getRep());
-    if (fld.itsValues.nodeType() == TaQLNode_Multi) {
+    // If value is not given, do it as True.
+    if (! fld.itsValues.isValid()) {
+      rec.define (fld.itsName, True);
+    } else if (fld.itsValues.nodeType() == TaQLNode_Multi) {
       // Value is a record or an array of values.
       const TaQLMultiNodeRep* mnode =
                      (const TaQLMultiNodeRep*)(fld.itsValues.getRep());
       handleMultiRecFld (fld.itsName, mnode, rec);
       return;
-    }
-    // Value is a single literal.
-    AlwaysAssert (fld.itsValues.nodeType() == TaQLNode_Const, AipsError);
-    const TaQLConstNodeRep& val =
-               *(const TaQLConstNodeRep*)(fld.itsValues.getRep());
-    switch (val.itsType) {
-    case TaQLConstNodeRep::CTBool:
-      rec.define (fld.itsName, val.itsBValue);
-      break;
-    case TaQLConstNodeRep::CTInt:
-      rec.define (fld.itsName, Int(val.itsIValue));
-      break;
-    case TaQLConstNodeRep::CTReal:
-      rec.define (fld.itsName, val.itsRValue);
-      break;
-    case TaQLConstNodeRep::CTComplex:
-      rec.define (fld.itsName, val.itsCValue);
-      break;
-    case TaQLConstNodeRep::CTString:
-      rec.define (fld.itsName, val.itsSValue);
-      break;
-    default:
-      throw TableInvExpr ("TaQLNodeHandler::handleRecFld - "
-			  "unknown data type");
+    } else {
+      // Value is a single literal.
+      AlwaysAssert (fld.itsValues.nodeType() == TaQLNode_Const, AipsError);
+      const TaQLConstNodeRep& val =
+        *(const TaQLConstNodeRep*)(fld.itsValues.getRep());
+      switch (val.itsType) {
+      case TaQLConstNodeRep::CTBool:
+        rec.define (fld.itsName, val.itsBValue);
+        break;
+      case TaQLConstNodeRep::CTInt:
+        rec.define (fld.itsName, Int(val.itsIValue));
+        break;
+      case TaQLConstNodeRep::CTReal:
+        rec.define (fld.itsName, val.itsRValue);
+        break;
+      case TaQLConstNodeRep::CTComplex:
+        rec.define (fld.itsName, val.itsCValue);
+        break;
+      case TaQLConstNodeRep::CTString:
+        rec.define (fld.itsName, val.itsSValue);
+        break;
+      default:
+        throw TableInvExpr ("TaQLNodeHandler::handleRecFld - "
+                            "unknown data type");
+      }
     }
   }
 

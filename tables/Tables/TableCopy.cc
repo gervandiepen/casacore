@@ -48,6 +48,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Table TableCopy::makeEmptyTable (const String& newName,
 				 const Record& dataManagerInfo,
+                                 const StorageOption& stopt,
 				 const Table& tab,
 				 Table::TableOption option,
 				 Table::EndianFormat endianFormat,
@@ -71,7 +72,7 @@ Table TableCopy::makeEmptyTable (const String& newName,
   // Replace non-writable storage managers by StandardStMan.
   // This is for instance needed for LofarStMan.
   dminfo = DataManInfo::adjustStMan (dminfo, "StandardStMan", True);
-  SetupNewTable newtab (newName, tabDesc, option);
+  SetupNewTable newtab (newName, tabDesc, option, stopt);
   newtab.bindCreate (dminfo);
   return Table(newtab, (noRows ? 0 : tab.nrow()), False, endianFormat);
 }

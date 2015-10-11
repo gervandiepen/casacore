@@ -37,6 +37,7 @@
 #include <casacore/tables/TaQL/ExprGroup.h>
 #include <casacore/casa/BasicSL/String.h>
 #include <casacore/casa/Utilities/Sort.h>
+#include <casacore/casa/Containers/Record.h>
 #include <casacore/casa/Containers/Block.h>
 #include <map>
 #include <vector>
@@ -492,8 +493,12 @@ public:
   // Finish the addition of columns to the list of column names.
   void handleColumnFinish (Bool distinct);
 
+  // Set the DataManager info for a new table.
+  void setDMInfo (const Record& dminfo)
+    { dminfo_p = dminfo;}
+
   // Handle the name and type given in a GIVING clause.
-  void handleGiving (const String& name, Int type);
+  void handleGiving (const String& name, const Record& type);
 
   // Handle the set given in a GIVING clause.
   void handleGiving (const TableExprNodeSet&);
@@ -761,6 +766,10 @@ private:
   //# Name and type of the resulting table (from GIVING part).
   String resultName_p;
   Int    resultType_p;
+  StorageOption storageOption_p;
+  Table::EndianFormat endianFormat_p;
+  Bool overwrite_p;
+  Record dminfo_p;
   //# Resulting set (from GIVING part).
   TableExprNodeSet* resultSet_p;
   //# The WHERE expression tree.

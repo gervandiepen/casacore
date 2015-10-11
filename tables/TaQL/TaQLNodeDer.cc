@@ -4,7 +4,7 @@
 //#
 //# This library is free software; you can redistribute it and/or modify it
 //# under the terms of the GNU Library General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or (at your
+//# the Free Software Foundatcd ion; either version 2 of the License, or (at your
 //# option) any later version.
 //#
 //# This library is distributed in the hope that it will be useful, but WITHOUT
@@ -797,37 +797,12 @@ TaQLLimitOffNodeRep* TaQLLimitOffNodeRep::restore (AipsIO& aio)
   return new TaQLLimitOffNodeRep (limit, offset);
 }
 
-TaQLGivingNodeRep::TaQLGivingNodeRep (const String& name, const String& type)
+TaQLGivingNodeRep::TaQLGivingNodeRep (const String& name,
+                                      const TaQLMultiNode& type)
   : TaQLNodeRep (TaQLNode_Giving),
     itsName     (name),
-    itsType     (0)
-{
-  if (!type.empty()) {
-    String typel(type);
-    typel.downcase();
-    if (typel == "memory") {
-      itsType = 1;
-    } else if (typel == "scratch") {
-      itsType = 2;
-    } else if (typel == "plain") {
-      itsType = 3;
-    } else if (typel == "plain_big") {
-      itsType = 4;
-    } else if (typel == "plain_little") {
-      itsType = 5;
-    } else if (typel == "plain_local") {
-      itsType = 6;
-    } else {
-      throw TableParseError ("AS " + type + " after table name " + name +
-			     " is invalid; "
-			     "use MEMORY, SCRATCH or PLAIN[_BIG,LITTLE,LOCAL]");
-    }
-  }
-  if (itsName.empty()  &&  itsType > 2) {
-    throw TableParseError ("output table name can only be omitted if "
-                           "AS MEMORY or AS SCRATCH is given");
-  }
-}
+    itsType     (type)
+{}
 TaQLGivingNodeRep::~TaQLGivingNodeRep()
 {}
 TaQLNodeResult TaQLGivingNodeRep::visit (TaQLNodeVisitor& visitor) const
@@ -836,43 +811,22 @@ TaQLNodeResult TaQLGivingNodeRep::visit (TaQLNodeVisitor& visitor) const
 }
 void TaQLGivingNodeRep::show (std::ostream& os) const
 {
-  if (itsType < 0) {
+  if (itsExprList.isValid()) {
     itsExprList.show (os);
   } else {
     os << itsName;
-    if (itsType > 0) {
+    if (itsType.isValid()) {
       os << " AS ";
-      switch (itsType) {
-      case 1:
-	os << "memory";
-	break;
-      case 2:
-	os << "scratch";
-	break;
-      case 3:
-	os << "plain";
-	break;
-      case 4:
-	os << "plain_big";
-	break;
-      case 5:
-	os << "plain_little";
-	break;
-      case 6:
-	os << "plain_local";
-	break;
-      default:
-	os << "UNKNOWN";
-	break;
-      }
+      itsType.show (os);
     }
   }
 }
 void TaQLGivingNodeRep::save (AipsIO& aio) const
 {
   itsExprList.saveNode (aio);
-  if (itsType >= 0) {
-    aio << itsName << itsType;
+  if (! itsExprList.isValid()) {
+    aio << itsName;
+    itsType.saveNode (aio);
   }
 }
 TaQLGivingNodeRep* TaQLGivingNodeRep::restore (AipsIO& aio)
@@ -883,8 +837,7 @@ TaQLGivingNodeRep* TaQLGivingNodeRep::restore (AipsIO& aio)
   }
   String name;
   aio >> name;
-  Int type;
-  aio >> type;
+  TaQLMultiNode type = TaQLNode::restoreMultiNode (aio);
   return new TaQLGivingNodeRep (name, type);
 }
 
@@ -949,11 +902,13 @@ TaQLSelectNodeRep::TaQLSelectNodeRep (const TaQLNode& columns,
                                       const TaQLNode& having,
                                       const TaQLNode& sort,
                                       const TaQLNode& limitoff,
-                                      const TaQLNode& giving)
+                                      const TaQLNode& giving,
+                                      const TaQLMultiNode& dminfo)
   : TaQLQueryNodeRep (TaQLNode_Select),
     itsColumns(columns),
     itsWhere(where), itsGroupby(groupby), itsHaving(having),
-    itsSort(sort), itsLimitOff(limitoff), itsGiving(giving)
+    itsSort(sort), itsLimitOff(limitoff), itsGiving(giving),
+    itsDMInfo(dminfo)
 {} 
 TaQLSelectNodeRep::TaQLSelectNodeRep (const TaQLNode& columns,
                                       const TaQLMultiNode& tables,
@@ -963,11 +918,13 @@ TaQLSelectNodeRep::TaQLSelectNodeRep (const TaQLNode& columns,
                                       const TaQLNode& having,
                                       const TaQLNode& sort,
                                       const TaQLNode& limitoff,
-                                      const TaQLNode& giving)
+                                      const TaQLNode& giving,
+                                      const TaQLMultiNode& dminfo)
   : TaQLQueryNodeRep (TaQLNode_Select),
     itsColumns(columns), itsTables(tables), itsJoin(join),
     itsWhere(where), itsGroupby(groupby), itsHaving(having),
-    itsSort(sort), itsLimitOff(limitoff), itsGiving(giving)
+    itsSort(sort), itsLimitOff(limitoff), itsGiving(giving),
+    itsDMInfo(dminfo)
 {}
 TaQLSelectNodeRep::~TaQLSelectNodeRep()
 {}
@@ -1001,6 +958,10 @@ void TaQLSelectNodeRep::showDerived (std::ostream& os) const
     os << " GIVING ";
     itsGiving.show (os);
   }
+  if (itsDMInfo.isValid()) {
+    os << " DMINFO ";
+    itsDMInfo.show (os);
+  }
 }
 void TaQLSelectNodeRep::save (AipsIO& aio) const
 {
@@ -1013,6 +974,7 @@ void TaQLSelectNodeRep::save (AipsIO& aio) const
   itsSort.saveNode (aio);
   itsLimitOff.saveNode (aio);
   itsGiving.saveNode (aio);
+  itsDMInfo.saveNode (aio);
   saveSuper (aio);
 }
 TaQLSelectNodeRep* TaQLSelectNodeRep::restore (AipsIO& aio)
@@ -1026,9 +988,11 @@ TaQLSelectNodeRep* TaQLSelectNodeRep::restore (AipsIO& aio)
   TaQLNode sort = TaQLNode::restoreNode (aio);
   TaQLNode limitoff = TaQLNode::restoreNode (aio);
   TaQLNode giving = TaQLNode::restoreNode (aio);
+  TaQLMultiNode dminfo = TaQLNode::restoreMultiNode (aio);
   TaQLSelectNodeRep* node = new TaQLSelectNodeRep (columns, tables, join,
 						   where, groupby, having,
-						   sort, limitoff, giving);
+						   sort, limitoff, giving,
+                                                   dminfo);
   node->restoreSuper (aio);
   return node;
 }
@@ -1251,12 +1215,12 @@ TaQLCalcNodeRep* TaQLCalcNodeRep::restore (AipsIO& aio)
 TaQLCreTabNodeRep::TaQLCreTabNodeRep (const TaQLNode& giving,
                                       const TaQLMultiNode& cols,
                                       const TaQLNode& limit,
-                                      const TaQLMultiNode& dataMans)
+                                      const TaQLMultiNode& dminfo)
   : TaQLQueryNodeRep (TaQLNode_CreTab),
-    itsGiving   (giving),
-    itsColumns  (cols),
-    itsLimit    (limit),
-    itsDataMans (dataMans)
+    itsGiving  (giving),
+    itsColumns (cols),
+    itsLimit   (limit),
+    itsDMInfo  (dminfo)
 {}
 TaQLCreTabNodeRep::~TaQLCreTabNodeRep()
 {}
@@ -1274,9 +1238,9 @@ void TaQLCreTabNodeRep::showDerived (std::ostream& os) const
     os << " LIMIT ";
     itsLimit.show (os);
   }
-  if (itsDataMans.isValid()) {
+  if (itsDMInfo.isValid()) {
     os << " DMINFO ";
-    itsDataMans.show (os);
+    itsDMInfo.show (os);
   }
 }
 void TaQLCreTabNodeRep::save (AipsIO& aio) const
@@ -1284,7 +1248,7 @@ void TaQLCreTabNodeRep::save (AipsIO& aio) const
   itsGiving.saveNode (aio);
   itsColumns.saveNode (aio);
   itsLimit.saveNode (aio);
-  itsDataMans.saveNode (aio);
+  itsDMInfo.saveNode (aio);
   saveSuper (aio);
 }
 TaQLCreTabNodeRep* TaQLCreTabNodeRep::restore (AipsIO& aio)
@@ -1292,9 +1256,9 @@ TaQLCreTabNodeRep* TaQLCreTabNodeRep::restore (AipsIO& aio)
   TaQLNode giving = TaQLNode::restoreNode (aio);
   TaQLMultiNode columns = TaQLNode::restoreMultiNode (aio);
   TaQLNode limit = TaQLNode::restoreNode (aio);
-  TaQLMultiNode datamans = TaQLNode::restoreMultiNode (aio);
+  TaQLMultiNode dminfo = TaQLNode::restoreMultiNode (aio);
   TaQLCreTabNodeRep* node = new TaQLCreTabNodeRep (giving, columns,
-                                                   limit, datamans);
+                                                   limit, dminfo);
   node->restoreSuper (aio);
   return node;
 }
@@ -1338,9 +1302,14 @@ TaQLNodeResult TaQLRecFldNodeRep::visit (TaQLNodeVisitor& visitor) const
 void TaQLRecFldNodeRep::show (std::ostream& os) const
 {
   if (! itsName.empty()) {
-    os << itsName << '=';
+    os << itsName;
+    if (itsValues.isValid()) {
+      os << '=';
+    }
   }
-  itsValues.show (os);
+  if (itsValues.isValid()) {
+    itsValues.show (os);
+  }
 }
 void TaQLRecFldNodeRep::save (AipsIO& aio) const
 {

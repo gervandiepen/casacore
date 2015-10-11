@@ -91,6 +91,7 @@ public:
   // If <src>noRows=True</src> is given, it does not contain any row.
   static Table makeEmptyTable (const String& newName,
 			       const Record& dataManagerInfo,
+                               const StorageOption&,
 			       const Table& tab,
 			       Table::TableOption option,
 			       Table::EndianFormat endianFormat,

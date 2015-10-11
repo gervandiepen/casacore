@@ -1,5 +1,5 @@
 /*
-    TableGram.y: Parser for table commands
+    TableGram.yy: Parser for table commands
     Copyright (C) 1994,1995,1997,1998,1999,2001,2002,2003
     Associated Universities, Inc. Washington DC, USA.
 
@@ -27,10 +27,6 @@
     $Id$
 */
 
-/*
- The grammar has 1 shift/reduce conflict which is resolved in a correct way.
-*/
-
 
 %{
 using namespace casacore;
@@ -38,7 +34,10 @@ using namespace casacore;
 
 %pure-parser                /* make parser re-entrant */
 
-%expect 1                   /* do not report 1 shift/reduce conflict */
+/*
+The grammar has 1 shift/reduce conflict which is resolved in a correct way.
+*/
+%expect 1
 
 %token STYLE
 %token TIMING
@@ -123,6 +122,7 @@ using namespace casacore;
 %type <node> having
 %type <node> order
 %type <node> limitoff
+%type <nodelist> tabnmtyps
 %type <node> tabnmtyp
 %type <node> given
 %type <node> into
@@ -289,28 +289,28 @@ selcomm:   SELECT selrow {
                $$ = $2;
            }
 
-selrow:    selcol FROM tables whexpr groupby having order limitoff given {
+selrow:    selcol FROM tables whexpr groupby having order limitoff given dminfo {
                $$ = new TaQLQueryNode(
                     new TaQLSelectNodeRep (*$1, *$3, 0, *$4, *$5, *$6,
-					   *$7, *$8, *$9));
+					   *$7, *$8, *$9, *$10));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | selcol into FROM tables whexpr groupby having order limitoff {
+         | selcol into FROM tables whexpr groupby having order limitoff dminfo {
                $$ = new TaQLQueryNode(
 		    new TaQLSelectNodeRep (*$1, *$4, 0, *$5, *$6, *$7,
-					   *$8, *$9, *$2));
+					   *$8, *$9, *$2, *$10));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | selcol whexpr groupby having order limitoff given {
+         | selcol whexpr groupby having order limitoff given dminfo {
                $$ = new TaQLQueryNode(
                     new TaQLSelectNodeRep (*$1, *$2, *$3, *$4,
-					   *$5, *$6, *$7));
+					   *$5, *$6, *$7, *$8));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | selcol into whexpr groupby having order limitoff {
+         | selcol into whexpr groupby having order limitoff dminfo {
                $$ = new TaQLQueryNode(
 		    new TaQLSelectNodeRep (*$1, *$3, *$4, *$5,
-					   *$6, *$7, *$2));
+					   *$6, *$7, *$2, *$8));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          ;
@@ -348,7 +348,7 @@ updcomm:   UPDATE updrow {
            }
          ;
 
-updrow:    tables UPDSET updlist FROM tables whexpr order limitoff {
+updrow:    tables UPDSET updlist FROM tables whexpr order limitoff dminfo {
                $$ = new TaQLNode(
                     new TaQLUpdateNodeRep (*$1, *$3, *$5, *$6, *$7, *$8));
 	       TaQLNode::theirNodesCreated.push_back ($$);
@@ -381,6 +381,31 @@ updexpr:   NAME EQASS orexpr {
                     new TaQLUpdExprNodeRep ($1->getString(), *$3, *$6));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
+/*         | LPAREN NAME COMMA NAME RPAREN EQASS orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLUpdExprNodeRep ($2->getString(), 0, *$4));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | PLUS NAME EQASS orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLUpdExprNodeRep ($2->getString(), 0, *$4));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | PLUS LPAREN NAME COMMA NAME RPAREN EQASS orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLUpdExprNodeRep ($3->getString(), 0, *$8));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | PLUS NAME EQASS orexpr AS colspec {
+	       $$ = new TaQLNode(
+                    new TaQLUpdExprNodeRep ($2->getString(), 0, *$4));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | PLUS LPAREN NAME COMMA NAME RPAREN EQASS orexpr AS colspec {
+	       $$ = new TaQLNode(
+                    new TaQLUpdExprNodeRep ($3->getString(), 0, *$8));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }*/
          ;
 
 inscomm:   INSERT insrow {
@@ -603,21 +628,31 @@ limitoff:  {         /* no limit,offset */
 
 tabnmtyp:  tabname {
 	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ($1->getString(), ""));
+                    new TaQLGivingNodeRep ($1->getString(), TaQLMultiNode()));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
-         | tabname AS NAME {
+         | tabname AS tabnmtyps {
 	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ($1->getString(), $3->getString()));
+                    new TaQLGivingNodeRep ($1->getString(), *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
-         | AS NAME {
+         | AS tabnmtyps {
 	       $$ = new TaQLNode(
-                    new TaQLGivingNodeRep ("", $2->getString()));
+                    new TaQLGivingNodeRep ("", *$2));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
          ;
 
+tabnmtyps: NAME {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (new TaQLRecFldNodeRep ($1->getString()));
+	   }
+         | LBRACKET recexpr RBRACKET {
+               $$ = $2;
+	   }
+         ;
+  
 given:     {          /* no result */
 	       $$ = new TaQLNode();
 	       TaQLNode::theirNodesCreated.push_back ($$);
@@ -1497,6 +1532,11 @@ srecfield: NAME EQASS literal {
        |   NAME EQASS LBRACKET recvalues RBRACKET {
 	       $$ = new TaQLNode(
                     new TaQLRecFldNodeRep ($1->getString(), *$4));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+       |   NAME {
+	       $$ = new TaQLNode(
+                    new TaQLRecFldNodeRep ($1->getString()));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
        ;

@@ -32,6 +32,7 @@ tTaQLNode
 # Only test scripts, no test programs.
 set (testscripts
 ttaql
+tTableGramCretab
 tTableGramGroupAggr
 tTableGramGroupAggrAll
 tTableGramGroupAggrMaskAll

@@ -451,8 +451,8 @@ void Table::copy (const String& newName, TableOption option,
 		  Bool noRows) const
 {
     if (noRows) {
-        baseTabPtr_p->deepCopy (newName, Record(), option, False,
-				AipsrcEndian, noRows);
+        baseTabPtr_p->deepCopy (newName, Record(), StorageOption(),
+                                option, False, AipsrcEndian, noRows);
     } else {
         baseTabPtr_p->copy (newName, option);
     }
@@ -464,8 +464,8 @@ void Table::deepCopy (const String& newName,
 		      EndianFormat endianFormat,
 		      Bool noRows) const
 {
-    baseTabPtr_p->deepCopy (newName, Record(), option, valueCopy,
-			    endianFormat, noRows);
+    baseTabPtr_p->deepCopy (newName, Record(), StorageOption(),
+                            option, valueCopy, endianFormat, noRows);
 }
 
 Table Table::copyToMemoryTable (const String& newName, Bool noRows) const

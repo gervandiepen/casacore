@@ -162,6 +162,8 @@ TableParseSelect::TableParseSelect (CommandType commandType)
     nrSelExprUsed_p (0),
     distinct_p      (False),
     resultType_p    (0),
+    endianFormat_p  (Table::AipsrcEndian),
+    overwrite_p     (True),
     resultSet_p     (0),
     groupbyRollup_p (False),
     limit_p         (0),
@@ -1326,6 +1328,7 @@ void TableParseSelect::handleColumnFinish (Bool distinct)
 			"one column name");
   }
   // Make (empty) new table if select expressions were given.
+  // This table is used when output columns are used in ORDERBY or HAVING.
   if (nrSelExprUsed_p > 0) {
     makeProjectExprTable();
   }
@@ -1336,10 +1339,10 @@ Table TableParseSelect::createTable (const TableDesc& td,
 {
   AlwaysAssert (resultType_p >= 0, AipsError);
   // Create the table.
-  // The types are defined in class TaQLGivingNodeRep.
-  Table::TableType    ttype = Table::Plain;
-  Table::TableOption  topt  = Table::New;
-  Table::EndianFormat tendf = Table::AipsrcEndian;
+  // The types are defined in function handleGiving.
+  Table::TableType   ttype = Table::Plain;
+  Table::TableOption topt  = Table::New;
+  if (!overwrite_p)  topt  = Table::NewNoReplace;
   // Use default Memory if no name or 'memory' has been given.
   if (resultName_p.empty()) {
     ttype = Table::Memory;
@@ -1347,16 +1350,10 @@ Table TableParseSelect::createTable (const TableDesc& td,
     ttype = Table::Memory;
   } else if (resultType_p == 2) {
     topt  = Table::Scratch;
-  } else if (resultType_p == 4) {
-    tendf = Table::BigEndian;
-  } else if (resultType_p == 5) {
-    tendf = Table::LittleEndian;
-  } else if (resultType_p == 6) {
-    tendf = Table::LocalEndian;
   }
-  SetupNewTable newtab(resultName_p, td, topt);
+  SetupNewTable newtab(resultName_p, td, topt, storageOption_p);
   newtab.bindCreate (dmInfo);
-  return Table(newtab, ttype, nrow, False, tendf);
+  return Table(newtab, ttype, nrow, False, endianFormat_p);
 }
 
 void TableParseSelect::makeProjectExprTable()
@@ -1365,11 +1362,6 @@ void TableParseSelect::makeProjectExprTable()
   // Check if all tables involved have the same nr of rows as the first one.
   TableDesc td;
   for (uInt i=0; i<columnExpr_p.nelements(); i++) {
-    ///    if (! columnExpr_p[i].checkTableSize (fromTables_p[0].table(), True)) {
-    ///      throw TableInvExpr ("Table(s) with incorrect size used in "
-    ///                          "selected column " + columnNames_p[i] +
-    ///                          " (mismatches first table)");
-    ///    }
     // If no new name is given, make one (unique).
     String newName = columnNames_p[i];
     if (newName.empty()) {
@@ -1399,7 +1391,7 @@ void TableParseSelect::makeProjectExprTable()
 		   columnExpr_p[i].unit().getName());
   }
   // Create the table.
-  projectExprTable_p = createTable (td, 0, Record());
+  projectExprTable_p = createTable (td, 0, dminfo_p);
 }
 
 void TableParseSelect::makeProjectExprSel()
@@ -2826,19 +2818,14 @@ Table TableParseSelect::doFinish (Bool showTimings, Table& table)
       result = table.copyToMemoryTable (resultName_p);
     }
   } else if (resultType_p > 0){
-    Table::EndianFormat tendf = Table::AipsrcEndian;
-    if (resultType_p == 3) {
-      tendf = Table::BigEndian;
-    } else if (resultType_p == 4) {
-      tendf = Table::LittleEndian;
-    } else if (resultType_p == 5) {
-      tendf = Table::LocalEndian;
-    }
-    table.deepCopy (resultName_p, Table::New, True, tendf);
+    table.deepCopy (resultName_p, dminfo_p, storageOption_p,
+                    overwrite_p ? Table::New : Table::NewNoReplace,
+                    True, endianFormat_p);
     result = Table(resultName_p);
   } else {
     // Normal reference table.
-    table.rename (resultName_p, Table::New);
+    table.rename (resultName_p,
+                  overwrite_p ? Table::New : Table::NewNoReplace);
     table.flush();
     result = table;
   }
@@ -3071,14 +3058,127 @@ Table TableParseSelect::doDistinct (Bool showTimings, const Table& table)
 
 
 //# Keep the name of the resulting table.
-void TableParseSelect::handleGiving (const String& name, Int type)
+void TableParseSelect::handleGiving (const String& name, const Record& rec)
 {
   resultName_p = name;
-  resultType_p = type;
-  ////  if (resultType_p == 0  &&  !resultName_p.empty()) {
-  ////    resultType_p = 3;     // default type is PLAIN if a name is given
-  ////  }
+  for (uInt i=0; i<rec.nfields(); ++i) {
+    String fldName = rec.name(i);
+    fldName.downcase();
+    Bool done=False;
+    if (rec.dataType(i) == TpBool) {
+      done = True;
+      if (fldName == "memory") {
+        resultType_p = 1;
+      } else if (fldName == "scratch") {
+        resultType_p = 2;
+      } else if (fldName == "plain") {
+        resultType_p = 3;
+      } else if (fldName == "plain_big") {
+        resultType_p   = 3;
+        endianFormat_p = Table::BigEndian;
+      } else if (fldName == "plain_little") {
+        resultType_p   = 3;
+        endianFormat_p = Table::LittleEndian;
+      } else if (fldName == "plain_local") {
+        resultType_p   = 3;
+        endianFormat_p = Table::LocalEndian;
+      } else if (fldName == "multifile") {
+        storageOption_p.setOption (StorageOption::MultiFile);
+      } else if (fldName == "multihdf5") {
+        storageOption_p.setOption (StorageOption::MultiHDF5);
+      } else if (fldName == "overwrite") {
+        overwrite_p = rec.asBool(i);
+      } else {
+        done = False;
+      }
+    }
+    if (done) {
+      if (fldName != "overwrite"  &&  !rec.asBool(i)) {
+        throw TableParseError ("Field name " + rec.name(i) +
+                               " should not have a False value");
+      }
+    } else if (fldName == "type") {
+      Bool ok = False;
+      if (rec.dataType(i) == TpString) {
+        ok = True;
+        String str = rec.asString(i);
+        str.downcase();
+        if (str == "plain") {
+          resultType_p = 3;
+        } else if (str == "scratch") {
+          resultType_p = 2;
+        } else if (str == "memory") {
+          resultType_p = 1;
+        } else {
+          ok = False;
+        }
+      }
+      if (!ok) {
+        throw TableParseError("type must have a string value "
+                              "plain, scratch or memory");
+      }
+    } else if (fldName == "endian") {
+      Bool ok = False;
+      if (rec.dataType(i) == TpString) {
+        ok = True;
+        String str = rec.asString(i);
+        str.downcase();
+        if (str == "big") {
+          endianFormat_p = Table::BigEndian;
+        } else if (str == "little") {
+          endianFormat_p = Table::LittleEndian;
+        } else if (str == "local") {
+          endianFormat_p = Table::LocalEndian;
+        } else if (str == "aipsrc") {
+          endianFormat_p = Table::AipsrcEndian;
+        } else {
+          ok = False;
+        }
+      }
+      if (!ok) {
+        throw TableParseError("endian must have a string value "
+                              "big, little, local or aipsrc");
+      }
+    } else if (fldName == "storage") {
+      Bool ok = False;
+      if (rec.dataType(i) == TpString) {
+        ok = True;
+        String str = rec.asString(i);
+        str.downcase();
+        if (str == "multifile") {
+          storageOption_p.setOption (StorageOption::MultiFile);
+        } else if (str == "multihdf5") {
+          storageOption_p.setOption (StorageOption::MultiHDF5);
+        } else if (str == "sepfile") {
+          storageOption_p.setOption (StorageOption::SepFile);
+        } else if (str == "default") {
+          storageOption_p.setOption (StorageOption::Default);
+        } else if (str == "aipsrc") {
+          storageOption_p.setOption (StorageOption::Aipsrc);
+        } else {
+          ok = False;
+        }
+      }
+      if (!ok) {
+        throw TableParseError("storage must have a string value "
+                              "multifile, multihdf5, sepfile, default or aipsrc");
+      }
+    } else if (fldName == "blocksize") {
+      try {
+        storageOption_p.setBlockSize (rec.asInt(i));
+      } catch (...) {
+        throw TableParseError("blocksize must have an integer value");
+      }
+    } else {
+      throw TableParseError(rec.name(i) + " is an invalid table options field");
+    }
+  }
+  if (resultName_p.empty()  &&  resultType_p > 2) {
+    throw TableParseError ("output table name can only be omitted if "
+                           "AS MEMORY or AS SCRATCH is given");
+  }
 }
+
 //# Keep the resulting set expression.
 void TableParseSelect::handleGiving (const TableExprNodeSet& set)
 {

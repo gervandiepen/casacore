@@ -402,14 +402,15 @@ void BaseTable::renameSubTables (const String&, const String&)
 {}
 
 void BaseTable::deepCopy (const String& newName,
-			  const Record& dataManagerInfo,
+                          const Record& dataManagerInfo,
+                          const StorageOption& stopt,
 			  int tableOption,
 			  Bool valueCopy,
 			  int endianFormat,
 			  Bool noRows) const
 {
     if (valueCopy  ||  dataManagerInfo.nfields() > 0  ||  noRows) {
-        trueDeepCopy (newName, dataManagerInfo, tableOption,
+      trueDeepCopy (newName, dataManagerInfo, stopt, tableOption,
 		      endianFormat, noRows);
     } else {
         copy (newName, tableOption);
@@ -418,6 +419,7 @@ void BaseTable::deepCopy (const String& newName,
 
 void BaseTable::trueDeepCopy (const String& newName,
 			      const Record& dataManagerInfo,
+                              const StorageOption& stopt,
 			      int tableOption,
 			      int endianFormat,
 			      Bool noRows) const
@@ -439,7 +441,8 @@ void BaseTable::trueDeepCopy (const String& newName,
     // Create the new table and copy everything.
     Table oldtab(ncThis);
     Table newtab = TableCopy::makeEmptyTable
-                        (absNewName, dataManagerInfo, oldtab, Table::New,
+                        (absNewName, dataManagerInfo, stopt,
+                         oldtab, Table::New,
 			 Table::EndianFormat(endianFormat), True, noRows);
     if (!noRows) {
       TableCopy::copyRows (newtab, oldtab);

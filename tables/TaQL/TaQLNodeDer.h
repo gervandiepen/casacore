@@ -737,26 +737,18 @@ public:
 class TaQLGivingNodeRep: public TaQLNodeRep
 {
 public:
-  explicit TaQLGivingNodeRep (const String& name, const String& type);
+  explicit TaQLGivingNodeRep (const String& name, const TaQLMultiNode& type);
   explicit TaQLGivingNodeRep (const TaQLMultiNode& exprlist)
     : TaQLNodeRep (TaQLNode_Giving),
-      itsType     (-1),
       itsExprList (exprlist) {}
   virtual ~TaQLGivingNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void show (std::ostream& os) const;
   virtual void save (AipsIO& aio) const;
   static TaQLGivingNodeRep* restore (AipsIO& aio);
-  // Constructor for restore.
-  TaQLGivingNodeRep (const String& name, Int type)
-    : TaQLNodeRep (TaQLNode_Giving),
-      itsName     (name),
-      itsType     (type) {}
 
   String        itsName;
-  Int           itsType;    // -1=exprlist 0=undefined, 1=memory, 2=scratch
-                            //  3=plain, 4=plain_big, 5=plain_little,
-                            //  6=plain_local
+  TaQLMultiNode itsType;
   TaQLMultiNode itsExprList;
 };
 
@@ -867,12 +859,12 @@ public:
   TaQLSelectNodeRep (const TaQLNode& columns, const TaQLNode& where,
 		     const TaQLNode& groupby, const TaQLNode& having,
 		     const TaQLNode& sort, const TaQLNode& limitoff,
-		     const TaQLNode& giving);
+		     const TaQLNode& giving, const TaQLMultiNode& dminfo);
   TaQLSelectNodeRep (const TaQLNode& columns, const TaQLMultiNode& tables,
 		     const TaQLNode& join, const TaQLNode& where,
 		     const TaQLNode& groupby, const TaQLNode& having,
 		     const TaQLNode& sort, const TaQLNode& limitoff,
-		     const TaQLNode& giving);
+		     const TaQLNode& giving, const TaQLMultiNode& dminfo);
   virtual ~TaQLSelectNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void showDerived (std::ostream& os) const;
@@ -888,6 +880,7 @@ public:
   TaQLNode      itsSort;
   TaQLNode      itsLimitOff;
   TaQLNode      itsGiving;
+  TaQLMultiNode itsDMInfo;
 };
 
 
@@ -1087,7 +1080,7 @@ class TaQLCreTabNodeRep: public TaQLQueryNodeRep
 {
 public:
   TaQLCreTabNodeRep (const TaQLNode& giving, const TaQLMultiNode& cols,
-		     const TaQLNode& limit, const TaQLMultiNode& dataMans);
+		     const TaQLNode& limit, const TaQLMultiNode& dminfo);
   virtual ~TaQLCreTabNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void showDerived (std::ostream& os) const;
@@ -1097,7 +1090,7 @@ public:
   TaQLNode      itsGiving;
   TaQLMultiNode itsColumns;
   TaQLNode      itsLimit;
-  TaQLMultiNode itsDataMans;
+  TaQLMultiNode itsDMInfo;
 };
 
 
@@ -1155,6 +1148,9 @@ public:
   TaQLRecFldNodeRep (const String& name, const TaQLNode& values)
     : TaQLNodeRep (TaQLNode_RecFld),
       itsName(name), itsValues(values) {}
+  TaQLRecFldNodeRep (const String& name)
+    : TaQLNodeRep (TaQLNode_RecFld),
+      itsName(name) {}
   virtual ~TaQLRecFldNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void show (std::ostream& os) const;

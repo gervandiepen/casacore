@@ -681,6 +681,11 @@ public:
 		   TableOption, Bool valueCopy=False,
 		   EndianFormat=AipsrcEndian,
 		   Bool noRows=False) const;
+    void deepCopy (const String& newName, const Record& dataManagerInfo,
+                   const StorageOption&,
+		   TableOption, Bool valueCopy=False,
+		   EndianFormat=AipsrcEndian,
+		   Bool noRows=False) const;
     // </group>
 
     // Make a copy of a table to a MemoryTable object.
@@ -1135,7 +1140,18 @@ inline void Table::deepCopy (const String& newName,
 			     Bool valueCopy,
 			     EndianFormat endianFormat,
 			     Bool noRows) const
-    { baseTabPtr_p->deepCopy (newName, dataManagerInfo, option, valueCopy,
+    { baseTabPtr_p->deepCopy (newName, dataManagerInfo, StorageOption(),
+                              option, valueCopy,
+			      endianFormat, noRows); }
+inline void Table::deepCopy (const String& newName,
+			     const Record& dataManagerInfo,
+                             const StorageOption& stopt,
+			     TableOption option,
+			     Bool valueCopy,
+			     EndianFormat endianFormat,
+			     Bool noRows) const
+    { baseTabPtr_p->deepCopy (newName, dataManagerInfo, stopt,
+                              option, valueCopy,
 			      endianFormat, noRows); }
 inline void Table::markForDelete()
     { baseTabPtr_p->markForDelete (True, ""); }
