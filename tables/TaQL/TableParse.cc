@@ -3082,10 +3082,6 @@ void TableParseSelect::handleGiving (const String& name, const Record& rec)
       } else if (fldName == "plain_local") {
         resultType_p   = 3;
         endianFormat_p = Table::LocalEndian;
-      } else if (fldName == "multifile") {
-        storageOption_p.setOption (StorageOption::MultiFile);
-      } else if (fldName == "multihdf5") {
-        storageOption_p.setOption (StorageOption::MultiHDF5);
       } else if (fldName == "overwrite") {
         overwrite_p = rec.asBool(i);
       } else {
