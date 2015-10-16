@@ -1,5 +1,5 @@
-//# PycExcp.cc: Functions to convert a C++ exception to Python
-//# Copyright (C) 2006
+//# MSSSpwErrorHandler.cc: Error handler for the SPW parser
+//# Copyright (C) 1994,1995,1996,1997,2000
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,30 +23,40 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PycExcp.cc,v 1.1 2006/10/17 03:33:50 gvandiep Exp $
+//# $Id$
 
-#include <casacore/python/Converters/PycExcp.h>
-#include <casacore/casa/Containers/IterError.h>
-//# The following include is necessary to work around a Boost-Python problem.
-#ifndef PYRAP_NO_BOOSTPYTHON_FIX
-# include <boost/type_traits/add_reference.hpp>
-#endif
-#include <boost/python/exception_translator.hpp>
+#include <casacore/ms/MSSel/MSSSpwErrorHandler.h>
+#include <casacore/ms/MSSel/MSSelectionError.h>
+#include <casacore/casa/Arrays/Vector.h>
+#include <vector>
 
-namespace casacore { namespace python {
+namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
-  void translate_iterexcp (const casacore::IterError& e)
+  String MSSSpwErrorHandler::constructMessage()
   {
-    // Use the Python 'C' API to set up an exception object
-    PyErr_SetString(PyExc_StopIteration, e.what());
+    ostringstream Mesg;
+    if (messageList.size() > 0)
+      {
+	Mesg << messageList[0];
+	if (tokenList.size() > 0)
+	  for (uInt i=0;i<tokenList.size();i++) Mesg << tokenList[i] << " ";
+	else
+	  for (uInt i=1;i<messageList.size(); i++) Mesg << endl << messageList[i];
+      }
+    String casaMesg(Mesg.str());
+    return casaMesg;
   }
 
-
-  //# Note that the most general exception must be registered first.
-  void register_convert_excp()
+  void MSSSpwErrorHandler::handleError(MSSelectionError&  mssErrorType) 
   {
-    boost::python::register_exception_translator<casacore::IterError>
-      (&translate_iterexcp);
+    if (messageList.size() > 0)
+      {
+	String mesg(constructMessage());
+	mssErrorType.addMessage(mesg);
+	LogIO logIO;
+	logIO << mssErrorType.getMesg() << LogIO::WARN << LogIO::POST;
+      }
   }
 
-}}
+} //# NAMESPACE CASACORE - END
+

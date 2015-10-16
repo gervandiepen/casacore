@@ -1,5 +1,5 @@
-//# PycExcp.cc: Functions to convert a C++ exception to Python
-//# Copyright (C) 2006
+ //# tImageProxy.cc
+//# Copyright (C) 1998,1999,2000,2002
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -23,30 +23,27 @@
 //#                        520 Edgemont Road
 //#                        Charlottesville, VA 22903-2475 USA
 //#
-//# $Id: PycExcp.cc,v 1.1 2006/10/17 03:33:50 gvandiep Exp $
+//#
+//# $Id$
 
-#include <casacore/python/Converters/PycExcp.h>
-#include <casacore/casa/Containers/IterError.h>
-//# The following include is necessary to work around a Boost-Python problem.
-#ifndef PYRAP_NO_BOOSTPYTHON_FIX
-# include <boost/type_traits/add_reference.hpp>
-#endif
-#include <boost/python/exception_translator.hpp>
+#include <casacore/images/Images/ImageProxy.h>
 
-namespace casacore { namespace python {
+#include <casacore/images/Images/ImageInfo.h>
 
-  void translate_iterexcp (const casacore::IterError& e)
-  {
-    // Use the Python 'C' API to set up an exception object
-    PyErr_SetString(PyExc_StopIteration, e.what());
-  }
+#include <casacore/casa/namespace.h>
 
-
-  //# Note that the most general exception must be registered first.
-  void register_convert_excp()
-  {
-    boost::python::register_exception_translator<casacore::IterError>
-      (&translate_iterexcp);
-  }
-
-}}
+int main() {
+    try {
+        ImageProxy proxy("imagetestimage.fits", "", vector<ImageProxy>());
+        ImageInfo ii = proxy.imageInfoObject();
+        AlwaysAssert(ii.getBeamSet().hasSingleBeam(), AipsError);
+        AlwaysAssert(proxy.type() == TpFloat, AipsError);
+        AlwaysAssert(proxy.coordSysObject().nWorldAxes() == 2, AipsError);
+    }
+    catch (const AipsError& x) {
+        cout << "Caught error " << x.getMesg() << endl;
+        return 1;
+    } 
+    cout << "OK" << endl;
+    return 0;
+}
