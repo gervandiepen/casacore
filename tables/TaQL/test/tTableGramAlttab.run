@@ -23,11 +23,15 @@ $casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2/subtab ADD C
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2/subtab colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
 echo ""
-$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 SET KEYWORD subtab="Table: tTableGramAlttab_tmp.tab2/subtab", ::key1=3, col1::subrec=[=], col1::subrec.k1="3x"'
+$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 SET KEYWORD subtab="Table: tTableGramAlttab_tmp.tab2/subtab", ::key1=3 AS I2, col1::subrec=[=], col1::subrec.k1="3x", key2=[2+3,4+5.] AS R4'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 tabkey=T colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
 echo ""
-$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 FROM ::subtab t1 SET KEYWORD col1::subrec.k1 AS t1.colxyz::skey, RENAME KEYWORDS key1 TO key1n DROp keyword subtab'
+$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 SET KEYWORD keyrec=[sub1=[k1=1 as U1, k2=2 as I2, k3=3 as U4, k4=4 as I2, k5=5 as I4, k6=6 as I8, k7=7 as R4, k8=8 as R8, k9=9 as C4, k10=10 as C8, k11=T as B, K12="s" as S, subtab="Table: tTableGramAlttab_tmp.tab2/subtab"], sub2=[sub2a=[k1=1, k2=2., k3=3+3j, k4=T, k5="s"], sub2b=[k1=1. as R4, k2=2. as R8, k3=3. as C4, k4=4. as C8], sub2c=[k1=1+2i as C4]]]'
+../../apps/showtable in=tTableGramAlttab_tmp.tab2 tabkey=T colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
+
+echo ""
+$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 FROM ::subtab t1 SET KEYWORD col1::subrec.k1 AS t1.colxyz::skey, RENAME KEYWORDS key1 TO key1n DROp keyword subtab, keyrec'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 tabkey=T colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
 echo ""
@@ -38,7 +42,7 @@ echo ""
 $casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 RENAME COLUMN col1a to col1b, col2a to col2b'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
-$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 DROP COLUMN col1b,col2 ,ADDrows 4 +5'
+$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 DELETE COLUMN col1b,col2 ,ADDrows 4 +5'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 | grep -v 'showtable:' | sed -e "s%$curdir/%%"
  
 exit 0

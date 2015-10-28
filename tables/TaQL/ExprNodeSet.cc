@@ -1118,7 +1118,8 @@ void TableExprNodeSet::setFindFunc (Bool isLeftClosed, Bool isRightClosed)
   }
 }
 
-void TableExprNodeSet::add (const TableExprNodeSetElem& elem)
+void TableExprNodeSet::add (const TableExprNodeSetElem& elem,
+                            Bool adaptType)
 {
     uInt n = itsElems.nelements();
     itsElems.resize (n+1);
@@ -1144,6 +1145,11 @@ void TableExprNodeSet::add (const TableExprNodeSetElem& elem)
     }
     if (n == 0) {
 	dtype_p = elem.dataType();
+    } else if (adaptType) {
+      // Determine the highest data type.
+      // Note: == works well for all types (including dates).
+        dtype_p = TableExprNodeBinary::getDT (dtype_p, elem.dataType(),
+                                              OtEQ);
     }
     checkTablePtr (itsElems[n]);
     fillExprType  (itsElems[n]);

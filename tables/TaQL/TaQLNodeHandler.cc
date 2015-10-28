@@ -234,9 +234,9 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       TaQLNodeResult vres = visitNode (node.itsNodes[i]);
       const TaQLNodeHRValue& vhr = getHR(vres);
       if (vhr.getElem()) {
-	set->add (*(vhr.getElem()));
+	set->add (*(vhr.getElem()), node.itsIsSetOrArray);
       } else {
-	set->add (TableExprNodeSetElem(vhr.getExpr()));
+	set->add (TableExprNodeSetElem(vhr.getExpr()), node.itsIsSetOrArray);
       }
     }
     if (node.itsIsSetOrArray) {

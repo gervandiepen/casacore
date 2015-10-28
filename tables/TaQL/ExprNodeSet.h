@@ -331,7 +331,10 @@ public:
     ~TableExprNodeSet();
     
     // Add an element to the set.
-    void add (const TableExprNodeSetElem&);
+    // If adaptType=True, the data type is the highest of the elements added.
+    // Otherwise it is that of the first element.
+    // True is meant for a set of values, False for function arguments.
+    void add (const TableExprNodeSetElem&, Bool adaptType=False);
 
     // Show the node.
     void show (ostream& os, uInt indent) const;
