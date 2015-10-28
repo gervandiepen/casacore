@@ -57,6 +57,7 @@
 #include <casacore/casa/Arrays/ArrayMath.h>
 #include <casacore/casa/Arrays/ArrayUtil.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
+#include <casacore/casa/Utilities/ValType.h>
 #include <casacore/casa/Utilities/Sort.h>
 #include <casacore/casa/Utilities/GenSort.h>
 #include <casacore/casa/Utilities/LinearSearch.h>
@@ -213,7 +214,7 @@ void TableParseSelect::addTable (Int tabnr, const String& name,
     //# SELECT statement.
     String shand, columnName;
     Vector<String> fieldNames;
-    if (splitName (shand, columnName, fieldNames, name, False)) { 
+    if (splitName (shand, columnName, fieldNames, name, False, False)) { 
       table = tableKey (name, shand, columnName, fieldNames, stack);
     } else {
       // If no or equal shorthand is given, try to see if the
@@ -310,21 +311,27 @@ Table TableParseSelect::findTableKey (const Table& table,
 Bool TableParseSelect::splitName (String& shorthand, String& columnName,
 				  Vector<String>& fieldNames,
 				  const String& name,
-				  Bool checkError) const
+				  Bool checkError,
+                                  Bool isKeyword) const
 {
   //# Make a copy, because some String functions are non-const.
   //# Usually the name consists of a columnName only, so use that.
-  //# A keyword is given if :: is part of the name.
+  //# A keyword is given if :: is part of the name of if isKeyword is set.
   shorthand = "";
   columnName = name;
   String restName;
-  Bool isKey = False;
+  Bool isKey = isKeyword;
   int j = columnName.index("::");
   Vector<String> fldNam;
   uInt stfld = 0;
   if (j >= 0) {
-    // The name represents a keyword name.
+    // The name contains ::, thus represents a keyword name.
     isKey = True;
+  } else if (isKey) {
+    // It is a keyword, but no ::.
+    j = -2;
+  }
+  if (isKey) {
     // There should be something after the ::
     // which can be multiple names separated by dots.
     // They represent the keyword name and possible subfields in case
@@ -339,7 +346,7 @@ Bool TableParseSelect::splitName (String& shorthand, String& columnName,
     fldNam = stringToVector (restName, '.');
     // The part before the :: can be empty, an optional shorthand,
     // and an optional column name (separated by a dot).
-    if (j == 0) {
+    if (j <= 0) {
       columnName = "";
     } else {
       Vector<String> scNames = stringToVector(columnName.before(j), '.');
@@ -428,7 +435,7 @@ TableExprNode TableParseSelect::handleKeyCol (const String& name, Bool tryProj)
   //# Split the name into optional shorthand, column, and optional keyword.
   String shand, columnName;
   Vector<String> fieldNames;
-  Bool hasKey = splitName (shand, columnName, fieldNames, name, True);
+  Bool hasKey = splitName (shand, columnName, fieldNames, name, True, False);
   //# Use first table if there is no shorthand given.
   //# Otherwise find the table.
   Table tab = findTable (shand);
@@ -1500,6 +1507,184 @@ void TableParseSelect::handleCreTab (const Record& dmInfo)
   table_p = createTable (tableDesc_p, limit_p, dmInfo);
 }
 
+void TableParseSelect::handleAltTab()
+{
+  // The first table has to be altered.
+  AlwaysAssert (fromTables_p.size() > 0, AipsError);
+  table_p = fromTables_p[0].table();
+  table_p.reopenRW();
+}
+
+void TableParseSelect::handleAddCol (const Record& dmInfo)
+{
+  if (dmInfo.empty()) {
+    StandardStMan ssm;
+    table_p.addColumn (tableDesc_p, ssm);
+  } else {
+    table_p.addColumn (tableDesc_p, dmInfo);
+  }
+}
+
+ValueHolder TableParseSelect::getRecFld (const String& name)
+{
+  String keyName;
+  TableRecord& keyset = findKeyword (name, keyName);
+  Int fieldnr = keyset.fieldNumber (keyName);
+  if (fieldnr < 0) {
+    throw (TableInvExpr ("Keyword " + name + " does not exist"));
+  }
+  return keyset.asValueHolder (fieldnr);
+}
+
+void TableParseSelect::setRecFld (RecordInterface& rec,
+                                  const String& name,
+                                  const String& dtype,
+                                  const ValueHolder& vh)
+{
+  String type = getTypeString (dtype, vh.dataType());
+  if (isScalar(vh.dataType())) {
+    if (type == "B") {
+      rec.define (name, vh.asBool());
+    } else if (type == "U1") {
+      rec.define (name, vh.asuChar());
+    } else if (type == "U4") {
+      rec.define (name, vh.asuInt());
+    } else if (type == "I2") {
+      rec.define (name, vh.asShort());
+    } else if (type == "I4") {
+      rec.define (name, vh.asInt());
+    } else if (type == "I8") {
+      rec.define (name, vh.asInt64());
+    } else if (type == "R4") {
+      rec.define (name, vh.asFloat());
+    } else if (type == "R8") {
+      rec.define (name, vh.asDouble());
+    } else if (type == "C4") {
+      rec.define (name, vh.asComplex());
+    } else if (type == "C8") {
+      rec.define (name, vh.asDComplex());
+    } else if (type == "S") {
+      rec.define (name, vh.asString());
+    } else {
+      throw TableInvExpr ("TableParse::setRecFld - "
+                          "unknown data type " + type);
+    }
+  } else {
+    if (type == "B") {
+      rec.define (name, vh.asArrayBool());
+    } else if (type == "U1") {
+      rec.define (name, vh.asArrayuChar());
+    } else if (type == "U4") {
+      rec.define (name, vh.asArrayuInt());
+    } else if (type == "I2") {
+      rec.define (name, vh.asArrayShort());
+    } else if (type == "I4") {
+      rec.define (name, vh.asArrayInt());
+    } else if (type == "I8") {
+      rec.define (name, vh.asArrayInt64());
+    } else if (type == "R4") {
+      rec.define (name, vh.asArrayFloat());
+    } else if (type == "R8") {
+      rec.define (name, vh.asArrayDouble());
+    } else if (type == "C4") {
+      rec.define (name, vh.asArrayComplex());
+    } else if (type == "C8") {
+      rec.define (name, vh.asArrayDComplex());
+    } else if (type == "S") {
+      rec.define (name, vh.asArrayString());
+    } else {
+      throw TableInvExpr ("TableParse::setRecFld - "
+                          "unknown data type " + type);
+    }
+  }
+}
+
+String TableParseSelect::getTypeString (const String& typeStr, DataType type)
+{
+  String out = typeStr;
+  if (out.empty()) {
+    switch (type) {
+    case TpBool:
+    case TpArrayBool:
+      out = "B";
+      break;
+    case TpInt64:
+    case TpArrayInt64:
+      out = "I4";
+      break;
+    case TpDouble:
+    case TpArrayDouble:
+      out = "R8";
+      break;
+    case TpDComplex:
+    case TpArrayDComplex:
+      out = "C8";
+      break;
+    case TpString:
+    case TpArrayString:
+      out = "S";
+      break;
+    default:
+      throw TableInvExpr ("TableParse::getTypeString - "
+                          "value has an unknown data type " +
+                          String::toString(type));
+    }
+  }
+  return out;
+}
+
+TableRecord& TableParseSelect::findKeyword (const String& name,
+                                            String& keyName)
+{
+  //# Split the name into optional shorthand, column, and keyword.
+  String shand, columnName;
+  Vector<String> fieldNames;
+  splitName (shand, columnName, fieldNames, name, True, True);
+  Table tab = findTable (shand);
+  if (tab.isNull()) {
+    throw (TableInvExpr("Shorthand " + shand + " has not been defined"));
+  }
+  TableRecord* rec;
+  String fullName;
+  if (columnName.empty()) {
+    rec = TableExprNode::findLastKeyRec (tab.rwKeywordSet(),
+                                         fieldNames, fullName);
+  } else {
+    TableRecord& colkeys (TableColumn(tab, columnName).rwKeywordSet());
+    rec = TableExprNode::findLastKeyRec (colkeys, fieldNames, fullName);
+  }
+  keyName = fieldNames[fieldNames.size() -1 ];
+  return *rec;
+}
+
+void TableParseSelect::handleSetKey (const String& name,
+                                     const String& dtype,
+                                     const ValueHolder& value)
+{
+  String keyName;
+  TableRecord& keyset = findKeyword (name, keyName);
+  if (value.dataType() == TpString  ||  value.dataType() == TpRecord) {
+    keyset.defineFromValueHolder (keyName, value);
+  } else {
+    setRecFld (keyset, keyName, dtype, value);
+  }
+}
+
+void TableParseSelect::handleRenameKey (const String& oldName,
+                                        const String& newName)
+{
+  String keyName;
+  TableRecord& keyset = findKeyword (oldName, keyName);
+  keyset.renameField (newName, keyName);
+}
+
+void TableParseSelect::handleRemoveKey (const String& name)
+{
+  String keyName;
+  TableRecord& keyset = findKeyword (name, keyName);
+  keyset.removeField (keyName);
+}
+
 void TableParseSelect::handleWhere (const TableExprNode& node)
 {
   checkAggrFuncs (node);
@@ -1744,6 +1929,11 @@ void TableParseSelect::handleLimit (const TableExprNode& expr)
 void TableParseSelect::handleOffset (const TableExprNode& expr)
 {
   offset_p = evalIntScaExpr (expr);
+}
+
+void TableParseSelect::handleAddRow (const TableExprNode& expr)
+{
+  table_p.addRow (evalIntScaExpr (expr));
 }
 
 Int64 TableParseSelect::evalIntScaExpr (const TableExprNode& expr) const

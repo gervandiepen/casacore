@@ -11,7 +11,7 @@ select ab,ac,ad,ae,af,ag into tTaQLNode_tmp.data2 from tTaQLNode_tmp.tab sh wher
 SELECT ab,ac,ad,ae,af,ag FROM tTaQLNode_tmp.tab AS sh WHERE ((ALL((ab)>(2)))&&(((ae)<(10))||((ae)>(11))))&&((ag)<>((10)+(1i))) ORDERBY ac DESC,ab GIVING tTaQLNode_tmp.data2
 
 select ab,ac,ad,ae,af,ag into tTaQLNode_tmp.data2 as PLAIN_LOCAL from tTaQLNode_tmp.tab sh where all(ab>2) && (ae<10 || ae>11.0) && ag!= 10 + 1i orderby ac desc,ab
-SELECT ab,ac,ad,ae,af,ag FROM tTaQLNode_tmp.tab AS sh WHERE ((ALL((ab)>(2)))&&(((ae)<(10))||((ae)>(11))))&&((ag)<>((10)+(1i))) ORDERBY ac DESC,ab GIVING tTaQLNode_tmp.data2 AS PLAIN_LOCAL
+SELECT ab,ac,ad,ae,af,ag FROM tTaQLNode_tmp.tab AS sh WHERE ((ALL((ab)>(2)))&&(((ae)<(10))||((ae)>(11))))&&((ag)<>((10)+(1i))) ORDERBY ac DESC,ab GIVING tTaQLNode_tmp.data2 AS [PLAIN_LOCAL=T]
 
 select from tTaQLNode_tmp.tab sh giving tTaQLNode_tmp.data2 as [type="PLAIN",endian="local",storage="multifile",blocksize=32768] dminfo [name="ISM1",type="IncrementalStMan"], [name="SSM1",type="StandardStMan", bucketsize=1000]
 SELECT FROM tTaQLNode_tmp.tab AS sh GIVING tTaQLNode_tmp.data2 AS [type='PLAIN',endian='local',storage='multifile',blocksize=32768] DMINFO [name='ISM1',type='IncrementalStMan'],[name='SSM1',type='StandardStMan',bucketsize=1000]
@@ -114,10 +114,10 @@ SELECT ab,ac FROM tTaQLNode_tmp.tab WHERE NOT((ab) IN {2,4})
 select ab,ac from tTaQLNode_tmp.tab where ab IN [:=2,4=:<6,7<:]
 SELECT ab,ac FROM tTaQLNode_tmp.tab WHERE (ab) IN [<,2},{4,6>,<7,>]
 
-select ab,ac from tTaQLNode_tmp.tab where ab IN (2,(3))
+select ab,ac from tTaQLNode_tmp.tab where ab IN [2,(3)]
 SELECT ab,ac FROM tTaQLNode_tmp.tab WHERE (ab) IN [2,3]
 
-select ab,ac from tTaQLNode_tmp.tab where ab NOT IN (2,(3))
+select ab,ac from tTaQLNode_tmp.tab where ab NOT IN [2,(3)]
 SELECT ab,ac FROM tTaQLNode_tmp.tab WHERE NOT((ab) IN [2,3])
 
 select ab,ac from tTaQLNode_tmp.tab where ab IN [select from tTaQLNode_tmp.tab where ab>4 giving [ac=:=ac+0.5]]
@@ -304,4 +304,34 @@ CREATE TABLE tTaQLNode_tmp.tab col1 I4,col2 R4 ndim=1,c3 R8 [ndim=2,shape=[3,4]]
 
 create table tTaQLNode_tmp.tab limit 10*10
 CREATE TABLE tTaQLNode_tmp.tab  LIMIT (10)*(10)
+
+alter table a.b rename column old to new
+ALTER TABLE a.b RENAME COLUMN old TO new
+
+alter table a.b rename column old to new, old1 to new1, old2 to new2
+ALTER TABLE a.b RENAME COLUMN old TO new,old1 TO new1,old2 TO new2
+
+alter table x.y drop column col
+ALTER TABLE x.y DROP COLUMN col
+
+alter table x.y drop column col, col1,col2
+ALTER TABLE x.y DROP COLUMN col,col1,col2
+
+alter table x.y drop column col rename column old to new
+ALTER TABLE x.y DROP COLUMN col RENAME COLUMN old TO new
+
+alter table x.y set keyword xyz=14
+ALTER TABLE x.y SET KEYWORD xyz=14
+
+alter table x.y set keyword xy.z=14 AS uint
+ALTER TABLE x.y SET KEYWORD xy.z=14 AS U4
+
+alter table x.y set keyword xyz=[14,15,16] as float
+ALTER TABLE x.y SET KEYWORD xyz=[14,15,16] AS R4
+
+alter table x.y set keyword xyz=[f1=14 as uint, f2=[f2a=4]]
+ALTER TABLE x.y SET KEYWORD xyz=[f1=14 AS U4,f2=[f2a=4]]
+
+alter table x.y set keyword x=[] as bool, y=[y1=2,y2=[3+4/2, a+b/c], y3=[] as s, y4=[=]]
+ALTER TABLE x.y SET KEYWORD x=[] AS B,y=[y1=2,y2=[(3)+((4)/(2)),(a)+((b)/(c))],y3=[] AS S,y4=[=]]
 

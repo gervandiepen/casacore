@@ -101,8 +101,8 @@ $casa_checktool ./tTableGram 'select distinct max(ab,3) from tTableGram_tmp.tab 
 
 $casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab where ab IN [:=2,4=:<6,7<:]'
 
-$casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab where ab IN (2,(3))'
-$casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab where ab NOT IN (2,(3))'
+$casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab where ab IN [2,(3)]'
+$casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab where ab NOT IN [2,(3)]'
 
 $casa_checktool ./tTableGram 'select ab,ac from tTableGram_tmp.tab where ab IN [select from tTableGram_tmp.tab where ab>4 giving [ac=:=ac+0.5]]'
 

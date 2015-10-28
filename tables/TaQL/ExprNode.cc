@@ -1138,6 +1138,33 @@ TableExprNode TableExprNode::newColumnNode (const Table& table,
     return tsnptr;
 }
 
+// Find the last TableRecord of the field names of a keyword.
+TableRecord* TableExprNode::findLastKeyRec (const TableRecord& keyset,
+                                            const Vector<String>& fieldNames,
+                                            String& fullName)
+{
+    const TableRecord* ksPtr = &keyset;
+    // All field names, except last one, should be records.
+    uInt last = fieldNames.nelements() - 1;
+    fullName.clear();
+    Int fieldnr = 0;
+    for (uInt i=0; i<last; i++) {
+	if (i > 0) {
+	    fullName += '.';
+	}
+	fullName += fieldNames(i);
+	fieldnr = ksPtr->fieldNumber (fieldNames(i));
+	if (fieldnr < 0) {
+	    throw (TableInvExpr ("Keyword " + fullName + " does not exist"));
+	}
+        if (ksPtr->dataType(fieldnr) != TpRecord) {
+          throw (TableInvExpr ("Keyword " + fullName + " is no record, "
+                               "so no subfields can be given for it"));
+        }
+        ksPtr = &(ksPtr->subRecord(fieldnr));
+    }
+    return const_cast<TableRecord*>(ksPtr);
+}
 
 //# Create a constant node for a keyword on behalf of the Table class.
 //# The constructor reads in the value and stores it as a constant.
@@ -1145,102 +1172,88 @@ TableExprNode TableExprNode::newKeyConst (const TableRecord& keyset,
 					  const Vector<String>& fieldNames)
 {
     TableExprNodeRep* tsnptr = 0;
-    const TableRecord* ksPtr = &keyset;
-    // All field names, except last one, should be records.
-    uInt last = fieldNames.nelements() - 1;
-    String keyword;
-    Int fieldnr = 0;
-    for (uInt i=0; i<=last; i++) {
-	if (i > 0) {
-	    keyword += '.';
-	}
-	keyword += fieldNames(i);
-	fieldnr = ksPtr->fieldNumber (fieldNames(i));
-	if (fieldnr < 0) {
-	    throw (TableInvExpr ("Keyword " + keyword + " does not exist"));
-	}
-	if (i < last) {
-	    if (ksPtr->dataType(fieldnr) != TpRecord) {
-		throw (TableInvExpr ("Keyword " + keyword + " is no record, "
-				     "so no subfields can be given for it"));
-	    }
-	    ksPtr = &(ksPtr->subRecord(fieldnr));
-	}
+    String fullName;
+    const TableRecord* ks = findLastKeyRec (keyset, fieldNames, fullName);
+    String name = fieldNames[fieldNames.size() - 1];
+    fullName += '.' + name;
+    Int fieldnr = ks->fieldNumber (name);
+    if (fieldnr < 0) {
+      throw (TableInvExpr ("Keyword " + fullName + " does not exist"));
     }
-    const String& name = fieldNames(last);
-    switch (ksPtr->dataType (fieldnr)) {
+    switch (ks->dataType (fieldnr)) {
     case TpBool:
-	tsnptr = new TableExprNodeConstBool (ksPtr->asBool (name));
+	tsnptr = new TableExprNodeConstBool (ks->asBool (name));
 	break;
     case TpString:
-	tsnptr = new TableExprNodeConstString (ksPtr->asString (name));
+	tsnptr = new TableExprNodeConstString (ks->asString (name));
 	break;
     case TpComplex:
     case TpDComplex:
-	tsnptr = new TableExprNodeConstDComplex (ksPtr->asDComplex (name));
+	tsnptr = new TableExprNodeConstDComplex (ks->asDComplex (name));
 	break;
     case TpFloat:
     case TpDouble:
-	tsnptr = new TableExprNodeConstDouble (ksPtr->asDouble (name));
+	tsnptr = new TableExprNodeConstDouble (ks->asDouble (name));
 	break;
     case TpChar:
     case TpShort:
     case TpInt:
-	tsnptr = new TableExprNodeConstInt (ksPtr->asInt (name));
+	tsnptr = new TableExprNodeConstInt (ks->asInt (name));
 	break;
     case TpUChar:
     case TpUShort:
     case TpUInt:
-	tsnptr = new TableExprNodeConstInt (ksPtr->asuInt (name));
+	tsnptr = new TableExprNodeConstInt (ks->asuInt (name));
 	break;
     case TpArrayBool:
-	tsnptr = new TableExprNodeArrayConstBool (ksPtr->asArrayBool (name));
+	tsnptr = new TableExprNodeArrayConstBool (ks->asArrayBool (name));
 	break;
     case TpArrayString:
 	tsnptr = new TableExprNodeArrayConstString
-                                               (ksPtr->asArrayString (name));
+                                               (ks->asArrayString (name));
 	break;
     case TpArrayComplex:
 	tsnptr = new TableExprNodeArrayConstDComplex
-                                               (ksPtr->asArrayComplex (name));
+                                               (ks->asArrayComplex (name));
 	break;
     case TpArrayDComplex:
 	tsnptr = new TableExprNodeArrayConstDComplex
-                                               (ksPtr->asArrayDComplex (name));
+                                               (ks->asArrayDComplex (name));
 	break;
     case TpArrayUChar:
 	tsnptr = new TableExprNodeArrayConstInt
-                                               (ksPtr->asArrayuChar (name));
+                                               (ks->asArrayuChar (name));
 	break;
     case TpArrayShort:
 	tsnptr = new TableExprNodeArrayConstInt
-                                               (ksPtr->asArrayShort (name));
+                                               (ks->asArrayShort (name));
 	break;
     case TpArrayInt:
 	tsnptr = new TableExprNodeArrayConstInt
-                                               (ksPtr->asArrayInt (name));
+                                               (ks->asArrayInt (name));
 	break;
     case TpArrayUInt:
 	tsnptr = new TableExprNodeArrayConstInt
-                                               (ksPtr->asArrayuInt (name));
+                                               (ks->asArrayuInt (name));
 	break;
     case TpArrayFloat:
 	tsnptr = new TableExprNodeArrayConstDouble
-                                               (ksPtr->asArrayFloat (name));
+                                               (ks->asArrayFloat (name));
 	break;
     case TpArrayDouble:
 	tsnptr = new TableExprNodeArrayConstDouble
-                                               (ksPtr->asArrayDouble (name));
+                                               (ks->asArrayDouble (name));
 	break;
     case TpRecord:
-	throw (TableInvExpr ("Keyword " + keyword + " contains records, "
+	throw (TableInvExpr ("Keyword " + fullName + " contains records, "
 			     "so subfields have to be given for it"));
 	break;
     case TpTable:
 	throw (TableInvExpr ("Keyword " + name + " is a table"));
 	break;
     default:
-	throw (TableInvExpr ("keyword " + keyword + " has unknown data type"));
+	throw (TableInvExpr ("keyword " + fullName +
+                             " has unknown data type"));
     }
     return tsnptr;
 }

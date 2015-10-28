@@ -106,6 +106,11 @@ public:
   virtual TaQLNodeResult visitColSpecNode  (const TaQLColSpecNodeRep& node) = 0;
   virtual TaQLNodeResult visitRecFldNode   (const TaQLRecFldNodeRep& node) = 0;
   virtual TaQLNodeResult visitUnitNode     (const TaQLUnitNodeRep& node) = 0;
+  virtual TaQLNodeResult visitAltTabNode   (const TaQLAltTabNodeRep& node) = 0;
+  virtual TaQLNodeResult visitAddColNode   (const TaQLAddColNodeRep& node) = 0;
+  virtual TaQLNodeResult visitSetKeyNode   (const TaQLSetKeyNodeRep& node) = 0;
+  virtual TaQLNodeResult visitRenDropNode  (const TaQLRenDropNodeRep& node) = 0;
+  virtual TaQLNodeResult visitAddRowNode   (const TaQLAddRowNodeRep& node) = 0;
   // </group>
 
 protected:

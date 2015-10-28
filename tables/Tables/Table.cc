@@ -214,7 +214,7 @@ Table::Table (const Block<String>& tableNames,
   isCounted_p      (True),
   lastModCounter_p (0)
 {
-  baseTabPtr_p = new ConcatTable (tableNames, subTables, subDirName,
+    baseTabPtr_p = new ConcatTable (tableNames, subTables, subDirName,
 				    option, TableLock(), tsmOpt);
     baseTabPtr_p->link();
 }

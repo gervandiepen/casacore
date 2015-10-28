@@ -1080,6 +1080,13 @@ public:
     static TableExprNode newKeyConst (const TableRecord&,
 				      const Vector<String>& fieldNames);
 
+    // Handle all field names except the last one. ALl of them must
+    // be records. The last record is returned.
+    // fullName is filled with the full keyword name separated by dots.
+    static TableRecord* findLastKeyRec (const TableRecord& keyset,
+                                        const Vector<String>& fieldNames,
+                                        String& fullName);
+
     // Throw invalid data type exception.
     static void throwInvDT (const String& message);
 

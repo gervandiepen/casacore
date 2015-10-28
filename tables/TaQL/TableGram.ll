@@ -110,6 +110,14 @@ COUNT     [Cc][Oo][Uu][Nn][Tt]
 COUNTALL  [Gg]{COUNT}{WHITE}"("{WHITE}"*"?{WHITE}")"
 CALC      [Cc][Aa][Ll][Cc]
 CREATETAB [Cc][Rr][Ee][Aa][Tt][Ee]{WHITE}[Tt][Aa][Bb][Ll][Ee]{WHITE1}
+ALTERTAB  [Aa][Ll][Tt][Ee][Rr]{WHITE}[Tt][Aa][Bb][Ll][Ee]{WHITE1}
+ADDCOL    ,?{WHITE}[Aa][Dd][Dd]{WHITE}[Cc][Oo][Ll][Uu][Mm][Nn]([Ss])?{WHITE1}
+RENAMECOL ,?{WHITE}[Rr][Ee][Nn][Aa][Mm][Ee]{WHITE}[Cc][Oo][Ll][Uu][Mm][Nn]([Ss])?{WHITE1}
+DROPCOL   ,?{WHITE}[Dd][Rr][Oo][Pp]{WHITE}[Cc][Oo][Ll][Uu][Mm][Nn]([Ss])?{WHITE1}
+SETKEY    ,?{WHITE}[Ss][Ee][Tt]{WHITE}[Kk][Ee][Yy][Ww][Oo][Rr][Dd]([Ss])?{WHITE1}
+RENAMEKEY ,?{WHITE}[Rr][Ee][Nn][Aa][Mm][Ee]{WHITE}[Kk][Ee][Yy][Ww][Oo][Rr][Dd]([Ss])?{WHITE1}
+DROPKEY   ,?{WHITE}[Dd][Rr][Oo][Pp]{WHITE}[Kk][Ee][Yy][Ww][Oo][Rr][Dd]([Ss])?{WHITE1}
+ADDROW    ,?{WHITE}[Aa][Dd][Dd]{WHITE}[Rr][Oo][Ww]([Ss])?{WHITE1}
 DMINFO    [Dd][Mm][Ii][Nn][Ff][Oo]
 SET       [Ss][Ee][Tt]
 VALUES    [Vv][Aa][Ll][Uu][Ee][Ss]
@@ -139,6 +147,7 @@ LIKE      [Ll][Ii][Kk][Ee]
 IN        [Ii][Nn]
 INCONE    [Ii][Nn]{WHITE}[Cc][Oo][Nn][Ee]{WHITE1}
 AS        [Aa][Ss]
+TO        [Tt][Oo]
 AND       [Aa][Nn][Dd]
 OR        [Oo][Rr]
 XOR       [Xx][Oo][Rr]
@@ -257,6 +266,46 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 	    BEGIN(CRETABstate);
 	    return CREATETAB;
 	  }
+{ALTERTAB} {
+            tableGramPosition() += yyleng;
+	    BEGIN(CRETABstate);
+	    return ALTERTAB;
+	  }
+{ADDCOL}  {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return ADDCOL;
+          } 
+{RENAMECOL} {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return RENAMECOL;
+          } 
+{DROPCOL} {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return DROPCOL;
+          } 
+{SETKEY}  {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return SETKEY;
+          } 
+{RENAMEKEY} {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return RENAMEKEY;
+          } 
+{DROPKEY} {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return DROPKEY;
+          } 
+{ADDROW}  {
+	    BEGIN(EXPRstate);
+            tableGramPosition() += yyleng;
+	    return ADDROW;
+          } 
 {DMINFO}  {
             tableGramPosition() += yyleng;
 	    BEGIN(EXPRstate);
@@ -336,6 +385,10 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 {AS}      {
             tableGramPosition() += yyleng;
             return AS;
+          }
+{TO}      {
+            tableGramPosition() += yyleng;
+            return TO;
           }
 {IN}      {
             tableGramPosition() += yyleng;

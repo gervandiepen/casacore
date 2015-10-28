@@ -110,6 +110,11 @@ public:
   #define TaQLNode_Regex    char(27)
   #define TaQLNode_Count    char(28)
   #define TaQLNode_Groupby  char(29)
+  #define TaQLNode_AltTab   char(30)
+  #define TaQLNode_AddCol   char(31)
+  #define TaQLNode_SetKey   char(32)
+  #define TaQLNode_RenDrop  char(33)
+  #define TaQLNode_AddRow   char(34)
   // </group>
 
   // Constructor for derived classes specifying the type.

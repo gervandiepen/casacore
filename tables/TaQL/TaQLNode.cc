@@ -164,6 +164,16 @@ TaQLNode TaQLNode::restoreNode (AipsIO& aio)
     return TaQLCountNodeRep::restore (aio);
   case TaQLNode_Groupby:
     return TaQLGroupNodeRep::restore (aio);
+  case TaQLNode_AltTab:
+    return TaQLAltTabNodeRep::restore (aio);
+  case TaQLNode_AddCol:
+    return TaQLAddColNodeRep::restore (aio);
+  case TaQLNode_SetKey:
+    return TaQLSetKeyNodeRep::restore (aio);
+  case TaQLNode_RenDrop:
+    return TaQLRenDropNodeRep::restore (aio);
+  case TaQLNode_AddRow:
+    return TaQLAddRowNodeRep::restore (aio);
   default:
     throw AipsError ("TaQLNode::restoreNode - unknown node type");
   }
@@ -257,6 +267,14 @@ void TaQLMultiNode::setPPFix (const String& prefix, const String& postfix)
   itsNRep->setPPFix (prefix, postfix);
 }
 
+void TaQLMultiNode::setSeparator (const String& sep)
+{
+  itsNRep->setSeparator (sep);
+}
+void TaQLMultiNode::setSeparator (uInt incr, const String& sep)
+{
+  itsNRep->setSeparator (incr, sep);
+}
 
 
 TaQLQueryNode::TaQLQueryNode (TaQLQueryNodeRep* rep)

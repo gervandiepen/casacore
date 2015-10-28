@@ -230,6 +230,8 @@ public:
   void add (TaQLNodeRep* noderep);
   void setIsSetOrArray();
   void setPPFix (const String& prefix, const String& postfix);
+  void setSeparator (const String& sep);
+  void setSeparator (uInt incr, const String& sep);
   const TaQLMultiNodeRep* getMultiRep() const
     { return itsNRep; }
 private:

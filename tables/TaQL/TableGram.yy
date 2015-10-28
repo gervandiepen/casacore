@@ -51,6 +51,7 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %token COUNTALL
 %token CALC
 %token CREATETAB
+%token ALTERTAB
 %token FROM
 %token WHERE
 %token GROUPBY
@@ -65,6 +66,13 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %token SORTDESC
 %token LIMIT
 %token OFFSET
+%token ADDCOL
+%token RENAMECOL
+%token DROPCOL
+%token SETKEY
+%token RENAMEKEY
+%token DROPKEY
+%token ADDROW
 %token DMINFO
 %token ALL                  /* ALL (in SELECT ALL) */
 %token <val> NAME           /* name of function, field, table, or alias */
@@ -75,6 +83,7 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %token <val> STRINGLITERAL
 %token <valre> REGEX
 %token AS
+%token TO
 %token IN
 %token INCONE
 %token BETWEEN
@@ -99,17 +108,20 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <val> literal
 %type <nodename> tabname
 %type <nodename> stabname
+%type <nodename> namefld
 %type <nodename> unit
 %type <node> tabalias
 %type <node> tfnamen
 %type <node> tfname
 %type <nodeselect> selcomm
-%type <nodeselect> countcomm
 %type <node> updcomm
 %type <node> inscomm
 %type <node> delcomm
 %type <node> calccomm
+%type <nodeselect> nestedcomm
+%type <nodeselect> countcomm
 %type <nodeselect> cretabcomm
+%type <nodeselect> alttabcomm
 %type <nodeselect> tfcommand
 %type <nodeselect> subquery
 %type <nodeselect> selrow
@@ -140,6 +152,14 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <nodelist> insclist
 %type <node> inspart
 %type <nodelist> insvlist
+%type <node> altcomm
+%type <nodelist> altlist
+%type <nodelist> rencols
+%type <nodelist> dropcols
+%type <nodelist> renkeys
+%type <nodelist> dropkeys
+%type <nodelist> setkeys
+%type <node> setkey
 %type <node> orexpr
 %type <node> andexpr
 %type <node> relexpr
@@ -162,13 +182,15 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <node> sortexpr
 %type <nodelist> sortlist
 %type <nodelist> dminfo
-%type <nodelist> reclist
-%type <node> recelem
+%type <nodelist> dmlist
+%type <node> dmelem
 %type <nodelist> recexpr
-%type <nodelist> recvalues
 %type <node> recfield
 %type <node> srecfield
 %type <node> rrecfield
+%type <noderecfldrep> brackval
+%type <noderecfldrep> keyval
+%type <noderecfldrep> srecval
 
 /* This defines the precedence order of the operators (low to high) */
 %left OR
@@ -195,7 +217,7 @@ TaQLNode* node;
 TaQLConstNode* nodename;
 TaQLMultiNode* nodelist;
 TaQLQueryNode* nodeselect;
-TaQLColNodeRep* nodecolrep;
+TaQLRecFldNodeRep* noderecfldrep;
 }
 
 %{
@@ -246,30 +268,28 @@ command:   selcomm
              { TaQLNode::theirNode = *$1; }
          | delcomm
              { TaQLNode::theirNode = *$1; }
-         | countcomm
-             { TaQLNode::theirNode = *$1; }
          | calccomm
              { TaQLNode::theirNode = *$1; }
-         | cretabcomm
+         | nestedcomm
              { TaQLNode::theirNode = *$1; }
+         ;
+
+nestedcomm: countcomm
+             { $$ = $1; }
+         | cretabcomm
+             { $$ = $1; }
+         | alttabcomm
+             { $$ = $1; }
          ;
 
 tfcommand: subquery {
                $$ = $1;
 	   }
-         | LPAREN cretabcomm RPAREN {
+         | LPAREN nestedcomm RPAREN {
                $$ = $2;
 	       $$->setBrackets();
 	   }
-         | LBRACKET cretabcomm RBRACKET {
-               $$ = $2;
-	       $$->setBrackets();
-	   }
-         | LPAREN countcomm RPAREN {
-               $$ = $2;
-	       $$->setBrackets();
-	   }
-         | LBRACKET countcomm RBRACKET {
+         | LBRACKET nestedcomm RBRACKET {
                $$ = $2;
 	       $$->setBrackets();
 	   }
@@ -504,11 +524,165 @@ cretabcomm: CREATETAB tabnmtyp colspecs nrowspec dminfo {
            }
          ;
 
+alttabcomm: ALTERTAB tabalias altlist {
+               $$ = new TaQLQueryNode(
+                    new TaQLAltTabNodeRep (*$2, TaQLMultiNode(), *$3));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+           | ALTERTAB tabalias FROM tables altlist {
+               $$ = new TaQLQueryNode(
+                    new TaQLAltTabNodeRep (*$2, *$4, *$5));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         ;
+
+altlist:   altlist altcomm {
+               $$ = $1;
+	       $$->add (*$2);
+           }
+         | altcomm {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->setSeparator (" ");
+	       $$->add (*$1);
+           }
+         ;
+
+altcomm:   ADDCOL colspecs dminfo {
+               $$ = new TaQLNode (
+                    new TaQLAddColNodeRep(*$2, *$3));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | RENAMECOL rencols {
+	       $$ = new TaQLNode(
+                    new TaQLRenDropNodeRep(0, *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | DROPCOL dropcols {
+	       $$ = new TaQLNode(
+                    new TaQLRenDropNodeRep(1, *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | SETKEY setkeys {
+	       $$ = new TaQLNode(
+                    new TaQLSetKeyNodeRep (*$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | RENAMEKEY renkeys {
+	       $$ = new TaQLNode(
+                    new TaQLRenDropNodeRep(2, *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | DROPKEY dropkeys {
+	       $$ = new TaQLNode(
+                    new TaQLRenDropNodeRep(3, *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | ADDROW orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLAddRowNodeRep(*$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         ;
+
+rencols:   rencols COMMA NAME TO NAME {
+               $$ = $1;
+               $$->add (new TaQLKeyColNodeRep ($3->getString()));
+               $$->add (new TaQLKeyColNodeRep ($5->getString()));
+           }
+         | NAME TO NAME {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->setSeparator (2, " TO ");
+               $$->add (new TaQLKeyColNodeRep ($1->getString()));
+               $$->add (new TaQLKeyColNodeRep ($3->getString()));
+           }
+         ;
+
+dropcols:  dropcols COMMA NAME {
+               $$ = $1;
+               $$->add (new TaQLKeyColNodeRep ($3->getString()));
+           }
+         | NAME {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (new TaQLKeyColNodeRep ($1->getString()));
+           }
+         ;
+
+renkeys:   renkeys COMMA namefld TO NAME {
+               $$ = $1;
+               $$->add (new TaQLKeyColNodeRep ($3->getString()));
+               $$->add (new TaQLKeyColNodeRep ($5->getString()));
+           }
+         | namefld TO NAME {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->setSeparator (2, " TO ");
+               $$->add (new TaQLKeyColNodeRep ($1->getString()));
+               $$->add (new TaQLKeyColNodeRep ($3->getString()));
+           }
+         ;
+
+dropkeys:  dropkeys COMMA namefld {
+               $$ = $1;
+               $$->add (new TaQLKeyColNodeRep ($3->getString()));
+           }
+         | namefld {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (new TaQLKeyColNodeRep ($1->getString()));
+           }
+         ;
+
+setkeys:   setkeys COMMA setkey {
+               $$ = $1;
+               $$->add (*$3);
+           }
+         | setkey {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (*$1);
+           }
+
+setkey:   namefld EQASS keyval {
+	       $$ = new TaQLNode(
+                    new TaQLRecFldNodeRep($1->getString(), *$3));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               delete $3;
+           }
+        | namefld AS namefld {
+	       $$ = new TaQLNode(
+                    new TaQLRecFldNodeRep($1->getString(), $3->getString()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+
+keyval:    srecval {
+               $$ = $1;
+           }
+         | brackval {
+               $$ = $1;
+           }
+
+brackval:  LBRACKET recexpr RBRACKET {
+	       $$ = new TaQLRecFldNodeRep ("", *$2, "");
+           }
+         | LBRACKET EQASS RBRACKET {
+	       /* Like in glish [=] is the syntax for an empty 'record' */
+               TaQLMultiNode empty(False);
+               empty.setPPFix ("[", "]");
+               $$ = new TaQLRecFldNodeRep ("", empty, "");
+           }
+         | LBRACKET RBRACKET AS NAME {
+               /* empty vector of the given type */
+           $$ = new TaQLRecFldNodeRep ("", TaQLNode(), $4->getString());
+           }
+
 dminfo:    {      /* no datamans */
                $$ = new TaQLMultiNode();
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | DMINFO reclist {
+         | DMINFO dmlist {
                $$ = $2;
            }
          ;
@@ -643,10 +817,12 @@ tabnmtyp:  tabname {
 	   }
          ;
 
-tabnmtyps: NAME {
+tabnmtyps: NAME {  /* PLAIN_BIG, etc. for backward compatibility */
+               TaQLNode val(new TaQLConstNodeRep (True));
                $$ = new TaQLMultiNode(False);
 	       TaQLNode::theirNodesCreated.push_back ($$);
-               $$->add (new TaQLRecFldNodeRep ($1->getString()));
+               $$->setPPFix ("[", "]");
+               $$->add (new TaQLRecFldNodeRep ($1->getString(), val, ""));
 	   }
          | LBRACKET recexpr RBRACKET {
                $$ = $2;
@@ -733,7 +909,7 @@ nrowspec:  {          /* no nrows given means 0 */
                $$ = new TaQLNode();
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | LIMIT arithexpr {
+         | LIMIT orexpr {
                $$ = $2;
 	   }
          ;
@@ -1129,12 +1305,7 @@ inxexpr:   simbexpr {
 
 simbexpr:  LPAREN orexpr RPAREN
                { $$ = $2; }
-         | NAME LPAREN elemlist RPAREN {
-	       $$ = new TaQLNode(
-                    new TaQLFuncNodeRep ($1->getString(), *$3));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	   }
-         | FLDNAME LPAREN elemlist RPAREN {
+         | namefld LPAREN elemlist RPAREN {
 	       $$ = new TaQLNode(
                     new TaQLFuncNodeRep ($1->getString(), *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
@@ -1149,12 +1320,7 @@ simbexpr:  LPAREN orexpr RPAREN
                     new TaQLFuncNodeRep ("COUNTALL"));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
-         | NAME {
-	       $$ = new TaQLNode(
-                    new TaQLKeyColNodeRep ($1->getString()));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	   }
-         | FLDNAME {
+         | namefld {
 	       $$ = new TaQLNode(
                     new TaQLKeyColNodeRep ($1->getString()));
 	       TaQLNode::theirNodesCreated.push_back ($$);
@@ -1167,12 +1333,20 @@ simbexpr:  LPAREN orexpr RPAREN
 	   }
          ;
 
-unit:      NAME            /* simple unit */
-           { $$ = $1; }
-         | FLDNAME         /* unit with . */
-           { $$ = $1; }
-         | STRINGLITERAL   /* compound unit (with special characters) */
-           { $$ = $1; }
+namefld:   NAME {            /* simple name */
+               $$ = $1;
+           }
+         | FLDNAME {         /* name with . or :: */
+               $$ = $1;
+           }
+         ;
+
+unit:      namefld {
+               $$ = $1;
+           }
+         | STRINGLITERAL {   /* compound unit (with special characters) */
+               $$ = $1;
+           }
          ;
 
 literal:   LITERAL {
@@ -1187,10 +1361,11 @@ set:       LBRACKET elems RBRACKET {
                $2->setIsSetOrArray();
                $$ = $2;
            }
-         | LPAREN elems RPAREN {
+/*         | LPAREN elems RPAREN {
                $2->setIsSetOrArray();
                $$ = $2;
            }
+*/
          | subquery {
                $$ = $1;
            }
@@ -1390,67 +1565,67 @@ subsrange: arithexpr {
 
 colonrangeinterval: colonrange {
                $$ = $1;
-            }
-         |  arithexpr COLON {
+           }
+         | arithexpr COLON {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (*$1, 0, 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  arithexpr COLON COLON {
+           }
+         | arithexpr COLON COLON {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (*$1, 0, 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  arithexpr COLON COLON arithexpr {
+           }
+         | arithexpr COLON COLON arithexpr {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (*$1, 0, *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
+           }
 
 colonrangeindex: colonrange {
                $$ = $1;
-            }
-         |  arithexpr COLON {
+           }
+         | arithexpr COLON {
 	       $$ = new TaQLNode (new TaQLIndexNodeRep
                     (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  arithexpr COLON COLON {
+           }
+         | arithexpr COLON COLON {
 	       $$ = new TaQLNode (new TaQLIndexNodeRep
                     (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  arithexpr COLON COLON arithexpr {
+           }
+         | arithexpr COLON COLON arithexpr {
 	       $$ = new TaQLNode (new TaQLIndexNodeRep
                     (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
+           }
 
 colonrange: arithexpr COLON arithexpr {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (*$1, *$3, 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  arithexpr COLON arithexpr COLON arithexpr {
+           }
+         | arithexpr COLON arithexpr COLON arithexpr {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (*$1, *$3, *$5));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  COLON arithexpr {
+           }
+         | COLON arithexpr {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (0, *$2, 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  COLON arithexpr COLON arithexpr {
+           }
+         | COLON arithexpr COLON arithexpr {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (0, *$2, *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
-         |  COLON COLON arithexpr {
+           }
+         | COLON COLON arithexpr {
 	       $$ = new TaQLNode(
                     new TaQLIndexNodeRep (0, 0, *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
-            }
+           }
          ;
 
 sortlist : sortlist COMMA sortexpr {
@@ -1481,20 +1656,20 @@ sortexpr : orexpr {
            }
          ;
 
-reclist:  recelem {
+dmlist:   dmelem {
                $$ = new TaQLMultiNode(False);
 	       TaQLNode::theirNodesCreated.push_back ($$);
                $$->add (*$1);
 	   }
-         | reclist COMMA recelem {
+         | dmlist COMMA dmelem {
 	       $$ = $1;
                $$->add (*$3);
 	   }
          ;
            
-recelem:   LBRACKET recexpr RBRACKET {
+dmelem:    LBRACKET recexpr RBRACKET {
 	       $$ = new TaQLNode(
-                    new TaQLRecFldNodeRep ("", *$2));
+                    new TaQLRecFldNodeRep ("", *$2, ""));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
          ;
@@ -1502,7 +1677,7 @@ recelem:   LBRACKET recexpr RBRACKET {
 recexpr:   recexpr COMMA recfield {
                $$->add (*$3);
 	   }
-       |   recfield {
+         | recfield {
 	       $$ = new TaQLMultiNode(False);
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	       $$->setPPFix ("[", "]");
@@ -1513,54 +1688,31 @@ recexpr:   recexpr COMMA recfield {
 recfield:  srecfield {
                $$ = $1;
            }
-       |   rrecfield {
+         | rrecfield {
                $$ = $1;
-           }
-       |   NAME EQASS LBRACKET EQASS RBRACKET {
-	       /* Like in glish [=] is the syntax for an empty 'record' */
-	       $$ = new TaQLNode(
-                    new TaQLRecFldNodeRep ($1->getString(), TaQLNode()));
-	       TaQLNode::theirNodesCreated.push_back ($$);
            }
        ;
 
-srecfield: NAME EQASS literal {
+srecfield: NAME EQASS srecval {
+               $$ = new TaQLNode(
+                    new TaQLRecFldNodeRep ($1->getString(), *$3));
+               delete $3;
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+      ;
+
+srecval:   orexpr {
+               $$ = new TaQLRecFldNodeRep ("", *$1, "");
+           }
+         | orexpr AS NAME {     /* unit */
+	       $$ = new TaQLRecFldNodeRep ("", *$1, $3->getString());
+           }
+
+rrecfield: NAME EQASS brackval {
 	       $$ = new TaQLNode(
                     new TaQLRecFldNodeRep ($1->getString(), *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-       |   NAME EQASS LBRACKET recvalues RBRACKET {
-	       $$ = new TaQLNode(
-                    new TaQLRecFldNodeRep ($1->getString(), *$4));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }
-       |   NAME {
-	       $$ = new TaQLNode(
-                    new TaQLRecFldNodeRep ($1->getString()));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }
        ;
 
-rrecfield: NAME EQASS LBRACKET recexpr RBRACKET {
-	       $$ = new TaQLNode(
-                    new TaQLRecFldNodeRep ($1->getString(), *$4));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }
-       ;
-
-recvalues: recvalues COMMA literal {
-               $$->add (*$3);
-	   }
-       |   literal {
-	       $$ = new TaQLMultiNode(False);
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	       $$->setPPFix ("[", "]");
-               $$->add (*$1);
-	   }
-       |   {      /* empty vector */
-	       $$ = new TaQLMultiNode(False);
-	       TaQLNode::theirNodesCreated.push_back ($$);
-	       $$->setPPFix ("[", "]");
-           }
-       ;
 %%

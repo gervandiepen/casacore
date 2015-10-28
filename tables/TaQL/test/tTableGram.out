@@ -305,13 +305,13 @@ select ab,ac from tTableGram_tmp.tab where ab IN [:=2,4=:<6,7<:]
  5 6
  8 9
  9 10
-select ab,ac from tTableGram_tmp.tab where ab IN (2,(3))
+select ab,ac from tTableGram_tmp.tab where ab IN [2,(3)]
     has been executed
     select result of 2 rows
 2 selected columns:  ab ac
  2 3
  3 4
-select ab,ac from tTableGram_tmp.tab where ab NOT IN (2,(3))
+select ab,ac from tTableGram_tmp.tab where ab NOT IN [2,(3)]
     has been executed
     select result of 8 rows
 2 selected columns:  ab ac

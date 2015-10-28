@@ -33,6 +33,7 @@ tTaQLNode
 set (testscripts
 ttaql
 tTableGramCretab
+tTableGramAlttab
 tTableGramGroupAggr
 tTableGramGroupAggrAll
 tTableGramGroupAggrMaskAll

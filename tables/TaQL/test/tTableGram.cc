@@ -335,9 +335,11 @@ void seltab (const String& str)
     } else {
       s = str.substr(spos, epos-spos);
       s.downcase();
-      addCalc = !(s=="select" || s=="update" || s=="insert" || s=="calc" ||
-                  s=="delete" || s=="create" || s=="createtable" ||
-                  s=="count"  || s=="using"  || s=="usingstyle"  || s=="time");
+      addCalc = !(s=="select" || s=="update" || s=="insert" ||
+                  s=="calc" || s=="delete" || s=="count" ||
+                  s=="create" || s=="createtable" ||
+                  s=="alter" || s=="altertable" ||
+                  s=="using"  || s=="usingstyle"  || s=="time");
     }
   } 
   String strc(str);

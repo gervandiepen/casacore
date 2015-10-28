@@ -354,7 +354,8 @@ public:
     PDELETE,
     PCOUNT,
     PCALC,
-    PCRETAB
+    PCRETAB,
+    PALTTAB
   };
 
   enum GroupAggrType {
@@ -421,6 +422,44 @@ public:
   void handleColSpec (const String& columnName, const String& dataType,
 		      const Record& spec, Bool isCOrder=False);
 
+  // Reopen the table (for update) used in the ALTER TABLE command.
+  void handleAltTab();
+
+  // Add columns to the table of ALTER TABLE.
+  // The column descriptions have already been added to tableDesc_p.
+  void handleAddCol (const Record& dmInfo);
+
+  // Add a keyword or replace a keyword with the value of another keyword.
+  // The keywords can be table or column keywords (col::key).
+  ValueHolder getRecFld (const String& name);
+
+  // Define a field with the given data type in the Record.
+  static void setRecFld (RecordInterface& rec,
+                         const String& name,
+                         const String& dtype,
+                         const ValueHolder& vh);
+
+  // Get the type string. If empty, it is made from the given
+  // data type.
+  static String getTypeString (const String& typeStr, DataType type);
+
+  // Add a keyword or replace a keyword with a value.
+  // The keyword can be a table or column keyword (col::key).
+  // The data type string can be empty leaving the data type unchanged.
+  void handleSetKey (const String& name, const String& dtype,
+                     const ValueHolder& value);
+
+  // Rename a table or column keyword.
+  void handleRenameKey (const String& oldName, const String& newName);
+
+  // Remove a table or column keyword.
+  void handleRemoveKey (const String& name);
+
+  // Split the given name into optional shorthand, column and fields.
+  // Find the keywordset for it and fill in the final keyword name.
+  // It is a helper function for handleSetKey, etc.
+  TableRecord& findKeyword (const String& name, String& keyName);
+
   // Add an update object.
   void addUpdate (TableParseUpdate* upd);
 
@@ -451,6 +490,9 @@ public:
 
   // Evaluate and keep the offset value.
   void handleOffset (const TableExprNode& expr);
+
+  // Evaluate and add the rows.
+  void handleAddRow (const TableExprNode& expr);
 
   // Add a table nr, name, or object to the container.
   void addTable (Int tabnr, const String& name,
@@ -650,7 +692,7 @@ private:
   Int64 evalIntScaExpr (const TableExprNode& expr) const;
 
   // Split a name into its parts (shorthand, column and field names).
-  // True is returned when the name contained a keyword part.
+  // True is returned if the name contained a keyword part.
   // In that case fieldNames contains the keyword name and the possible
   // subfields. The possible shorthand and the column name are
   // filled in if it is a column keyword.
@@ -660,7 +702,7 @@ private:
   // Otherwise the name is treated as a normal name without keyword.
   Bool splitName (String& shorthand, String& columnName,
 		  Vector<String>& fieldNames, const String& name,
-		  Bool checkError) const;
+		  Bool checkError, Bool isKeyword) const;
 
   // Find a table for the given shorthand.
   // If no shorthand is given, the first table is returned (if there).

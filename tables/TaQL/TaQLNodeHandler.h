@@ -36,6 +36,7 @@
 #include <casacore/tables/TaQL/ExprNode.h>
 #include <casacore/tables/TaQL/ExprNodeSet.h>
 #include <casacore/casa/Containers/Record.h>
+#include <casacore/casa/Containers/ValueHolder.h>
 #include <vector>
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
@@ -132,6 +133,11 @@ public:
   virtual TaQLNodeResult visitColSpecNode  (const TaQLColSpecNodeRep& node);
   virtual TaQLNodeResult visitRecFldNode   (const TaQLRecFldNodeRep& node);
   virtual TaQLNodeResult visitUnitNode     (const TaQLUnitNodeRep& node);
+  virtual TaQLNodeResult visitAltTabNode   (const TaQLAltTabNodeRep& node);
+  virtual TaQLNodeResult visitAddColNode   (const TaQLAddColNodeRep& node);
+  virtual TaQLNodeResult visitSetKeyNode   (const TaQLSetKeyNodeRep& node);
+  virtual TaQLNodeResult visitRenDropNode  (const TaQLRenDropNodeRep& node);
+  virtual TaQLNodeResult visitAddRowNode   (const TaQLAddRowNodeRep& node);
   // </group>
 
   // Get the actual result object from the result.
@@ -173,22 +179,10 @@ private:
   void handleInsVal (const TaQLNode&);
 
   // Handle a column specification in a create table.
-  void handleColSpec (const TaQLMultiNode&);
+  void handleColSpecs (const TaQLMultiNode&);
 
-  // Handle a record specification.
-  Record handleRecord (const TaQLMultiNodeRep*);
-
-  // Handle a record field and add it to the Record.
-  void handleRecFld (const TaQLNode&, Record&);
-
-  // Handle a record field with multiple values and add it to the Record.
-  // The field can be a record or a vector of values.
-  void handleMultiRecFld (const String& fldName,
-			  const TaQLMultiNodeRep* node,
-			  Record& rec);
-
-  // Determine 'highest' constant data type and check if they match.
-  int checkConstDtype (int dt1, int dt2);
+  // Handle a Multi RecFld representing a Record.
+  Record handleMultiRecFld (const TaQLNode& node);
 
 
   //# Use vector instead of stack because it has random access
@@ -251,6 +245,8 @@ public:
     { return itsDtype; }
   const Record& getRecord() const
     { return itsRecord; }
+  const ValueHolder& getValueHolder() const
+    { return itsVH; }
   const Table& getTable() const
     { return itsTable; }
   const TableExprNode& getExpr() const
@@ -276,6 +272,8 @@ public:
     { itsDtype = dtype; }
   void setRecord (const Record& record)
     { itsRecord = record; }
+  void setValueHolder (const ValueHolder& vh)
+    { itsVH = vh; }
   void setTable (const Table& table)
     { itsTable = table; }
   void setExpr (const TableExprNode& expr)
@@ -294,6 +292,7 @@ private:
   String itsAlias;
   String itsDtype;
   Record itsRecord;
+  ValueHolder itsVH;
   Table  itsTable;
   TableExprNode         itsExpr;
   TableExprNodeSetElem* itsElem;
