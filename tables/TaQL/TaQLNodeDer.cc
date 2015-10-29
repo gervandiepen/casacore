@@ -1553,15 +1553,17 @@ TaQLRecFldNodeRep::TaQLRecFldNodeRep (const String& name,
 TaQLRecFldNodeRep::TaQLRecFldNodeRep (const String& name,
                                       const TaQLRecFldNodeRep& node)
   : TaQLNodeRep (TaQLNode_RecFld),
-    itsName(name),
+    itsName  (name),
     itsDtype (node.itsDtype),
     itsValues(node.itsValues)
 {}
 TaQLRecFldNodeRep::TaQLRecFldNodeRep (const String& name,
-                                      const String& fromName)
+                                      const String& fromName,
+                                      const String& dtype)
   : TaQLNodeRep (TaQLNode_RecFld),
     itsName     (name),
-    itsFromName (fromName)
+    itsFromName (fromName),
+    itsDtype    (checkDataType(dtype))
 {}
 TaQLRecFldNodeRep::~TaQLRecFldNodeRep()
 {}
@@ -1603,7 +1605,7 @@ TaQLRecFldNodeRep* TaQLRecFldNodeRep::restore (AipsIO& aio)
   if (fromName.empty()) {
     return new TaQLRecFldNodeRep (name, values, dtype);
   } else {
-    return new TaQLRecFldNodeRep (name, fromName);
+    return new TaQLRecFldNodeRep (name, fromName, dtype);
   }
 }
 

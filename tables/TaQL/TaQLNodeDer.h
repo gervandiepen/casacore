@@ -1076,7 +1076,8 @@ public:
   TaQLRecFldNodeRep (const String& name,
                      const TaQLNode& values, const String& dtype);
   TaQLRecFldNodeRep (const String& name, const TaQLRecFldNodeRep&);
-  TaQLRecFldNodeRep (const String& name, const String& fromName);
+  TaQLRecFldNodeRep (const String& name, const String& fromName,
+                     const String& dtype);
   virtual ~TaQLRecFldNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void show (std::ostream& os) const;

@@ -70,6 +70,7 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %token RENAMECOL
 %token DROPCOL
 %token SETKEY
+%token COPYKEY
 %token RENAMEKEY
 %token DROPKEY
 %token ADDROW
@@ -159,7 +160,9 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <nodelist> renkeys
 %type <nodelist> dropkeys
 %type <nodelist> setkeys
+%type <nodelist> copykeys
 %type <node> setkey
+%type <node> copykey
 %type <node> orexpr
 %type <node> andexpr
 %type <node> relexpr
@@ -568,6 +571,11 @@ altcomm:   ADDCOL colspecs dminfo {
                     new TaQLSetKeyNodeRep (*$2));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
+         | COPYKEY copykeys {
+	       $$ = new TaQLNode(
+                    new TaQLSetKeyNodeRep (*$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
          | RENAMEKEY renkeys {
 	       $$ = new TaQLNode(
                     new TaQLRenDropNodeRep(2, *$2));
@@ -651,9 +659,27 @@ setkey:   namefld EQASS keyval {
 	       TaQLNode::theirNodesCreated.push_back ($$);
                delete $3;
            }
-        | namefld AS namefld {
+
+copykeys:  copykeys COMMA copykey {
+               $$ = $1;
+               $$->add (*$3);
+           }
+         | copykey {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (*$1);
+           }
+
+copykey:  namefld EQASS namefld {
 	       $$ = new TaQLNode(
-                    new TaQLRecFldNodeRep($1->getString(), $3->getString()));
+                    new TaQLRecFldNodeRep($1->getString(),
+                                          $3->getString(), ""));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+        | namefld EQASS namefld AS NAME {
+	       $$ = new TaQLNode(
+                    new TaQLRecFldNodeRep($1->getString(),
+                                          $3->getString(), $5->getString()));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
 

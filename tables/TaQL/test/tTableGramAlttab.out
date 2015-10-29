@@ -19,7 +19,7 @@ Structure of table tTableGramAlttab_tmp.tab2
  StandardStMan file=table.f1  name=StandardStMan  bucketsize=128
     ActualCacheSize=2 PERSCACHESIZE=2 IndexLength=118
   col2 Bool     scalar
-alter table tTableGramAlttab_tmp.tab2/subtab ADD COLUMN colxyz S SET KEYWORD colxyz::skey="newval"
+alter table tTableGramAlttab_tmp.tab2/subtab ADD COLUMN colxyz S SET KEYWORD colxyz::skey="newval", tabk=4 as I2
     has been executed
     alttab result of 0 rows
 0 selected columns: 
@@ -34,6 +34,9 @@ Structure of table tTableGramAlttab_tmp.tab2/subtab
 
 Keywords of main table 
 ----------------------
+  Table Keywords
+    tabk: Short 4
+
   Column colxyz
     skey: String "newval"
 
@@ -119,7 +122,7 @@ Keywords of main table
       }
       sub2: {
         sub2a: {
-          k1: Int 1
+          k1: Int64 1
           k2: Double 2
           k3: DComplex (3,3)
           k4: Bool 1
@@ -145,7 +148,7 @@ Keywords of main table
     }
 
 
-alter table tTableGramAlttab_tmp.tab2 FROM ::subtab t1 SET KEYWORD col1::subrec.k1 AS t1.colxyz::skey, RENAME KEYWORDS key1 TO key1n DROp keyword subtab, keyrec
+alter table tTableGramAlttab_tmp.tab2 FROM ::subtab t1 COPY KEYWORD col1::subrec.k2 = t1.::tabk, col1::subrec.k1=t1.colxyz::skey, col1::subrec.k3=t1.::tabk as R4, keyrecc=keyrec RENAME KEYWORDS key1 TO key1n DROp keyword subtab, keyrec
     has been executed
     alttab result of 0 rows
 0 selected columns: 
@@ -168,12 +171,49 @@ Keywords of main table
     key1n: Short 3
     key2: Float array with shape [2]
       [5, 9]
+    keyrecc: {
+      sub1: {
+        k1: uChar 1
+        k2: Short 2
+        k3: uInt 3
+        k4: Short 4
+        k5: Int 5
+        k6: Int64 6
+        k7: Float 7
+        k8: Double 8
+        k9: Complex (9,0)
+        k10: DComplex (10,0)
+        k11: Bool 1
+        K12: String "s"
+        subtab: Table tTableGramAlttab_tmp.tab2/subtab
+      }
+      sub2: {
+        sub2a: {
+          k1: Int64 1
+          k2: Double 2
+          k3: DComplex (3,3)
+          k4: Bool 1
+          k5: String "s"
+        }
+        sub2b: {
+          k1: Float 1
+          k2: Double 2
+          k3: Complex (3,0)
+          k4: DComplex (4,0)
+        }
+        sub2c: {
+          k1: Complex (1,2)
+        }
+      }
+    }
 
   Column col1
     QuantumUnits: String array with shape [1]
       [m]
     subrec: {
       k1: String "newval"
+      k2: Short 4
+      k3: Float 4
     }
 
 
@@ -220,7 +260,7 @@ Structure of table tTableGramAlttab_tmp.tab2
     ActualCacheSize=2 PERSCACHESIZE=2 IndexLength=118
   col1b Int      shape=[2,3] unit=[m]
   col2b Bool     scalar
-alter table tTableGramAlttab_tmp.tab2 DELETE COLUMN col1b,col2 ,ADDrows 4 +5
+alter table tTableGramAlttab_tmp.tab2 DELETE COLUMN col1b,col2 ,ADDrows 4 +5, set keyword col1::emvec=[] as R4
     has been executed
     alttab result of 9 rows
 0 selected columns: 
@@ -236,3 +276,17 @@ Structure of table tTableGramAlttab_tmp.tab2
  StandardStMan file=table.f2  name=SSM  bucketsize=260
     ActualCacheSize=2 PERSCACHESIZE=2 IndexLength=134
   col2b Bool     scalar
+
+Keywords of main table 
+----------------------
+  Column col1
+    QuantumUnits: String array with shape [1]
+      [m]
+    subrec: {
+      k1: String "newval"
+      k2: Short 4
+      k3: Float 4
+    }
+    emvec: Float array with shape [0]
+      []
+

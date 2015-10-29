@@ -110,6 +110,7 @@ DROP      ([Dd][Rr][Oo][Pp])|{DELETE}
 ADD       [Aa][Dd][Dd]
 RENAME    [Rr][Ee][Nn][Aa][Mm][Ee]
 SET       [Ss][Ee][Tt]
+COPY      [Cc][Oo][Pp][Yy]
 COLUMN    [Cc][Oo][Ll][Uu][Mm][Nn]([Ss])?
 KEYWORD   [Kk][Ee][Yy][Ww][Oo][Rr][Dd]([Ss])?
 ROW       [Rr][Oo][Ww]([Ss])?
@@ -122,6 +123,7 @@ ADDCOL    ,?{WHITE}{ADD}{WHITE}{COLUMN}{WHITE1}
 RENAMECOL ,?{WHITE}{RENAME}{WHITE}{COLUMN}{WHITE1}
 DROPCOL   ,?{WHITE}{DROP}{WHITE}{COLUMN}{WHITE1}
 SETKEY    ,?{WHITE}{SET}{WHITE}{KEYWORD}{WHITE1}
+COPYKEY   ,?{WHITE}{COPY}{WHITE}{KEYWORD}{WHITE1}
 RENAMEKEY ,?{WHITE}{RENAME}{WHITE}{KEYWORD}{WHITE1}
 DROPKEY   ,?{WHITE}{DROP}{WHITE}{KEYWORD}{WHITE1}
 ADDROW    ,?{WHITE}{ADD}{WHITE}{ROW}{WHITE1}
@@ -296,6 +298,11 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
             tableGramPosition() += yyleng;
 	    BEGIN(EXPRstate);
 	    return SETKEY;
+          } 
+{COPYKEY} {
+            tableGramPosition() += yyleng;
+	    BEGIN(EXPRstate);
+	    return COPYKEY;
           } 
 {RENAMEKEY} {
             tableGramPosition() += yyleng;

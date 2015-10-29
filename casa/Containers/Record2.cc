@@ -46,7 +46,7 @@ void Record::defineFromValueHolder (const RecordFieldId& id,
   if (value.dataType() == TpRecord) {
     defineRecord (id, value.asRecord());
   } else {
-    defineFromValueHolder (id, value);
+    RecordInterface::defineFromValueHolder (id, value);
   }
 }
 

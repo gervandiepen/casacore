@@ -441,9 +441,9 @@ void BaseTable::trueDeepCopy (const String& newName,
     // Create the new table and copy everything.
     Table oldtab(ncThis);
     Table newtab = TableCopy::makeEmptyTable
-                        (absNewName, dataManagerInfo, stopt,
-                         oldtab, Table::New,
-			 Table::EndianFormat(endianFormat), True, noRows);
+                        (absNewName, dataManagerInfo, oldtab, Table::New,
+			 Table::EndianFormat(endianFormat), True, noRows,
+                         stopt);
     if (!noRows) {
       TableCopy::copyRows (newtab, oldtab);
     }

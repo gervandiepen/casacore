@@ -1442,7 +1442,7 @@ void TableParseSelect::handleColSpec (const String& colName,
     if (name == "NDIM") {
       ndim = spec.asInt(i);
     } else if (name == "SHAPE") {
-      Vector<Int> ivec(spec.asArrayInt(i));
+      Vector<Int> ivec(spec.toArrayInt(i));
       if (isCOrder) {
 	Int nd = ivec.nelements();
 	shape.resize (nd);
@@ -1608,13 +1608,41 @@ String TableParseSelect::getTypeString (const String& typeStr, DataType type)
     case TpArrayBool:
       out = "B";
       break;
+    case TpUChar:
+    case TpArrayUChar:
+      out = "U1";
+      break;
+    case TpUShort:
+    case TpArrayUShort:
+      out = "U2";          // github.com/ICRAR/skuareview
+      break;
+    case TpUInt:
+    case TpArrayUInt:
+      out = "U4";
+      break;
+    case TpShort:
+    case TpArrayShort:
+      out = "I2";
+      break;
+    case TpInt:
+    case TpArrayInt:
+      out = "I4";
+      break;
     case TpInt64:
     case TpArrayInt64:
-      out = "I4";
+      out = "I8";
+      break;
+    case TpFloat:
+    case TpArrayFloat:
+      out = "R4";
       break;
     case TpDouble:
     case TpArrayDouble:
       out = "R8";
+      break;
+    case TpComplex:
+    case TpArrayComplex:
+      out = "C4";
       break;
     case TpDComplex:
     case TpArrayDComplex:

@@ -48,12 +48,12 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 Table TableCopy::makeEmptyTable (const String& newName,
 				 const Record& dataManagerInfo,
-                                 const StorageOption& stopt,
 				 const Table& tab,
 				 Table::TableOption option,
 				 Table::EndianFormat endianFormat,
 				 Bool replaceTSM,
-				 Bool noRows)
+				 Bool noRows,
+                                 const StorageOption& stopt)
 {
   TableDesc tabDesc = tab.actualTableDesc();
   Record dminfo (dataManagerInfo);

@@ -19,8 +19,8 @@ echo ""
 $casa_checktool ./tTableGram 'create table tTableGramAlttab_tmp.tab2 (col1 i4 [shape=[2,3], unit="m"], col2 B) dminfo [TYPE="IncrementalStMan",NAME="ISM1",SPEC=[BUCKETSIZE=16384],COLUMNS=["col1"]]'
 $casa_checktool ./tTableGram 'create table tTableGramAlttab_tmp.tab2/subtab'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 | grep -v 'showtable:' | sed -e "s%$curdir/%%"
-$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2/subtab ADD COLUMN colxyz S SET KEYWORD colxyz::skey="newval"'
-../../apps/showtable in=tTableGramAlttab_tmp.tab2/subtab colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
+$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2/subtab ADD COLUMN colxyz S SET KEYWORD colxyz::skey="newval", tabk=4 as I2'
+../../apps/showtable in=tTableGramAlttab_tmp.tab2/subtab tabkey=T colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
 echo ""
 $casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 SET KEYWORD subtab="Table: tTableGramAlttab_tmp.tab2/subtab", ::key1=3 AS I2, col1::subrec=[=], col1::subrec.k1="3x", key2=[2+3,4+5.] AS R4'
@@ -31,7 +31,7 @@ $casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 SET KEYWORD 
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 tabkey=T colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
 echo ""
-$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 FROM ::subtab t1 SET KEYWORD col1::subrec.k1 AS t1.colxyz::skey, RENAME KEYWORDS key1 TO key1n DROp keyword subtab, keyrec'
+$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 FROM ::subtab t1 COPY KEYWORD col1::subrec.k2 = t1.::tabk, col1::subrec.k1=t1.colxyz::skey, col1::subrec.k3=t1.::tabk as R4, keyrecc=keyrec RENAME KEYWORDS key1 TO key1n DROp keyword subtab, keyrec'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 tabkey=T colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
 echo ""
@@ -42,7 +42,7 @@ echo ""
 $casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 RENAME COLUMN col1a to col1b, col2a to col2b'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
-$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 DELETE COLUMN col1b,col2 ,ADDrows 4 +5'
-../../apps/showtable in=tTableGramAlttab_tmp.tab2 | grep -v 'showtable:' | sed -e "s%$curdir/%%"
+$casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 DELETE COLUMN col1b,col2 ,ADDrows 4 +5, set keyword col1::emvec=[] as R4'
+../../apps/showtable in=tTableGramAlttab_tmp.tab2 colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
  
 exit 0
