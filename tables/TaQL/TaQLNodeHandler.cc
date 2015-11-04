@@ -468,12 +468,21 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   {
     TaQLNodeResult eres = visitNode (node.itsExpr);
     TableExprNode expr = getHR(eres).getExpr();
-    if (node.itsIndices.isValid()) {
-      TaQLNodeResult ires = visitNode (node.itsIndices);
-      topStack()->addUpdate (new TableParseUpdate(node.itsName,
-						  getHR(ires).getExprSet(),
-						  expr,
-						  node.itsIndices.style()));
+    if (node.itsIndices1.isValid()) {
+      TaQLNodeResult ires1 = visitNode (node.itsIndices1);
+      if (node.itsIndices2.isValid()) {
+        TaQLNodeResult ires2 = visitNode (node.itsIndices2);
+        topStack()->addUpdate (new TableParseUpdate(node.itsName,
+                                                    getHR(ires1).getExprSet(),
+                                                    getHR(ires2).getExprSet(),
+                                                    expr,
+                                                    node.itsIndices1.style()));
+      } else {
+        topStack()->addUpdate (new TableParseUpdate(node.itsName,
+                                                    getHR(ires1).getExprSet(),
+                                                    expr,
+                                                    node.itsIndices1.style()));
+      }
     } else {
       topStack()->addUpdate (new TableParseUpdate(node.itsName, expr));
     }
@@ -927,13 +936,19 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   void TaQLNodeHandler::handleInsVal (const TaQLNode& node)
   {
     AlwaysAssert (node.nodeType() == TaQLNode_Multi, AipsError);
-    const TaQLMultiNodeRep& vals = *(const TaQLMultiNodeRep*)(node.getRep());
-    const std::vector<TaQLNode>& nodes = vals.itsNodes;
-    for (uInt i=0; i<nodes.size(); ++i) {
+    const TaQLMultiNodeRep& avals = *(const TaQLMultiNodeRep*)(node.getRep());
+    const std::vector<TaQLNode>& anodes = avals.itsNodes;
+    ///for (uInt i=0; i<anodes.size(); ++i) {
+    for (uInt i=0; i<1; ++i) {
       // Handle each insert expression.
-      TaQLNodeResult eres = visitNode (nodes[i]);
-      TableExprNode expr = getHR(eres).getExpr();
-      topStack()->addUpdate (new TableParseUpdate("", expr));
+      AlwaysAssert (anodes[i].nodeType() == TaQLNode_Multi, AipsError);
+      const TaQLMultiNodeRep& vals = *(const TaQLMultiNodeRep*)(anodes[i].getRep());
+      const std::vector<TaQLNode>& nodes = vals.itsNodes;
+      for (uInt j=0; j<nodes.size(); ++j) {
+        TaQLNodeResult eres = visitNode (nodes[j]);
+        TableExprNode expr = getHR(eres).getExpr();
+        topStack()->addUpdate (new TableParseUpdate("", expr));
+      }
     }
   }
 

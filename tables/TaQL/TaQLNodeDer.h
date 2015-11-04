@@ -717,7 +717,13 @@ class TaQLUpdExprNodeRep: public TaQLNodeRep
 {
 public:
   TaQLUpdExprNodeRep (const String& name,
+                      const TaQLNode& expr);
+  TaQLUpdExprNodeRep (const String& name,
                       const TaQLMultiNode& indices,
+                      const TaQLNode& expr);
+  TaQLUpdExprNodeRep (const String& name,
+                      const TaQLMultiNode& indices1,
+                      const TaQLMultiNode& indices2,
                       const TaQLNode& expr);
   virtual ~TaQLUpdExprNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
@@ -726,7 +732,8 @@ public:
   static TaQLUpdExprNodeRep* restore (AipsIO& aio);
 
   String        itsName;
-  TaQLMultiNode itsIndices;
+  TaQLMultiNode itsIndices1;     //# indices or mask
+  TaQLMultiNode itsIndices2;     //# mask or indices
   TaQLNode      itsExpr;
 };
 

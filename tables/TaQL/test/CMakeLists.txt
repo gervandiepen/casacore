@@ -34,6 +34,7 @@ set (testscripts
 ttaql
 tTableGramCretab
 tTableGramAlttab
+tTableGramUpdate
 tTableGramGroupAggr
 tTableGramGroupAggrAll
 tTableGramGroupAggrMaskAll

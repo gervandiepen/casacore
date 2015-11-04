@@ -248,8 +248,8 @@ private:
 // </prerequisite>
 
 // <etymology>
-// TableParseUpdate holds a column name, optional indices, and an
-// update expression.
+// TableParseUpdate holds a column name, optional indices, optional mask,
+// and an update expression.
 // </etymology>
 
 // <synopsis> 
@@ -270,13 +270,25 @@ public:
   TableParseUpdate (const String& columnName, const TableExprNode&,
                     Bool checkAggr=True);
 
-  // Construct from a column name, subscripts, and expression.
+  // Construct from a column name, subscripts or mask, and expression.
   // It checks if no aggregate functions are used.
   TableParseUpdate (const String& columnName,
 		    const TableExprNodeSet& indices,
-		    const TableExprNode&,
+                    const TableExprNode&,
 		    const TaQLStyle&);
 
+  // Construct from a column name, subscripts and mask, and expression.
+  // It checks if no aggregate functions are used.
+  // It checks if one of the indices represents subscripts, the other a mask.
+  TableParseUpdate (const String& columnName,
+		    const TableExprNodeSet& indices1,
+		    const TableExprNodeSet& indices2,
+                    const TableExprNode&,
+		    const TaQLStyle&);
+  // Handle the subscripts or mask.
+  // It checks if subscripts or mask was not already used.
+  void handleIndices (const TableExprNodeSet& indices,
+                      const TaQLStyle& style);
   ~TableParseUpdate();
 
   // Set the column name.
@@ -284,6 +296,10 @@ public:
 
   // Get the column name.
   const String& columnName() const;
+
+  // Tell if the mask is given first (i.e., before slice).
+  Bool maskFirst() const
+    { return maskFirst_p; }
 
   // Get the pointer to the indices.
   TableExprNodeIndex* indexPtr() const;
@@ -297,14 +313,20 @@ public:
   TableExprNode& node();
   // </group>
 
+  // Get the mask.
+  const TableExprNode& mask() const
+    { return mask_p; }
+
   // Adapt the possible unit of the expression to the possible unit
   // of the column.
   void adaptUnit (const Unit& columnUnit);
 
 private:
   String              columnName_p;
-  TableExprNodeIndex* indexPtr_p;      //# copy of pointer in indexNode_p
+  Bool                maskFirst_p;  //# True = mask is given before slice
+  TableExprNodeIndex* indexPtr_p;   //# copy of pointer in indexNode_p
   TableExprNode       indexNode_p;
+  TableExprNode       mask_p;
   TableExprNode       node_p;
 };
 
@@ -662,15 +684,30 @@ private:
   // Update the values in the columns (helpers of doUpdate).
   // <group>
   template<typename TCOL, typename TNODE>
-  void updateValue2 (uInt row, const TableExprId& rowid, Bool isScalarCol,
-                     const TableExprNode& node, TableColumn& col,
-                     const Slicer* slicerPtr,
-                     IPosition& blc, IPosition& trc, IPosition& inc);
-  template<typename T>
-  void updateValue1 (uInt row, const TableExprId& rowid, Bool isScalarCol,
-                     const TableExprNode& node, TableColumn& col,
-                     const Slicer* slicerPtr,
-                     IPosition& blc, IPosition& trc, IPosition& inc);
+  void updateValue (uInt row, const TableExprId& rowid,
+                    Bool isScalarCol, const TableExprNode& node,
+                    const Array<Bool>& mask, Bool maskFirst,
+                    TableColumn& col, const Slicer* slicerPtr);
+  template<typename TCOL, typename TNODE>
+  void updateScalar (uInt row, const TableExprId& rowid,
+                     const TableExprNode& node,
+                     TableColumn& col);
+  template<typename TCOL, typename TNODE>
+  void updateArray (uInt row, const TableExprId& rowid,
+                    const TableExprNode& node,
+                    ArrayColumn<TCOL>& col);
+  template<typename TCOL, typename TNODE>
+  void updateSlice (uInt row, const TableExprId& rowid,
+                    const TableExprNode& node,
+                    const Slicer& slice,
+                    ArrayColumn<TCOL>& col);
+  template<typename TCOL, typename TNODE>
+  void copyMaskedValue (Array<TCOL>& to, const TNODE* val, uInt incr,
+                        const Array<Bool>& mask);
+  Array<Bool> makeMaskSlice (const Array<Bool>& mask,
+                             Bool maskFirst,
+                             const IPosition& shapeCol,
+                             const Slicer* slicerPtr);
   // </group>
 
   // Make a data type from the string.

@@ -151,7 +151,9 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <node> updexpr
 %type <node> insrow
 %type <nodelist> insclist
-%type <node> inspart
+%type <node> insvalue
+%type <nodelist> insparts
+%type <nodelist> inspart
 %type <nodelist> insvlist
 %type <node> altcomm
 %type <nodelist> altlist
@@ -277,6 +279,7 @@ command:   selcomm
              { TaQLNode::theirNode = *$1; }
          ;
 
+/* The commands (besides SELECT) that can be used in a nested FROM */
 nestedcomm: countcomm
              { $$ = $1; }
          | cretabcomm
@@ -371,7 +374,7 @@ updcomm:   UPDATE updrow {
            }
          ;
 
-updrow:    tables UPDSET updlist FROM tables whexpr order limitoff dminfo {
+updrow:    tables UPDSET updlist FROM tables whexpr order limitoff {
                $$ = new TaQLNode(
                     new TaQLUpdateNodeRep (*$1, *$3, *$5, *$6, *$7, *$8));
 	       TaQLNode::theirNodesCreated.push_back ($$);
@@ -396,39 +399,21 @@ updlist:   updlist COMMA updexpr {
 
 updexpr:   NAME EQASS orexpr {
 	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($1->getString(), 0, *$3));
+                    new TaQLUpdExprNodeRep ($1->getString(), *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | NAME LBRACKET subscripts RBRACKET EQASS orexpr {
+               /* array slice or mask */
 	       $$ = new TaQLNode(
                     new TaQLUpdExprNodeRep ($1->getString(), *$3, *$6));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-/*         | LPAREN NAME COMMA NAME RPAREN EQASS orexpr {
+         | NAME LBRACKET subscripts RBRACKET LBRACKET subscripts RBRACKET EQASS orexpr {
+               /* array slice and mask (in any order) */
 	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($2->getString(), 0, *$4));
+                    new TaQLUpdExprNodeRep ($1->getString(), *$3, *$6, *$9));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | PLUS NAME EQASS orexpr {
-	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($2->getString(), 0, *$4));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }
-         | PLUS LPAREN NAME COMMA NAME RPAREN EQASS orexpr {
-	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($3->getString(), 0, *$8));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }
-         | PLUS NAME EQASS orexpr AS colspec {
-	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($2->getString(), 0, *$4));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }
-         | PLUS LPAREN NAME COMMA NAME RPAREN EQASS orexpr AS colspec {
-	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($3->getString(), 0, *$8));
-	       TaQLNode::theirNodesCreated.push_back ($$);
-           }*/
          ;
 
 inscomm:   INSERT insrow {
@@ -436,19 +421,21 @@ inscomm:   INSERT insrow {
            }
          ;
 
-insrow:    INTO tables insclist inspart {
+insrow:    INTO tables insclist insvalue {
+               /* update in SQL style */
 	       $$ = new TaQLNode(
                     new TaQLInsertNodeRep (*$2, *$3, *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | INTO tables UPDSET updlist {
+               /* insert in update style */
 	       $$ = new TaQLNode(
                     new TaQLInsertNodeRep (*$2, *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          ;
 
-insclist:  {         /* no column-list */   
+insclist:  {         /* no insert column-list */   
                $$ = new TaQLMultiNode();
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
@@ -460,16 +447,32 @@ insclist:  {         /* no column-list */
            }
          ;
 
-inspart:   VALUES LBRACKET insvlist RBRACKET {
-               $$ = $3;
-           }
-         | VALUES LPAREN insvlist RPAREN {
-               $$ = $3;
+insvalue:  VALUES insparts {
+	       $2->setPPFix ("VALUES ", "");
+               $$ = $2;
            }
          | selcomm {
 	       $1->setNoExecute();
                $$ = $1;
 	   }
+         ;
+
+insparts:  insparts COMMA inspart {
+               $$ = $1;
+	       $$->add (*$3);
+           }
+           | inspart {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	       $$->add (*$1);
+           }
+
+inspart:   LBRACKET insvlist RBRACKET {
+               $$ = $2;
+           }
+         | LPAREN insvlist RPAREN {
+               $$ = $2;
+           }
          ;
 
 insvlist:  insvlist COMMA orexpr {
@@ -479,7 +482,7 @@ insvlist:  insvlist COMMA orexpr {
          | orexpr {
                $$ = new TaQLMultiNode(False);
 	       TaQLNode::theirNodesCreated.push_back ($$);
-	       $$->setPPFix ("VALUES [", "]");
+	       $$->setPPFix ("[", "]");
 	       $$->add (*$1);
            }
          ;

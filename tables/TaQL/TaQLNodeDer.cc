@@ -1031,12 +1031,28 @@ TaQLGivingNodeRep* TaQLGivingNodeRep::restore (AipsIO& aio)
 }
 
 TaQLUpdExprNodeRep::TaQLUpdExprNodeRep (const String& name,
-                                        const TaQLMultiNode& indices,
                                         const TaQLNode& expr)
   : TaQLNodeRep (TaQLNode_UpdExpr),
     itsName    (name),
-    itsIndices (indices),
     itsExpr    (expr)
+{}
+TaQLUpdExprNodeRep::TaQLUpdExprNodeRep (const String& name,
+                                        const TaQLMultiNode& indices,
+                                        const TaQLNode& expr)
+  : TaQLNodeRep (TaQLNode_UpdExpr),
+    itsName     (name),
+    itsIndices1 (indices),
+    itsExpr     (expr)
+{}
+TaQLUpdExprNodeRep::TaQLUpdExprNodeRep (const String& name,
+                                        const TaQLMultiNode& indices1,
+                                        const TaQLMultiNode& indices2,
+                                        const TaQLNode& expr)
+  : TaQLNodeRep (TaQLNode_UpdExpr),
+    itsName     (name),
+    itsIndices1 (indices1),
+    itsIndices2 (indices2),
+    itsExpr     (expr)
 {}
 TaQLUpdExprNodeRep::~TaQLUpdExprNodeRep()
 {}
@@ -1047,23 +1063,26 @@ TaQLNodeResult TaQLUpdExprNodeRep::visit (TaQLNodeVisitor& visitor) const
 void TaQLUpdExprNodeRep::show (std::ostream& os) const
 {
   os << itsName;
-  itsIndices.show (os);
+  itsIndices1.show (os);
+  itsIndices2.show (os);
   os << '=';
   itsExpr.show (os);
 }
 void TaQLUpdExprNodeRep::save (AipsIO& aio) const
 {
   aio << itsName;
-  itsIndices.saveNode (aio);
+  itsIndices1.saveNode (aio);
+  itsIndices2.saveNode (aio);
   itsExpr.saveNode (aio);
 }
 TaQLUpdExprNodeRep* TaQLUpdExprNodeRep::restore (AipsIO& aio)
 {
   String name;
   aio >> name;
-  TaQLMultiNode indices = TaQLNode::restoreMultiNode (aio);
+  TaQLMultiNode indices1 = TaQLNode::restoreMultiNode (aio);
+  TaQLMultiNode indices2 = TaQLNode::restoreMultiNode (aio);
   TaQLNode expr = TaQLNode::restoreNode (aio);
-  return new TaQLUpdExprNodeRep (name, indices, expr);
+  return new TaQLUpdExprNodeRep (name, indices1, indices2, expr);
 }
 
 TaQLQueryNodeRep::TaQLQueryNodeRep (int nodeType)
@@ -1317,7 +1336,7 @@ TaQLInsertNodeRep::TaQLInsertNodeRep (const TaQLMultiNode& tables,
     const TaQLUpdExprNodeRep* rep = dynamic_cast<const TaQLUpdExprNodeRep*>
       (nodes[i].getRep());
     AlwaysAssert (rep, AipsError);
-    if (rep->itsIndices.isValid()) {
+    if (rep->itsIndices1.isValid()) {
       throw TableInvExpr ("Column indices cannot be given in an "
                           "INSERT command");
     }

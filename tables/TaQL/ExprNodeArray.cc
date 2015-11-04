@@ -1182,7 +1182,7 @@ void TableExprNodeIndex::fillIndex (const TableExprNodeSet& indices)
 	if (operands_p[i] != 0) {
 	    if (operands_p[i]->dataType()  != NTInt
 	    ||  operands_p[i]->valueType() != VTScalar) {
-		throw (TableInvExpr ("Index value must an integer scalar"));
+		throw (TableInvExpr ("Index value must be an integer scalar"));
 	    }
             TableExprNodeRep::checkAggrFuncs (operands_p[i]);
 	}
