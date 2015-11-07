@@ -1031,25 +1031,31 @@ TaQLGivingNodeRep* TaQLGivingNodeRep::restore (AipsIO& aio)
 }
 
 TaQLUpdExprNodeRep::TaQLUpdExprNodeRep (const String& name,
+                                        const String& nameMask,
                                         const TaQLNode& expr)
   : TaQLNodeRep (TaQLNode_UpdExpr),
-    itsName    (name),
-    itsExpr    (expr)
+    itsName     (name),
+    itsNameMask (nameMask),
+    itsExpr     (expr)
 {}
 TaQLUpdExprNodeRep::TaQLUpdExprNodeRep (const String& name,
+                                        const String& nameMask,
                                         const TaQLMultiNode& indices,
                                         const TaQLNode& expr)
   : TaQLNodeRep (TaQLNode_UpdExpr),
     itsName     (name),
+    itsNameMask (nameMask),
     itsIndices1 (indices),
     itsExpr     (expr)
 {}
 TaQLUpdExprNodeRep::TaQLUpdExprNodeRep (const String& name,
+                                        const String& nameMask,
                                         const TaQLMultiNode& indices1,
                                         const TaQLMultiNode& indices2,
                                         const TaQLNode& expr)
   : TaQLNodeRep (TaQLNode_UpdExpr),
     itsName     (name),
+    itsNameMask (nameMask),
     itsIndices1 (indices1),
     itsIndices2 (indices2),
     itsExpr     (expr)
@@ -1062,7 +1068,11 @@ TaQLNodeResult TaQLUpdExprNodeRep::visit (TaQLNodeVisitor& visitor) const
 }
 void TaQLUpdExprNodeRep::show (std::ostream& os) const
 {
-  os << itsName;
+  if (itsNameMask.empty()) {
+    os << itsName;
+  } else {
+    os << '(' << itsName << ',' << itsNameMask << ')';
+  }
   itsIndices1.show (os);
   itsIndices2.show (os);
   os << '=';
@@ -1070,19 +1080,19 @@ void TaQLUpdExprNodeRep::show (std::ostream& os) const
 }
 void TaQLUpdExprNodeRep::save (AipsIO& aio) const
 {
-  aio << itsName;
+  aio << itsName << itsNameMask;
   itsIndices1.saveNode (aio);
   itsIndices2.saveNode (aio);
   itsExpr.saveNode (aio);
 }
 TaQLUpdExprNodeRep* TaQLUpdExprNodeRep::restore (AipsIO& aio)
 {
-  String name;
-  aio >> name;
+  String name, nameMask;
+  aio >> name >> nameMask;
   TaQLMultiNode indices1 = TaQLNode::restoreMultiNode (aio);
   TaQLMultiNode indices2 = TaQLNode::restoreMultiNode (aio);
   TaQLNode expr = TaQLNode::restoreNode (aio);
-  return new TaQLUpdExprNodeRep (name, indices1, indices2, expr);
+  return new TaQLUpdExprNodeRep (name, nameMask, indices1, indices2, expr);
 }
 
 TaQLQueryNodeRep::TaQLQueryNodeRep (int nodeType)
@@ -1816,6 +1826,40 @@ TaQLAddRowNodeRep* TaQLAddRowNodeRep::restore (AipsIO& aio)
 {
   TaQLNode nrow = TaQLNode::restoreNode (aio);
   return new TaQLAddRowNodeRep (nrow);
+}
+
+TaQLConcTabNodeRep::TaQLConcTabNodeRep (const String& tableName,
+                                        const TaQLMultiNode& tables)
+  : TaQLQueryNodeRep (TaQLNode_ConcTab),
+    itsTableName (tableName),
+    itsTables    (tables)
+{}
+TaQLConcTabNodeRep::~TaQLConcTabNodeRep()
+{}
+TaQLNodeResult TaQLConcTabNodeRep::visit (TaQLNodeVisitor& visitor) const
+{
+  return visitor.visitConcTabNode (*this);
+}
+void TaQLConcTabNodeRep::showDerived (std::ostream& os) const
+{
+  os << "[";
+  itsTables.show (os);
+  if (! itsTableName.empty()) {
+    os << " GIVING " << itsTableName;
+  }
+  os << ']';
+}
+void TaQLConcTabNodeRep::save (AipsIO& aio) const
+{
+  aio << itsTableName;
+  itsTables.saveNode (aio);
+}
+TaQLConcTabNodeRep* TaQLConcTabNodeRep::restore (AipsIO& aio)
+{
+  String tableName;
+  aio >> tableName;
+  TaQLMultiNode tables = TaQLNode::restoreMultiNode (aio);
+  return new TaQLConcTabNodeRep (tableName, tables);
 }
 
 

@@ -716,12 +716,12 @@ public:
 class TaQLUpdExprNodeRep: public TaQLNodeRep
 {
 public:
-  TaQLUpdExprNodeRep (const String& name,
+  TaQLUpdExprNodeRep (const String& name, const String& nameMask,
                       const TaQLNode& expr);
-  TaQLUpdExprNodeRep (const String& name,
+  TaQLUpdExprNodeRep (const String& name, const String& nameMask,
                       const TaQLMultiNode& indices,
                       const TaQLNode& expr);
-  TaQLUpdExprNodeRep (const String& name,
+  TaQLUpdExprNodeRep (const String& name, const String& nameMask,
                       const TaQLMultiNode& indices1,
                       const TaQLMultiNode& indices2,
                       const TaQLNode& expr);
@@ -732,6 +732,7 @@ public:
   static TaQLUpdExprNodeRep* restore (AipsIO& aio);
 
   String        itsName;
+  String        itsNameMask;
   TaQLMultiNode itsIndices1;     //# indices or mask
   TaQLMultiNode itsIndices2;     //# mask or indices
   TaQLNode      itsExpr;
@@ -1270,6 +1271,36 @@ public:
   static TaQLAddRowNodeRep* restore (AipsIO& aio);
 
   TaQLNode itsNRow;
+};
+
+
+// <summary>
+// Raw TaQL parse tree node defining an alter table command.
+// </summary>
+// <use visibility=local>
+// <reviewed reviewer="" date="" tests="tTaQLNode">
+// </reviewed>
+// <prerequisite>
+//# Classes you should understand before using this one.
+//   <li> <linkto class=TaQLNodeRep>TaQLNodeRep</linkto>
+// </prerequisite>
+// <synopsis> 
+// This class is a TaQLNodeRep holding the parts of the alter table command.
+// </synopsis> 
+
+class TaQLConcTabNodeRep: public TaQLQueryNodeRep
+{
+public:
+  TaQLConcTabNodeRep (const String& tableNamer,
+                      const TaQLMultiNode& tables);
+  virtual ~TaQLConcTabNodeRep();
+  virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
+  virtual void showDerived (std::ostream& os) const;
+  virtual void save (AipsIO& aio) const;
+  static TaQLConcTabNodeRep* restore (AipsIO& aio);
+
+  String        itsTableName;
+  TaQLMultiNode itsTables;
 };
 
 

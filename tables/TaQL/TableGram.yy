@@ -129,6 +129,7 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <node> selcol
 %type <node> normcol
 %type <nodelist> tables
+%type <nodelist> tabconc
 %type <node> whexpr
 %type <node> groupby
 %type <nodelist> exprlist
@@ -399,19 +400,32 @@ updlist:   updlist COMMA updexpr {
 
 updexpr:   NAME EQASS orexpr {
 	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($1->getString(), *$3));
+                    new TaQLUpdExprNodeRep ($1->getString(), "", *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | NAME LBRACKET subscripts RBRACKET EQASS orexpr {
                /* array slice or mask */
 	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($1->getString(), *$3, *$6));
+                    new TaQLUpdExprNodeRep ($1->getString(), "", *$3, *$6));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | NAME LBRACKET subscripts RBRACKET LBRACKET subscripts RBRACKET EQASS orexpr {
                /* array slice and mask (in any order) */
 	       $$ = new TaQLNode(
-                    new TaQLUpdExprNodeRep ($1->getString(), *$3, *$6, *$9));
+                    new TaQLUpdExprNodeRep ($1->getString(), "", *$3, *$6, *$9));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | LPAREN NAME COMMA NAME RPAREN EQASS orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLUpdExprNodeRep ($2->getString(),
+                                            $4->getString(), *$7));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         ;
+         | LPAREN NAME COMMA NAME RPAREN LBRACKET subscripts RBRACKET EQASS orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLUpdExprNodeRep ($2->getString(),
+                                            $4->getString(), *$7, *$10));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          ;
@@ -1042,6 +1056,21 @@ tfname:    tfcommand {
          | stabname {
 	       $$ = $1;
            }
+         | LBRACKET tabconc RBRACKET {
+	       $$ = new TaQLNode(
+                    new TaQLConcTabNodeRep("", *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | LBRACKET tabconc GIVING tabname RBRACKET {
+	       $$ = new TaQLNode(
+                    new TaQLConcTabNodeRep($4->getString(), *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | LBRACKET tabconc INTO tabname RBRACKET {
+	       $$ = new TaQLNode(
+                    new TaQLConcTabNodeRep($4->getString(), *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
          ;
 
 stabname:  TABNAME {
@@ -1066,6 +1095,17 @@ tabname:   NAME {
                $$ = $1;
            }
          ;
+
+tabconc:   tabalias {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (*$1);
+	   }
+         | tabconc COMMA tabalias {
+	       $$ = $1;
+               $$->add (*$3);
+           }
+	 ;
 
 whexpr:    {                   /* no selection */
 	       $$ = new TaQLNode();

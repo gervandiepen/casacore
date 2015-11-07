@@ -174,6 +174,8 @@ TaQLNode TaQLNode::restoreNode (AipsIO& aio)
     return TaQLRenDropNodeRep::restore (aio);
   case TaQLNode_AddRow:
     return TaQLAddRowNodeRep::restore (aio);
+  case TaQLNode_ConcTab:
+    return TaQLConcTabNodeRep::restore (aio);
   default:
     throw AipsError ("TaQLNode::restoreNode - unknown node type");
   }

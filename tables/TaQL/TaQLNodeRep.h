@@ -115,6 +115,7 @@ public:
   #define TaQLNode_SetKey   char(32)
   #define TaQLNode_RenDrop  char(33)
   #define TaQLNode_AddRow   char(34)
+  #define TaQLNode_ConcTab  char(35)
   // </group>
 
   // Constructor for derived classes specifying the type.

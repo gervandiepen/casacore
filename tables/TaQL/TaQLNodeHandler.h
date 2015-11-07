@@ -138,6 +138,7 @@ public:
   virtual TaQLNodeResult visitSetKeyNode   (const TaQLSetKeyNodeRep& node);
   virtual TaQLNodeResult visitRenDropNode  (const TaQLRenDropNodeRep& node);
   virtual TaQLNodeResult visitAddRowNode   (const TaQLAddRowNodeRep& node);
+  virtual TaQLNodeResult visitConcTabNode  (const TaQLConcTabNodeRep& node);
   // </group>
 
   // Get the actual result object from the result.
@@ -162,6 +163,9 @@ private:
 
   // Handle a MultiNode containing table info.
   void handleTables (const TaQLMultiNode&);
+
+  // Make a ConcatTable from a nested set of tables.
+  Table makeConcatTable (const TaQLMultiNodeRep& node);
 
   // Handle the WHERE clause.
   void handleWhere (const TaQLNode&);

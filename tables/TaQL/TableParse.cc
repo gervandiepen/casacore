@@ -99,40 +99,54 @@ TableParse& TableParse::operator= (const TableParse& that)
 
 
 TableParseUpdate::TableParseUpdate (const String& columnName,
+                                    const String& columnNameMask,
 				    const TableExprNode& node,
                                     Bool checkAggr)
-  : columnName_p (columnName),
-    maskFirst_p  (False),
-    indexPtr_p   (0),
-    node_p       (node)
+  : columnName_p     (columnName),
+    columnNameMask_p (columnNameMask),
+    maskFirst_p      (False),
+    indexPtr_p       (0),
+    node_p           (node)
 {
   if (checkAggr) {
     TableParseSelect::checkAggrFuncs (node);
   }
 }
 TableParseUpdate::TableParseUpdate (const String& columnName,
+                                    const String& columnNameMask,
 				    const TableExprNodeSet& indices,
 				    const TableExprNode& node,
 				    const TaQLStyle& style)
-  : columnName_p (columnName),
-    maskFirst_p  (False),
-    indexPtr_p   (0),
-    node_p       (node)
+  : columnName_p     (columnName),
+    columnNameMask_p (columnNameMask),
+    maskFirst_p      (False),
+    indexPtr_p       (0),
+    node_p           (node)
 {
   TableParseSelect::checkAggrFuncs (node);
   handleIndices (indices, style);
-  maskFirst_p = indexPtr_p==0;
+  if (indexPtr_p == 0) {
+    if (! columnNameMask_p.empty()) {
+      throw TableInvExpr ("No mask column name can be given if the update "
+                          "data column is masked");
+    }
+    maskFirst_p = True;
+  }
 }
 TableParseUpdate::TableParseUpdate (const String& columnName,
+                                    const String& columnNameMask,
 				    const TableExprNodeSet& indices1,
 				    const TableExprNodeSet& indices2,
 				    const TableExprNode& node,
 				    const TaQLStyle& style)
-  : columnName_p (columnName),
-    maskFirst_p  (False),
-    indexPtr_p   (0),
-    node_p       (node)
+  : columnName_p     (columnName),
+    columnNameMask_p (columnNameMask),
+    maskFirst_p      (False),
+    indexPtr_p       (0),
+    node_p           (node)
 {
+  // The grammar does not allow a column mask name, but you can never tell.
+  AlwaysAssert (columnNameMask.empty(), AipsError);
   TableParseSelect::checkAggrFuncs (node);
   handleIndices (indices1, style);
   maskFirst_p = indexPtr_p==0;
@@ -234,6 +248,16 @@ void TableParseSelect::addTable (Int tabnr, const String& name,
 				 const vector<const Table*> tempTables,
 				 const vector<TableParseSelect*>& stack)
 {
+  Table table = makeTable (tabnr, name, ftab, shorthand, tempTables, stack);
+  fromTables_p.push_back (TableParse(table, shorthand));
+}
+
+Table TableParseSelect::makeTable (Int tabnr, const String& name,
+                                   const Table& ftab,
+                                   const String& shorthand,
+                                   const vector<const Table*> tempTables,
+                                   const vector<TableParseSelect*>& stack)
+{
   Table table;
   //# If the table name is numeric, we have a temporary table number
   //# which will be made 0-based.
@@ -276,7 +300,7 @@ void TableParseSelect::addTable (Int tabnr, const String& name,
       }
     }
   }
-  fromTables_p.push_back (TableParse(table, shorthand));
+  return table;
 }
 
 void TableParseSelect::replaceTable (const Table& table)
@@ -2092,11 +2116,13 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
   const TableDesc& tabdesc = updTable.tableDesc();
   uInt nrkey = update_p.size();
   Block<TableColumn> cols(nrkey);
+  Block<ArrayColumn<Bool> > maskCols(nrkey);
   Block<Int> dtypeCol(nrkey);
   Block<Bool> isScalarCol(nrkey);
   for (uInt i=0; i<nrkey; i++) {
     TableParseUpdate& key = *(update_p[i]);
     const String& colName = key.columnName();
+    const String& colNameMask = key.columnNameMask();
     //# Check if the correct table is used in the update and index expression.
     //# A constant expression can be given.
     if (! key.node().checkTableSize (origTable, True)) {
@@ -2124,10 +2150,32 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
 			  " is not writable in table " +
 			  updTable.tableName());
     }
-    //# An index expression can only be given for an array column.
     const ColumnDesc& coldesc = tabdesc[colName];
     Bool isScalar = coldesc.isScalar();
     isScalarCol[i] = isScalar;
+    if (! colNameMask.empty()) {
+      if (! tabdesc.isColumn (colNameMask)) {
+        throw TableInvExpr ("Update column " + colNameMask +
+                            " does not exist in table " +
+                            updTable.tableName());
+      }
+      if (! updTable.isColumnWritable (colNameMask)) {
+        throw TableInvExpr ("Update column " + colNameMask +
+                            " is not writable in table " +
+                            updTable.tableName());
+      }
+      const ColumnDesc& coldescMask = tabdesc[colNameMask];
+      if (key.node().isScalar()) {
+        throw TableInvExpr ("Update mask column " + colNameMask +
+                            " cannot be given for a scalar expression");
+      }
+      if (coldescMask.dataType() != TpBool) {
+        throw TableInvExpr ("Update mask column " + colNameMask +
+                            " must have data type Bool");
+      }
+      maskCols[i].attach (updTable, colNameMask);
+    }
+    //# An index expression can only be given for an array column.
     if (key.indexPtr() != 0) {
       if (isScalar) {
 	throw TableInvExpr ("Index value cannot be given in UPDATE of "
@@ -2164,7 +2212,7 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
 	slicerPtr = &(key.indexPtr()->getSlicer(rowid));
       }
       Bool isSca = isScalarCol[i];
-      // Evaluate a possibkle mask.
+      // Evaluate a possible mask.
       MArray<Bool> mask;
       if (! key.mask().isNull()) {
         key.mask().get (rowid, mask);
@@ -2178,7 +2226,7 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
       case TpBool:
         switch (dtypeCol[i]) {
         case TpBool:
-          updateValue<Bool,Bool> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Bool,Bool> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
           break;
         default:
           throw TableInvExpr ("Column " + update_p[i]->columnName() +
@@ -2190,7 +2238,7 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
       case TpString:
         switch (dtypeCol[i]) {
         case TpString:
-          updateValue<String,String> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<String,String> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
           break;
         default:
           throw TableInvExpr ("Column " + update_p[i]->columnName() +
@@ -2202,31 +2250,31 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
       case TpInt:
         switch (dtypeCol[i]) {
         case TpUChar:
-          updateValue<uChar,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<uChar,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpShort:
-          updateValue<Short,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Short,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
  	    break;
         case TpUShort:
-          updateValue<uShort,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<uShort,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpInt:
-          updateValue<Int,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Int,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpUInt:
-          updateValue<uInt,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<uInt,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpFloat:
-          updateValue<Float,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Float,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpDouble:
-          updateValue<Double,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Double,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpComplex:
-          updateValue<Complex,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Complex,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpDComplex:
-          updateValue<DComplex,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<DComplex,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         default:
           throw TableInvExpr ("Column " + update_p[i]->columnName() +
@@ -2238,31 +2286,31 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
       case TpDouble:
         switch (dtypeCol[i]) {
         case TpUChar:
-          updateValue<uChar,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<uChar,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpShort:
-          updateValue<Short,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Short,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
  	    break;
         case TpUShort:
-          updateValue<uShort,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<uShort,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpInt:
-          updateValue<Int,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Int,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpUInt:
-          updateValue<uInt,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<uInt,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpFloat:
-          updateValue<Float,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Float,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpDouble:
-          updateValue<Double,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Double,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpComplex:
-          updateValue<Complex,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Complex,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpDComplex:
-          updateValue<DComplex,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<DComplex,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         default:
           throw TableInvExpr ("Column " + update_p[i]->columnName() +
@@ -2274,10 +2322,10 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
       case TpDComplex:
         switch (dtypeCol[i]) {
         case TpComplex:
-          updateValue<Complex,DComplex> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<Complex,DComplex> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         case TpDComplex:
-          updateValue<DComplex,DComplex> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr);
+          updateValue<DComplex,DComplex> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
            break;
         default:
           throw TableInvExpr ("Column " + update_p[i]->columnName() +
@@ -2297,12 +2345,22 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
 }
 
 template<typename TCOL, typename TNODE>
-void TableParseSelect::copyMaskedValue (Array<TCOL>& to, const TNODE* val,
+void TableParseSelect::copyMaskedValue (uInt row, ArrayColumn<TCOL>& acol,
+                                        const Slicer* slicerPtr,
+                                        const TNODE* val,
                                         uInt incr, const Array<Bool>& mask)
 {
-  typename Array<TCOL>::iterator ito = to.begin();
+  // Get the array from the table.
+  Array<TCOL> res(mask.shape());
+  if (slicerPtr) {
+    acol.getSlice (row, *slicerPtr, res);
+  } else {
+    acol.get (row, res);
+  }
+  // Copy values where masked.
+  typename Array<TCOL>::iterator ito = res.begin();
   Array<Bool>::const_iterator imask = mask.begin();
-  size_t n = to.size();
+  size_t n = res.size();
   for (size_t i=0; i<n; ++i) {
     if (*imask) {
       *ito = static_cast<TCOL>(*val);
@@ -2310,6 +2368,12 @@ void TableParseSelect::copyMaskedValue (Array<TCOL>& to, const TNODE* val,
     ++ito;
     ++imask;
     val += incr;
+  }
+  // Put the array (slice).
+  if (slicerPtr) {
+    acol.putSlice (row, *slicerPtr, res);
+  } else {
+    acol.put (row, res);
   }
 }
 
@@ -2357,6 +2421,7 @@ void TableParseSelect::updateScalar (uInt row, const TableExprId& rowid,
 template<typename TCOL, typename TNODE>
 void TableParseSelect::updateArray (uInt row, const TableExprId& rowid,
                                     const TableExprNode& node,
+                                    const Array<TNODE>& res,
                                     ArrayColumn<TCOL>& col)
 {
   if (node.isScalar()  &&  col.isDefined (row)) {
@@ -2366,16 +2431,15 @@ void TableParseSelect::updateArray (uInt row, const TableExprId& rowid,
     arr = static_cast<TCOL>(val);
     col.put (row, arr);
   } else {
-    MArray<TNODE> res;
-    node.get (rowid, res);
     Array<TCOL> arr(res.shape());
-    convertArray (arr, res.array());
+    convertArray (arr, res);
     col.put (row, arr);
   }
 }
 template<typename TCOL, typename TNODE>
 void TableParseSelect::updateSlice (uInt row, const TableExprId& rowid,
                                     const TableExprNode& node,
+                                    const Array<TNODE>& res,
                                     const Slicer& slice,
                                     ArrayColumn<TCOL>& col)
 {
@@ -2397,12 +2461,30 @@ void TableParseSelect::updateSlice (uInt row, const TableExprId& rowid,
     } else {
       // Only put if defined.
       if (node.isResultDefined(rowid)) {
-        MArray<TNODE> res;
-        node.get (rowid, res);
         Array<TCOL> arr(res.shape());
-        convertArray (arr, res.array());
+        convertArray (arr, res);
         col.putSlice (row, slice, arr);
       }
+    }
+  }
+}
+
+void TableParseSelect::checkMaskColumn (Bool hasMask,
+                                        const ArrayColumn<Bool>& maskCol,
+                                        const TableColumn& col)
+{
+  if (! maskCol.isNull()) {
+    ///  if (maskCol.isNull()) {
+    ///    if (hasMask) {
+    ///      throw AipsError ("An update mask column must be given for a "
+    ///                       "masked array expression in update of column " +
+    ///                       col.columnDesc().name());
+    ///    }
+    ///  } else {
+    if (! hasMask) {
+      throw AipsError ("No update mask column can be given for an "
+                       "unmasked expression in update of column " +
+                       col.columnDesc().name());
     }
   }
 }
@@ -2414,63 +2496,70 @@ void TableParseSelect::updateValue (uInt row, const TableExprId& rowid,
                                     const Array<Bool>& mask,
                                     Bool maskFirst,
                                     TableColumn& col,
-                                    const Slicer* slicerPtr)
+                                    const Slicer* slicerPtr,
+                                    ArrayColumn<Bool>& maskCol)
 {
   if (isScalarCol) {
     updateScalar<TCOL,TNODE> (row, rowid, node, col);
   } else {
+    MArray<TNODE> aval;
+    if (! node.isScalar()) {
+      node.get (rowid, aval);
+    }
+    checkMaskColumn (aval.hasMask(), maskCol, col);
     ArrayColumn<TCOL> acol(col);
     if (mask.empty()) {
       if (slicerPtr) {
-        updateSlice<TCOL,TNODE> (row, rowid, node, *slicerPtr, acol);
-      } else {
-        updateArray<TCOL,TNODE> (row, rowid, node, acol);
-      }
-    // A mask is used; can only be done if the column cell
-    // contains an array.
-    } else if (acol.isDefined(row)) {
-      IPosition shapeCol = acol.shape (row);
-      // Check shapes, get possible slice from mask.
-      Array<Bool> smask(makeMaskSlice (mask, maskFirst, shapeCol, slicerPtr));
-      // Get the expression data (scalar or array).
-      MArray<TNODE> aval;
-      TNODE sval;
-      const TNODE* ptr = &sval;
-      size_t incr = 0;
-      Bool deleteIt;
-      if (node.isScalar()) {
-        node.get (rowid, sval);
-      } else {
-        node.get (rowid, aval);
-        if (! aval.shape().isEqual (smask.shape())) {
-          throw TableInvExpr ("Array shapes in update of column " +
-                              col.columnDesc().name() + " mismatch");
+        updateSlice<TCOL,TNODE> (row, rowid, node, aval.array(),
+                                 *slicerPtr, acol);
+        if (! maskCol.isNull()) {
+          updateSlice<Bool,Bool> (row, rowid, node, aval.mask(),
+                                  *slicerPtr, maskCol);
         }
-        ptr = aval.array().getStorage (deleteIt);
-        incr = 1;
-      }
-      // Get the array.
-      Array<TCOL> res(smask.shape());
-      if (slicerPtr) {
-        acol.getSlice (row, *slicerPtr, res);
       } else {
-        acol.get (row, res);
+        updateArray<TCOL,TNODE> (row, rowid, node, aval.array(), acol);
+        if (! maskCol.isNull()) {
+          updateArray<Bool,Bool> (row, rowid, node, aval.mask(), maskCol);
+        }
       }
-      // Copy values where masked.
-      copyMaskedValue (res, ptr, incr, smask);
-      // Put the array (slice).
-      if (slicerPtr) {
-        acol.putSlice (row, *slicerPtr, res);
-      } else {
-        acol.put (row, res);
-      }
-      if (! node.isScalar()) {
-        aval.array().freeStorage (ptr, deleteIt);
+    } else {
+      // A mask is used; can only be done if the column cell
+      // contains an array.
+      if (acol.isDefined(row)) {
+        IPosition shapeCol = acol.shape (row);
+        // Check shapes, get possible slice from mask.
+        Array<Bool> smask(makeMaskSlice (mask, maskFirst, shapeCol,
+                                         slicerPtr));
+        // Get the expression data (scalar or array).
+        TNODE sval;
+        const TNODE* ptr = &sval;
+        size_t incr = 0;
+        Bool deleteIt;
+        if (node.isScalar()) {
+          node.get (rowid, sval);
+        } else {
+          if (! aval.shape().isEqual (smask.shape())) {
+            throw TableInvExpr ("Array shapes in update of column " +
+                                col.columnDesc().name() + " mismatch");
+          }
+          ptr = aval.array().getStorage (deleteIt);
+          incr = 1;
+        }
+        // Put the array into the column (slice).
+        // Copy values where masked.
+        copyMaskedValue (row, acol, slicerPtr, ptr, incr, smask);
+        if (! node.isScalar()) {
+          aval.array().freeStorage (ptr, deleteIt);
+          if (! maskCol.isNull()) {
+            const Bool* bptr = aval.mask().getStorage (deleteIt);
+            copyMaskedValue (row, maskCol, slicerPtr, bptr, 1, smask);
+            aval.mask().freeStorage (bptr, deleteIt);
+          }
+        }
       }
     }
   }
 }
-
 
 //# Execute the inserts.
 Table TableParseSelect::doInsert (Bool showTimings, Table& table)
@@ -3099,8 +3188,8 @@ Table TableParseSelect::doProjectExpr
     for (uInt i=0; i<columnExpr_p.nelements(); i++) {
       if (! columnExpr_p[i].isNull()) {
         if (projectExprSelColumn_p[i] == useSel) {
-          addUpdate (new TableParseUpdate (columnNames_p[i], columnExpr_p[i],
-                                           False));
+          addUpdate (new TableParseUpdate (columnNames_p[i], "",
+                                           columnExpr_p[i], False));
         }
       }
     }

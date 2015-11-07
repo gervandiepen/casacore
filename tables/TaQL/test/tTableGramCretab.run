@@ -41,5 +41,3 @@ $casa_checktool ./tTableGram 'select from tTableGramCretab_tmp.tab3 where col2y 
 ../../apps/showtable in=tTableGramCretab_tmp.tab4 | grep -v 'showtable:' | sed -e "s%$curdir/%%"
 
 exit 0
-
-

@@ -473,18 +473,22 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       if (node.itsIndices2.isValid()) {
         TaQLNodeResult ires2 = visitNode (node.itsIndices2);
         topStack()->addUpdate (new TableParseUpdate(node.itsName,
+                                                    node.itsNameMask,
                                                     getHR(ires1).getExprSet(),
                                                     getHR(ires2).getExprSet(),
                                                     expr,
                                                     node.itsIndices1.style()));
       } else {
         topStack()->addUpdate (new TableParseUpdate(node.itsName,
+                                                    node.itsNameMask,
                                                     getHR(ires1).getExprSet(),
                                                     expr,
                                                     node.itsIndices1.style()));
       }
     } else {
-      topStack()->addUpdate (new TableParseUpdate(node.itsName, expr));
+      topStack()->addUpdate (new TableParseUpdate(node.itsName,
+                                                  node.itsNameMask,
+                                                  expr));
     }
     return TaQLNodeResult();
   }
@@ -879,14 +883,34 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     if (! node.isValid()) {
       return;
     }
-    const TaQLMultiNodeRep& tables = *(node.getMultiRep());
-    const std::vector<TaQLNode>& nodes = tables.itsNodes;
+    const std::vector<TaQLNode>& nodes = node.getMultiRep()->itsNodes;
     for (uInt i=0; i<nodes.size(); ++i) {
       TaQLNodeResult result = visitNode (nodes[i]);
       const TaQLNodeHRValue& res = getHR(result);
       topStack()->addTable (res.getInt(), res.getString(), res.getTable(),
-			    res.getAlias(), itsTempTables, itsStack);
+                            res.getAlias(), itsTempTables, itsStack);
     }
+  }
+
+  TaQLNodeResult TaQLNodeHandler::visitConcTabNode
+  (const TaQLConcTabNodeRep& node)
+  {
+    const std::vector<TaQLNode>& nodes = node.itsTables.getMultiRep()->itsNodes;
+    Block<Table> tables(nodes.size());
+    for (uInt i=0; i<nodes.size(); ++i) {
+      TaQLNodeResult result = visitNode (nodes[i]);
+      const TaQLNodeHRValue& res = getHR(result);
+      tables[i] = topStack()->makeTable (res.getInt(), res.getString(),
+                                         res.getTable(), res.getAlias(),
+                                         itsTempTables, itsStack);
+    }
+    Table conctab(tables);
+    if (! node.itsTableName.empty()) {
+      conctab.rename (node.itsTableName, Table::New);
+    }
+    TaQLNodeHRValue* hr = new TaQLNodeHRValue();
+    hr->setTable (conctab);
+    return hr;
   }
 
   void TaQLNodeHandler::handleWhere (const TaQLNode& node)
@@ -947,7 +971,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       for (uInt j=0; j<nodes.size(); ++j) {
         TaQLNodeResult eres = visitNode (nodes[j]);
         TableExprNode expr = getHR(eres).getExpr();
-        topStack()->addUpdate (new TableParseUpdate("", expr));
+        topStack()->addUpdate (new TableParseUpdate("", "", expr));
       }
     }
   }

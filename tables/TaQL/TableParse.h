@@ -267,12 +267,15 @@ public:
 
   // Construct from a column name and expression.
   // By default it checks if no aggregate functions are used.
-  TableParseUpdate (const String& columnName, const TableExprNode&,
+  TableParseUpdate (const String& columnName,
+                    const String& columnNameMask,
+                    const TableExprNode&,
                     Bool checkAggr=True);
 
   // Construct from a column name, subscripts or mask, and expression.
   // It checks if no aggregate functions are used.
   TableParseUpdate (const String& columnName,
+                    const String& columnNameMask,
 		    const TableExprNodeSet& indices,
                     const TableExprNode&,
 		    const TaQLStyle&);
@@ -281,6 +284,7 @@ public:
   // It checks if no aggregate functions are used.
   // It checks if one of the indices represents subscripts, the other a mask.
   TableParseUpdate (const String& columnName,
+                    const String& columnNameMask,
 		    const TableExprNodeSet& indices1,
 		    const TableExprNodeSet& indices2,
                     const TableExprNode&,
@@ -296,6 +300,10 @@ public:
 
   // Get the column name.
   const String& columnName() const;
+
+  // Get the possible column name for the mask.
+  const String& columnNameMask() const
+    { return columnNameMask_p; }
 
   // Tell if the mask is given first (i.e., before slice).
   Bool maskFirst() const
@@ -323,6 +331,7 @@ public:
 
 private:
   String              columnName_p;
+  String              columnNameMask_p;
   Bool                maskFirst_p;  //# True = mask is given before slice
   TableExprNodeIndex* indexPtr_p;   //# copy of pointer in indexNode_p
   TableExprNode       indexNode_p;
@@ -523,6 +532,13 @@ public:
 		 const vector<const Table*> tempTables,
 		 const vector<TableParseSelect*>& stack);
 
+  // Make a Table object for given name, seqnr or so.
+  Table makeTable (Int tabnr, const String& name,
+                   const Table& ftab,
+                   const String& shorthand,
+                   const vector<const Table*> tempTables,
+                   const vector<TableParseSelect*>& stack);
+
   // Replace the first table (used by CALC command).
   void replaceTable (const Table& table);
 
@@ -687,7 +703,8 @@ private:
   void updateValue (uInt row, const TableExprId& rowid,
                     Bool isScalarCol, const TableExprNode& node,
                     const Array<Bool>& mask, Bool maskFirst,
-                    TableColumn& col, const Slicer* slicerPtr);
+                    TableColumn& col, const Slicer* slicerPtr,
+                    ArrayColumn<Bool>& maskCol);
   template<typename TCOL, typename TNODE>
   void updateScalar (uInt row, const TableExprId& rowid,
                      const TableExprNode& node,
@@ -695,19 +712,26 @@ private:
   template<typename TCOL, typename TNODE>
   void updateArray (uInt row, const TableExprId& rowid,
                     const TableExprNode& node,
+                    const Array<TNODE>& res,
                     ArrayColumn<TCOL>& col);
   template<typename TCOL, typename TNODE>
   void updateSlice (uInt row, const TableExprId& rowid,
                     const TableExprNode& node,
+                    const Array<TNODE>& res,
                     const Slicer& slice,
                     ArrayColumn<TCOL>& col);
   template<typename TCOL, typename TNODE>
-  void copyMaskedValue (Array<TCOL>& to, const TNODE* val, uInt incr,
-                        const Array<Bool>& mask);
+  void copyMaskedValue (uInt row, ArrayColumn<TCOL>& acol,
+                        const Slicer* slicerPtr,
+                        const TNODE* val,
+                        uInt incr, const Array<Bool>& mask);
   Array<Bool> makeMaskSlice (const Array<Bool>& mask,
                              Bool maskFirst,
                              const IPosition& shapeCol,
                              const Slicer* slicerPtr);
+  void checkMaskColumn (Bool hasMask,
+                        const ArrayColumn<Bool>& maskCol,
+                        const TableColumn& col);
   // </group>
 
   // Make a data type from the string.
