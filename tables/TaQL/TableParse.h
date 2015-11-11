@@ -494,6 +494,10 @@ public:
   // Add an update object.
   void addUpdate (TableParseUpdate* upd);
 
+  // Set the insert expressions for all rows.
+  void setInsertExprs (const std::vector<TableExprNode> exprs)
+    { insertExprs_p = exprs; }
+
   // Keep the update expressions.
   void handleUpdate();
 
@@ -891,8 +895,10 @@ private:
   Int64 offset_p;
   //# The possible stride in offset:endrow:stride.
   Int64 stride_p;
-  //# The update or insert expression list.
+  //# The update and insert list.
   std::vector<TableParseUpdate*> update_p;
+  //# The insert expressions (possibly for multiple rows).
+  std::vector<TableExprNode> insertExprs_p;
   //# The table selection to be inserted.
   TableParseSelect* insSel_p;
   //# The sort list.

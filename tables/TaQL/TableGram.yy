@@ -61,6 +61,7 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %token NODUPL
 %token GIVING
 %token INTO
+%token SUBTABLES
 %token EXCEPT
 %token SORTASC
 %token SORTDESC
@@ -130,6 +131,9 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <node> normcol
 %type <nodelist> tables
 %type <nodelist> tabconc
+%type <nodelist> concsub
+%type <nodelist> concslist
+%type <nodename> concinto
 %type <node> whexpr
 %type <node> groupby
 %type <nodelist> exprlist
@@ -435,10 +439,27 @@ inscomm:   INSERT insrow {
            }
          ;
 
-insrow:    INTO tables insclist insvalue {
-               /* update in SQL style */
+insrow:    INTO tables insclist selcomm {
+               /* insert with SELECT command */
+	       $4->setNoExecute();
 	       $$ = new TaQLNode(
-                    new TaQLInsertNodeRep (*$2, *$3, *$4));
+                    new TaQLInsertNodeRep (*$2, *$3, *$4, TaQLNode()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | INTO tables insclist insvalue {
+               /* insert in SQL style */
+	       $$ = new TaQLNode(
+                    new TaQLInsertNodeRep (*$2, *$3, *$4, TaQLNode()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | LIMIT orexpr INTO tables insclist insvalue {
+	       $$ = new TaQLNode(
+                    new TaQLInsertNodeRep (*$4, *$5, *$6, *$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | INTO tables insclist insvalue LIMIT orexpr {
+	       $$ = new TaQLNode(
+                    new TaQLInsertNodeRep (*$2, *$3, *$4, *$6));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | INTO tables UPDSET updlist {
@@ -465,10 +486,6 @@ insvalue:  VALUES insparts {
 	       $2->setPPFix ("VALUES ", "");
                $$ = $2;
            }
-         | selcomm {
-	       $1->setNoExecute();
-               $$ = $1;
-	   }
          ;
 
 insparts:  insparts COMMA inspart {
@@ -948,7 +965,7 @@ nmcolumns: NAME {
 	   }
          ;
 
-nrowspec:  {          /* no nrows given means 0 */
+nrowspec:  {          /* no nrows given */
                $$ = new TaQLNode();
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
@@ -1056,21 +1073,45 @@ tfname:    tfcommand {
          | stabname {
 	       $$ = $1;
            }
-         | LBRACKET tabconc RBRACKET {
+         | LBRACKET tabconc concsub concinto RBRACKET {
 	       $$ = new TaQLNode(
-                    new TaQLConcTabNodeRep("", *$2));
+                    new TaQLConcTabNodeRep($4->getString(), *$2, *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | LBRACKET tabconc GIVING tabname RBRACKET {
-	       $$ = new TaQLNode(
-                    new TaQLConcTabNodeRep($4->getString(), *$2));
-	       TaQLNode::theirNodesCreated.push_back ($$);
+         ;
+
+concsub:   {    /* no SUBTABLES */
+                $$ = new TaQLMultiNode();
+                TaQLNode::theirNodesCreated.push_back ($$);
            }
-         | LBRACKET tabconc INTO tabname RBRACKET {
-	       $$ = new TaQLNode(
-                    new TaQLConcTabNodeRep($4->getString(), *$2));
-	       TaQLNode::theirNodesCreated.push_back ($$);
+         | SUBTABLES concslist {
+                $$ = $2;
            }
+         ;
+
+concslist: NAME {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	       $1->setIsTableName();
+               $$->add (*$1);
+	   }
+         | concslist COMMA NAME {
+	       $$ = $1;
+	       $3->setIsTableName();
+               $$->add (*$3);
+	   }
+         ;
+
+concinto:  {    /* no GIVING */
+                $$ = new TaQLConstNode(new TaQLConstNodeRep(String()));
+                TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | GIVING tabname {
+                $$ = $2;
+           }
+         | INTO tabname {
+                $$ = $2;
+          }
          ;
 
 stabname:  TABNAME {

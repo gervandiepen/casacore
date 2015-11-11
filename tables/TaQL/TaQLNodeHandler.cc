@@ -28,6 +28,7 @@
 #include <casacore/tables/TaQL/TaQLNodeHandler.h>
 #include <casacore/tables/TaQL/TaQLNode.h>
 #include <casacore/tables/Tables/TableError.h>
+#include <casacore/casa/OS/Directory.h>
 #include <casacore/casa/Utilities/Regex.h>
 #include <casacore/casa/Utilities/StringDistance.h>
 #include <casacore/casa/Utilities/Assert.h>
@@ -566,6 +567,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     TableParseSelect* curSel = pushStack (TableParseSelect::PINSERT);
     handleTables  (node.itsTables);
     handleInsCol  (node.itsColumns);
+    if (node.itsLimit.isValid()) {
+      TaQLNodeResult res = visitNode (node.itsLimit);
+      curSel->handleLimit (getHR(res).getExpr());
+    }
     Bool addedSel = False;
     if (node.itsValues.nodeType() == TaQLNode_Multi) {
       // Individual value expressions given.
@@ -896,15 +901,44 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   (const TaQLConcTabNodeRep& node)
   {
     const std::vector<TaQLNode>& nodes = node.itsTables.getMultiRep()->itsNodes;
-    Block<Table> tables(nodes.size());
+    std::vector<Table> tables;
     for (uInt i=0; i<nodes.size(); ++i) {
       TaQLNodeResult result = visitNode (nodes[i]);
       const TaQLNodeHRValue& res = getHR(result);
-      tables[i] = topStack()->makeTable (res.getInt(), res.getString(),
-                                         res.getTable(), res.getAlias(),
-                                         itsTempTables, itsStack);
+      const String& name = res.getString();
+      if (name.empty()) {
+        tables.push_back (topStack()->makeTable
+                          (res.getInt(), res.getString(),
+                           res.getTable(), res.getAlias(),
+                           itsTempTables, itsStack));
+      } else {
+        Vector<String> nms = Directory::shellExpand(Vector<String>(1, name));
+        if (nms.empty()) {
+          throw AipsError ("No matching tables found for " + name);
+        }
+        for (uInt j=0; j<nms.size(); ++j) {
+          tables.push_back (topStack()->makeTable
+                            (res.getInt(), nms[j],
+                             res.getTable(), res.getAlias(),
+                             itsTempTables, itsStack));
+        }
+      }
     }
-    Table conctab(tables);
+    Block<Table> tabs(tables.size());
+    for (uInt i=0; i<tables.size(); ++i) {
+      tabs[i] = tables[i];
+    }
+    Block<String> subtables;
+    if (node.itsSubTables.isValid()) {
+      const std::vector<TaQLNode>& names = node.itsSubTables.getMultiRep()->itsNodes;
+      subtables.resize (names.size());
+      for (uInt i=0; i<names.size(); ++i) {
+        TaQLNodeResult result = visitNode (names[i]);
+        const TaQLNodeHRValue& res = getHR(result);
+        subtables[i] = res.getExpr().getString(0);
+      }
+    }
+    Table conctab(tabs, subtables);
     if (! node.itsTableName.empty()) {
       conctab.rename (node.itsTableName, Table::New);
     }
@@ -962,18 +996,32 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     AlwaysAssert (node.nodeType() == TaQLNode_Multi, AipsError);
     const TaQLMultiNodeRep& avals = *(const TaQLMultiNodeRep*)(node.getRep());
     const std::vector<TaQLNode>& anodes = avals.itsNodes;
-    ///for (uInt i=0; i<anodes.size(); ++i) {
-    for (uInt i=0; i<1; ++i) {
-      // Handle each insert expression.
+    std::vector<TableExprNode> exprs;
+    AlwaysAssert (anodes.size() > 0, AipsError);
+    uInt nval = 0;
+    for (uInt i=0; i<anodes.size(); ++i) {
+      // Handle the first insert expression.
       AlwaysAssert (anodes[i].nodeType() == TaQLNode_Multi, AipsError);
       const TaQLMultiNodeRep& vals = *(const TaQLMultiNodeRep*)(anodes[i].getRep());
       const std::vector<TaQLNode>& nodes = vals.itsNodes;
+      if (i == 0) {
+        nval = nodes.size();
+        exprs.reserve (nval*anodes.size());
+      } else {
+        if (nodes.size() != nval) {
+          throw TableInvExpr("Different nr of values given in INSERT");
+        }
+      }
       for (uInt j=0; j<nodes.size(); ++j) {
         TaQLNodeResult eres = visitNode (nodes[j]);
         TableExprNode expr = getHR(eres).getExpr();
-        topStack()->addUpdate (new TableParseUpdate("", "", expr));
+        exprs.push_back (expr);
+        if (i == 0) {
+          topStack()->addUpdate (new TableParseUpdate("", "", expr));
+        }
       }
     }
+    topStack()->setInsertExprs (exprs);
   }
 
   void TaQLNodeHandler::handleColSpecs (const TaQLMultiNode& node)

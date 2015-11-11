@@ -1322,11 +1322,13 @@ TaQLUpdateNodeRep* TaQLUpdateNodeRep::restore (AipsIO& aio)
 
 TaQLInsertNodeRep::TaQLInsertNodeRep (const TaQLMultiNode& tables,
                                       const TaQLMultiNode& columns,
-                                      const TaQLNode& values)
+                                      const TaQLNode& values,
+                                      const TaQLNode& limit)
   : TaQLNodeRep (TaQLNode_Insert),
     itsTables  (tables),
     itsColumns (columns),
-    itsValues  (values)
+    itsValues  (values),
+    itsLimit   (limit)
 {}
 TaQLInsertNodeRep::TaQLInsertNodeRep (const TaQLMultiNode& tables,
                                       const TaQLMultiNode& insert)
@@ -1364,7 +1366,12 @@ TaQLNodeResult TaQLInsertNodeRep::visit (TaQLNodeVisitor& visitor) const
 }
 void TaQLInsertNodeRep::show (std::ostream& os) const
 {
-  os << "INSERT INTO ";
+  os << "INSERT";
+  if (itsLimit.isValid()) {
+    os << " LIMIT ";
+    itsLimit.show (os);
+  }
+  os << " INTO ";
   itsTables.show (os);
   if (itsColumns.isValid()) {
     os << " [";
@@ -1379,13 +1386,15 @@ void TaQLInsertNodeRep::save (AipsIO& aio) const
   itsTables.saveNode (aio);
   itsColumns.saveNode (aio);
   itsValues.saveNode (aio);
+  itsLimit.saveNode (aio);
 }
 TaQLInsertNodeRep* TaQLInsertNodeRep::restore (AipsIO& aio)
 {
   TaQLMultiNode tables = TaQLNode::restoreMultiNode (aio);
   TaQLMultiNode columns = TaQLNode::restoreMultiNode (aio);
   TaQLNode values = TaQLNode::restoreNode (aio);
-  return new TaQLInsertNodeRep (tables, columns, values);
+  TaQLNode limit  = TaQLNode::restoreNode (aio);
+  return new TaQLInsertNodeRep (tables, columns, values, limit);
 }
 
 TaQLDeleteNodeRep::TaQLDeleteNodeRep (const TaQLMultiNode& tables,
@@ -1829,10 +1838,12 @@ TaQLAddRowNodeRep* TaQLAddRowNodeRep::restore (AipsIO& aio)
 }
 
 TaQLConcTabNodeRep::TaQLConcTabNodeRep (const String& tableName,
-                                        const TaQLMultiNode& tables)
+                                        const TaQLMultiNode& tables,
+                                        const TaQLMultiNode& subtableNames)
   : TaQLQueryNodeRep (TaQLNode_ConcTab),
     itsTableName (tableName),
-    itsTables    (tables)
+    itsTables    (tables),
+    itsSubTables (subtableNames)
 {}
 TaQLConcTabNodeRep::~TaQLConcTabNodeRep()
 {}
@@ -1844,6 +1855,10 @@ void TaQLConcTabNodeRep::showDerived (std::ostream& os) const
 {
   os << "[";
   itsTables.show (os);
+  if (itsSubTables.isValid()) {
+    os << " SUBTABLES ";
+    itsSubTables.show (os);
+  }
   if (! itsTableName.empty()) {
     os << " GIVING " << itsTableName;
   }
@@ -1853,13 +1868,15 @@ void TaQLConcTabNodeRep::save (AipsIO& aio) const
 {
   aio << itsTableName;
   itsTables.saveNode (aio);
+  itsSubTables.saveNode (aio);
 }
 TaQLConcTabNodeRep* TaQLConcTabNodeRep::restore (AipsIO& aio)
 {
   String tableName;
   aio >> tableName;
   TaQLMultiNode tables = TaQLNode::restoreMultiNode (aio);
-  return new TaQLConcTabNodeRep (tableName, tables);
+  TaQLMultiNode subtables = TaQLNode::restoreMultiNode (aio);
+  return new TaQLConcTabNodeRep (tableName, tables, subtables);
 }
 
 

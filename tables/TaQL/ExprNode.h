@@ -949,6 +949,10 @@ public:
     Bool isNull() const
       { return node_p == 0; }
 
+    // Do not apply the selection.
+    void disableApplySelection()
+      { node_p->disableApplySelection(); }
+
     // Re-create the column object for a selection of rows.
     // Nothing is done if the node does not represent a column object.
     void applySelection (const Vector<uInt>& rownrs)

@@ -920,7 +920,7 @@ class TaQLInsertNodeRep: public TaQLNodeRep
 {
 public:
   TaQLInsertNodeRep (const TaQLMultiNode& tables, const TaQLMultiNode& columns,
-		     const TaQLNode& values);
+		     const TaQLNode& values, const TaQLNode& limit);
   TaQLInsertNodeRep (const TaQLMultiNode& tables, const TaQLMultiNode& insert);
   virtual ~TaQLInsertNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
@@ -931,6 +931,7 @@ public:
   TaQLMultiNode itsTables;
   TaQLMultiNode itsColumns;
   TaQLNode      itsValues;
+  TaQLNode      itsLimit;
 };
 
 
@@ -1291,8 +1292,9 @@ public:
 class TaQLConcTabNodeRep: public TaQLQueryNodeRep
 {
 public:
-  TaQLConcTabNodeRep (const String& tableNamer,
-                      const TaQLMultiNode& tables);
+  TaQLConcTabNodeRep (const String& tableName,
+                      const TaQLMultiNode& tables,
+                      const TaQLMultiNode& subtableNames);
   virtual ~TaQLConcTabNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void showDerived (std::ostream& os) const;
@@ -1301,6 +1303,7 @@ public:
 
   String        itsTableName;
   TaQLMultiNode itsTables;
+  TaQLMultiNode itsSubTables;
 };
 
 

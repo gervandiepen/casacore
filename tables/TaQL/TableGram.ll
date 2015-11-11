@@ -140,6 +140,7 @@ GIVING1   [Gg][Ii][Vv][Ii][Nn][Gg]
 SAVETO    [Ss][Aa][Vv][Ee]{WHITE}[Tt][Oo]{WHITE1}
 GIVING    {GIVING1}|{SAVETO}
 INTO      [Ii][Nn][Tt][Oo]
+SUBTABLES [Ss][Uu][Bb][Tt][Aa][Bb][Ll][Ee][Ss]
 GROUPBY   [Gg][Rr][Oo][Uu][Pp]{WHITE}[Bb][Yy]{WHITE1}
 GROUPROLL {GROUPBY}{WHITE}[Rr][Oo][Ll][Ll][Uu][Pp]{WHITE1}
 HAVING    [Hh][Aa][Vv][Ii][Nn][Gg]
@@ -147,7 +148,7 @@ JOIN      [Jj][Oo][Ii][Nn]
 ON        [Oo][Nn]
 ASC       [Aa][Ss][Cc]
 DESC      [Dd][Ee][Ss][Cc]
-LIMIT     [Ll][Ii][Mm][Ii][Tt]
+LIMIT     ([Ll][Ii][Mm][Ii][Tt])|([Tt][Oo][Pp])
 OFFSET    [Oo][Ff][Ff][Ss][Ee][Tt]
 BETWEEN   [Bb][Ee][Tt][Ww][Ee][Ee][Nn]
 EXISTS    [Ee][Xx][Ii][Ss][Tt][Ss]
@@ -360,6 +361,10 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 {INTO}    {
             tableGramPosition() += yyleng;
 	    return INTO;
+          }
+{SUBTABLES}    {
+            tableGramPosition() += yyleng;
+	    return SUBTABLES;
           }
 {LIMIT}   {
             tableGramPosition() += yyleng;

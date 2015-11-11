@@ -805,6 +805,32 @@ select ab,ac from tTableGram_tmp.tab
  7 8
  9 10
  3 34
+insert into [createtable tTableGram_tmp.tab2 (ab I4, ac U2, ad I4)] values (10,11,1),(12,13,2),(14,15,4)
+    has been executed
+    insert result of 3 rows
+3 selected columns:  ab ac ad
+ 10 11 1
+ 12 13 2
+ 14 15 4
+insert top 4 into tTableGram_tmp.tab2 values (rowid(), ab+10, rownumber())
+    has been executed
+    insert result of 4 rows
+3 selected columns:  ab ac ad
+ 3 13 4
+ 4 14 5
+ 5 15 6
+ 6 16 7
+select ab,ac,ad from tTableGram_tmp.tab2
+    has been executed
+    select result of 7 rows
+3 selected columns:  ab ac ad
+ 10 11 1
+ 12 13 2
+ 14 15 4
+ 3 13 4
+ 4 14 5
+ 5 15 6
+ 6 16 7
 
 testing create ...
 create table tTableGram_tmp.tab2 (col1 i4 [shape=[2,3], unit="m", dmtype="IncrementalStMan"], col2 B) dminfo [TYPE="IncrementalStMan",NAME="ISM1",SPEC=[BUCKETSIZE=16384],COLUMNS=["col1"]]
@@ -1125,6 +1151,10 @@ select * from tTableGram_tmp.tst
  1
  2
 
+select gcount() from [tTableGram_tmp.tst,"tTableGram_*.tst" subtables a,b]
+
+Caught an exception: Error in TaQL command: 'select gcount() from [tTableGram_tmp.tst,"tTableGram_*.tst" subtables a,b]'
+  RecordInterface: field a is unknown
 select gcount() from [tTableGram_tmp.tst,tTableGram_tmp.tst giving tTableGram_tmp.tst2]
     has been executed
     select result of 1 rows

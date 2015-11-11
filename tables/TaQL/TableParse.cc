@@ -1990,10 +1990,6 @@ TableExprNode TableParseSelect::makeSubSet() const
   // Link to set to make sure that TableExprNode hereafter does not delete
   // the object.
   resultSet_p->link();
-  ///  if (! TableExprNode(resultSet_p).checkTableSize (origTable, False)) {
-  ///    throw TableInvExpr ("Tables with different sizes used in "
-  ///                        "GIVING set expression (mismatches first table)");
-  ///  }
   TableExprNodeSet set(rownrs_p, *resultSet_p);
   return set.setOrArray();
 }
@@ -2570,15 +2566,44 @@ Table TableParseSelect::doInsert (Bool showTimings, Table& table)
   if (! table.isWritable()) {
     throw TableInvExpr ("Table " + table.tableName() + " is not writable");
   }
-  // Add a single row if the inserts are given as expressions.
-  // Select the single row and use update to put the expressions into the row.
+  // Add rows if the inserts are given as expressions.
+  // Select rows and use update to put the expressions into the rows.
   if (update_p.size() > 0) {
-    Vector<uInt> rownrs(1);
-    rownrs[0] = table.nrow();
-    table.addRow();
-    Table sel = table(rownrs);
-    doUpdate (False, Table(), sel, rownrs);
-    return sel;
+    uInt  nexpr  = insertExprs_p.size();
+    Int64 nrowex = nexpr / update_p.size();
+    AlwaysAssert (nrowex*update_p.size() == nexpr, AipsError);
+    Int64 nrow   = nrowex;
+    if (limit_p > 0) {
+      // See if #rows is given explicitly.
+      nrow = limit_p;
+    } else if (limit_p < 0) {
+      nrow = table.nrow() + limit_p;
+    }
+    Vector<uInt> newRownrs(nrow);
+    indgen (newRownrs, table.nrow());
+    Vector<uInt> selRownrs(1, table.nrow() + nrow);
+    // Add new rows to TableExprNodeRowid.
+    // It works because NodeRowid does not obey disableApplySelection.
+    for (vector<TableExprNode>::iterator iter=applySelNodes_p.begin();
+         iter!=applySelNodes_p.end(); ++iter) {
+      iter->disableApplySelection();
+      iter->applySelection (selRownrs);
+    }
+    // Add one row at a time, because an insert expression might use
+    // the table itself.
+    Int64 inx = 0;
+    for (Int64 i=0; i<nrow; ++i) {
+      selRownrs[0] = table.nrow();
+      table.addRow();
+      Table sel = table(selRownrs);
+      for (uInt j=0; j<update_p.size(); ++j) {
+        update_p[j]->node() = insertExprs_p[inx*update_p.size() + j];
+      }
+      doUpdate (False, Table(), sel, selRownrs);
+      inx++;
+      if (inx == nrowex) inx = 0;
+    }
+    return table(newRownrs);
   }
   // Handle the inserts from another selection.
   // Do the selection.
@@ -2727,10 +2752,6 @@ void TableParseSelect::doHaving (Bool showTimings,
                                  const CountedPtr<TableExprGroupResult>& groups)
 {
   Timer timer;
-  ///  if (! havingNode_p.checkTableSize (table, True)) {
-  ///    throw TableInvExpr ("Table(s) with incorrect size used in the "
-  ///                        "HAVING expression (mismatches first table)");
-  ///  }
   // Find the rows matching the HAVING expression.
   Vector<uInt> rownrs(rownrs_p.size());
   uInt nr = 0;
@@ -2913,15 +2934,6 @@ void TableParseSelect::doSort (Bool showTimings)
   //# First check if the sort keys are correct.
   for (i=0; i<nrkey; i++) {
     const TableParseSort& key = sort_p[i];
-    /*
-    //# Check if the correct table is used in the sort key expression.
-    if (! key.node().checkTableSize (origTable, False)) {
-      cout<<"node="<<key.node().getNodeRep()<<endl;
-      throw TableInvExpr ("Table(s) with incorrect size used "
-                          "in sort key " + String::toString(i) +
-                          " (mismatches first table)");
-    }
-    */
     //# This throws an exception for unknown data types (datetime, regex).
     key.node().getColumnDataType();
   }

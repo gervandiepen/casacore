@@ -155,18 +155,13 @@ $casa_checktool ./tTaQLNode 'update tTaQLNode_tmp.tab set arr1[arr1>0][1,,]=4, a
 $casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab limit 3 offset 2'
 $casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab orderby desc ab limit 1 offset 2'
 $casa_checktool ./tTaQLNode 'select ab from tTaQLNode_tmp.tab'
-
 $casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab'
-$casa_checktool ./tTaQLNode 'select ab from tTaQLNode_tmp.tab'
+$casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab where ab%2==0'
 
 $casa_checktool ./tTaQLNode 'insert into tTaQLNode_tmp.tab select from tTaQLNode_tmp.tabc'
-$casa_checktool ./tTaQLNode 'select ab from tTaQLNode_tmp.tab'
-
-$casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab where ab%2==0'
-$casa_checktool ./tTaQLNode 'select ab from tTaQLNode_tmp.tab'
-
 $casa_checktool ./tTaQLNode 'insert into tTaQLNode_tmp.tab (ab,ac) values (1+2,3*ab + sum([select ab from tTaQLNode_tmp.tab]))'
-$casa_checktool ./tTaQLNode 'select ab,ac from tTaQLNode_tmp.tab'
+$casa_checktool ./tTaQLNode 'insert into tTaQLNode_tmp.tab values (1+2),(8),(9),(10)'
+$casa_checktool ./tTaQLNode 'insert limit 10 into tTaQLNode_tmp.tab values (1)'
 
 $casa_checktool ./tTaQLNode 'count ab,ac+1 from tTaQLnode_tmp.tab'
 $casa_checktool ./tTaQLNode 'count min(ab),ac+1 from tTaQLnode_tmp.tab where ac>1'
@@ -178,7 +173,7 @@ $casa_checktool ./tTaQLNode 'create table tTaQLNode_tmp.tab col1 i4, col2 r4 ndi
 $casa_checktool ./tTaQLNode 'create table tTaQLNode_tmp.tab limit 10*10'
 
 $casa_checktool ./tTaQLNode 'select gcount() from [tTableGram_tmp.tst as t1,tTableGram_tmp.tst as t2,[[tTableGram_tmp.tst,tTableGram_tmp.tst] as t3] as t4] as t5'
-$casa_checktool ./tTaQLNode 'select from [t_tmp.tst1,t_tmp.tst2 giving a.tab]'
+$casa_checktool ./tTaQLNode 'select from [t_tmp.tst1,t_tmp.tst2 subtables a,b giving a.tab]'
 
 $casa_checktool ./tTaQLNode 'alter table a.b rename column old to new'
 $casa_checktool ./tTaQLNode 'alter table a.b rename column old to new, old1 to new1, old2 to new2'

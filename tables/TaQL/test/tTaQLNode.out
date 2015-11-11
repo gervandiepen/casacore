@@ -281,26 +281,20 @@ SELECT ab FROM tTaQLNode_tmp.tab
 delete from tTaQLNode_tmp.tab
 DELETE FROM tTaQLNode_tmp.tab
 
-select ab from tTaQLNode_tmp.tab
-SELECT ab FROM tTaQLNode_tmp.tab
+delete from tTaQLNode_tmp.tab where ab%2==0
+DELETE FROM tTaQLNode_tmp.tab WHERE ((ab)%(2))=(0)
 
 insert into tTaQLNode_tmp.tab select from tTaQLNode_tmp.tabc
 INSERT INTO tTaQLNode_tmp.tab SELECT FROM tTaQLNode_tmp.tabc
 
-select ab from tTaQLNode_tmp.tab
-SELECT ab FROM tTaQLNode_tmp.tab
-
-delete from tTaQLNode_tmp.tab where ab%2==0
-DELETE FROM tTaQLNode_tmp.tab WHERE ((ab)%(2))=(0)
-
-select ab from tTaQLNode_tmp.tab
-SELECT ab FROM tTaQLNode_tmp.tab
-
 insert into tTaQLNode_tmp.tab (ab,ac) values (1+2,3*ab + sum([select ab from tTaQLNode_tmp.tab]))
 INSERT INTO tTaQLNode_tmp.tab [ab,ac] VALUES [(1)+(2),((3)*(ab))+(sum([SELECT ab FROM tTaQLNode_tmp.tab]))]
 
-select ab,ac from tTaQLNode_tmp.tab
-SELECT ab,ac FROM tTaQLNode_tmp.tab
+insert into tTaQLNode_tmp.tab values (1+2),(8),(9),(10)
+INSERT INTO tTaQLNode_tmp.tab VALUES [(1)+(2)],[8],[9],[10]
+
+insert limit 10 into tTaQLNode_tmp.tab values (1)
+INSERT LIMIT 10 INTO tTaQLNode_tmp.tab VALUES [1]
 
 count ab,ac+1 from tTaQLnode_tmp.tab
 COUNT  ab,(ac)+(1) FROM tTaQLnode_tmp.tab
@@ -323,8 +317,8 @@ CREATE TABLE tTaQLNode_tmp.tab  LIMIT (10)*(10)
 select gcount() from [tTableGram_tmp.tst as t1,tTableGram_tmp.tst as t2,[[tTableGram_tmp.tst,tTableGram_tmp.tst] as t3] as t4] as t5
 SELECT COUNTALL() FROM [tTableGram_tmp.tst AS t1,tTableGram_tmp.tst AS t2,[[tTableGram_tmp.tst,tTableGram_tmp.tst] AS t3] AS t4] AS t5
 
-select from [t_tmp.tst1,t_tmp.tst2 giving a.tab]
-SELECT FROM [t_tmp.tst1,t_tmp.tst2 GIVING a.tab]
+select from [t_tmp.tst1,t_tmp.tst2 subtables a,b giving a.tab]
+SELECT FROM [t_tmp.tst1,t_tmp.tst2 SUBTABLES a,b GIVING a.tab]
 
 alter table a.b rename column old to new
 ALTER TABLE a.b RENAME COLUMN old TO new
