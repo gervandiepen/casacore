@@ -210,8 +210,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   }
 
   template<typename T>
-  MArray<T> TEFMASKiif (const MArray<T>& arr, TableExprNodeRep* operand2,
-                        const TableExprId& id)
+  MArray<T> TEFMASKrepl (const MArray<T>& arr, TableExprNodeRep* operand2,
+                         const TableExprId& id, Bool maskValue)
   {
     if (!arr.hasMask()) {
       return arr;
@@ -229,8 +229,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     } else {
       operand2->get(id, arr2);
       if (! arr.shape().isEqual (arr2.shape())) {
-        throw TableInvExpr ("TableExprFuncNodeArray::get<T>, "
-                            "array shapes mismatch in function IIFMASK");
+        throw TableInvExpr ("TableExprFuncNodeArray::get<T>, array shapes "
+                            "mismatch in function REPLACE(UN)MASKED");
       }
       data2 = arr2.array().getStorage (del2);
       incr2 = 1;
@@ -238,7 +238,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     data1 = res.array().getStorage (del1);
     mask1 = arr.mask().getStorage (delm);
     for (size_t i=0; i<arr.size(); ++i, data2+=incr2) {
-      if (mask1[i]) {
+      if (mask1[i] == maskValue) {
         data1[i] = *data2;
       }
     }
@@ -390,7 +390,8 @@ void TableExprFuncNodeArray::tryToConst()
     case TableExprFuncNode::arrdataFUNC:
     case TableExprFuncNode::arrmaskFUNC:
     case TableExprFuncNode::negatemaskFUNC:
-    case TableExprFuncNode::iifmaskFUNC:
+    case TableExprFuncNode::replmaskedFUNC:
+    case TableExprFuncNode::replunmaskedFUNC:
     case TableExprFuncNode::arrflatFUNC:
         if (operands()[0]->valueType() == VTScalar) {
             ipos_p = IPosition(1,1);
@@ -819,8 +820,12 @@ MArray<Bool> TableExprFuncNodeArray::getArrayBool (const TableExprId& id)
         return MArray<Bool> (operands()[0]->getBoolAS(id).array());
     case TableExprFuncNode::negatemaskFUNC:
         return TEFMASKneg (operands()[0]->getBoolAS(id));
-    case TableExprFuncNode::iifmaskFUNC:
-        return TEFMASKiif (operands()[0]->getBoolAS(id), operands()[1], id);
+    case TableExprFuncNode::replmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getBoolAS(id), operands()[1],
+                            id, True);
+    case TableExprFuncNode::replunmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getBoolAS(id), operands()[1],
+                            id, False);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<Bool> (operands()[0]->getBoolAS(id).flatten());
     case TableExprFuncNode::arrmaskFUNC:
@@ -1155,8 +1160,12 @@ MArray<Int64> TableExprFuncNodeArray::getArrayInt (const TableExprId& id)
         return MArray<Int64> (operands()[0]->getIntAS(id).array());
     case TableExprFuncNode::negatemaskFUNC:
         return TEFMASKneg (operands()[0]->getIntAS(id));
-    case TableExprFuncNode::iifmaskFUNC:
-        return TEFMASKiif (operands()[0]->getIntAS(id), operands()[1], id);
+    case TableExprFuncNode::replmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getIntAS(id), operands()[1],
+                            id, True);
+    case TableExprFuncNode::replunmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getIntAS(id), operands()[1],
+                            id, False);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<Int64> (operands()[0]->getIntAS(id).flatten());
     default:
@@ -1555,8 +1564,12 @@ MArray<Double> TableExprFuncNodeArray::getArrayDouble (const TableExprId& id)
         return MArray<Double> (operands()[0]->getDoubleAS(id).array());
     case TableExprFuncNode::negatemaskFUNC:
         return TEFMASKneg (operands()[0]->getDoubleAS(id));
-    case TableExprFuncNode::iifmaskFUNC:
-        return TEFMASKiif (operands()[0]->getDoubleAS(id), operands()[1], id);
+    case TableExprFuncNode::replmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getDoubleAS(id), operands()[1],
+                            id, True);
+    case TableExprFuncNode::replunmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getDoubleAS(id), operands()[1],
+                            id, False);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<Double> (operands()[0]->getDoubleAS(id).flatten());
     case TableExprFuncNode::angdistFUNC:
@@ -1830,8 +1843,12 @@ MArray<DComplex> TableExprFuncNodeArray::getArrayDComplex
         return MArray<DComplex> (operands()[0]->getDComplexAS(id).array());
     case TableExprFuncNode::negatemaskFUNC:
         return TEFMASKneg (operands()[0]->getDComplexAS(id));
-    case TableExprFuncNode::iifmaskFUNC:
-        return TEFMASKiif (operands()[0]->getDComplexAS(id), operands()[1], id);
+    case TableExprFuncNode::replmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getDComplexAS(id), operands()[1],
+                            id, True);
+    case TableExprFuncNode::replunmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getDComplexAS(id), operands()[1],
+                            id, False);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<DComplex> (operands()[0]->getDComplexAS(id).flatten());
     default:
@@ -2139,8 +2156,12 @@ MArray<String> TableExprFuncNodeArray::getArrayString (const TableExprId& id)
         return MArray<String> (operands()[0]->getStringAS(id).array());
     case TableExprFuncNode::negatemaskFUNC:
         return TEFMASKneg (operands()[0]->getStringAS(id));
-    case TableExprFuncNode::iifmaskFUNC:
-        return TEFMASKiif (operands()[0]->getStringAS(id), operands()[1], id); 
+    case TableExprFuncNode::replmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getStringAS(id), operands()[1],
+                            id, True); 
+    case TableExprFuncNode::replunmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getStringAS(id), operands()[1],
+                            id, False); 
    case TableExprFuncNode::arrflatFUNC:
         return MArray<String> (operands()[0]->getStringAS(id).flatten());
     default:
@@ -2246,8 +2267,12 @@ MArray<MVTime> TableExprFuncNodeArray::getArrayDate (const TableExprId& id)
         return MArray<MVTime> (operands()[0]->getDateAS(id).array());
     case TableExprFuncNode::negatemaskFUNC:
         return TEFMASKneg (operands()[0]->getDateAS(id));
-    case TableExprFuncNode::iifmaskFUNC:
-        return TEFMASKiif (operands()[0]->getDateAS(id), operands()[1], id);
+    case TableExprFuncNode::replmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getDateAS(id), operands()[1],
+                            id, True);
+    case TableExprFuncNode::replunmaskedFUNC:
+        return TEFMASKrepl (operands()[0]->getDateAS(id), operands()[1],
+                            id, False);
     case TableExprFuncNode::arrflatFUNC:
         return MArray<MVTime> (operands()[0]->getDateAS(id).flatten());
     default:

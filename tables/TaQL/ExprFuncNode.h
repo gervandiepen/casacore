@@ -194,85 +194,88 @@ public:
         isfiniteFUNC,     //# 96
 	    // for any array returning Bool scalar
 	isdefFUNC,        //# 97
+        iscolFUNC,        //# 98
+        iskeyFUNC,        //# 99
 	    // for any array returning Int scalar
-	ndimFUNC,         //# 98
-	nelemFUNC,        //# 99
+	ndimFUNC,         //# 100
+	nelemFUNC,        //# 101
 	    // for any array returning Int array
-	shapeFUNC,        //# 100
+	shapeFUNC,        //# 102
             // for String
-	strlengthFUNC,    //# 101          returning Int
-	upcaseFUNC,       //# 102          returning String
-	downcaseFUNC,     //# 103          returning String
-	capitalizeFUNC,   //# 104          returning String
-	trimFUNC,         //# 105          returning String
-	ltrimFUNC,        //# 106          returning String
-	rtrimFUNC,        //# 107          returning String
-	substrFUNC,       //# 108          returning String
-        replaceFUNC,      //# 109          returning String
-	regexFUNC,        //# 110          returning TaqlRegex
-	patternFUNC,      //# 111          returning TaqlRegex
-	sqlpatternFUNC,   //# 112          returning TaqlRegex
+	strlengthFUNC,    //# 103          returning Int
+	upcaseFUNC,       //# 104          returning String
+	downcaseFUNC,     //# 105          returning String
+	capitalizeFUNC,   //# 106          returning String
+	trimFUNC,         //# 107          returning String
+	ltrimFUNC,        //# 108          returning String
+	rtrimFUNC,        //# 109          returning String
+	substrFUNC,       //# 110          returning String
+        replaceFUNC,      //# 111          returning String
+	regexFUNC,        //# 112          returning TaqlRegex
+	patternFUNC,      //# 113          returning TaqlRegex
+	sqlpatternFUNC,   //# 114          returning TaqlRegex
             // for Date
-	datetimeFUNC,     //# 113          returning Date
-	mjdtodateFUNC,    //# 114          returning Date
-	mjdFUNC,          //# 115          returning Double
-	dateFUNC,         //# 116          returning Date
-	timeFUNC,         //# 117          returning Double (in radians)
-	yearFUNC,         //# 118          returning Int
-	monthFUNC,        //# 119          returning Int
-	dayFUNC,          //# 120          returning Int
-	cmonthFUNC,       //# 121          returning String
-	weekdayFUNC,      //# 122          returning Int
-	cdowFUNC,         //# 123          returning String
-	weekFUNC,         //# 124          returning Int
-        ctodFUNC,         //# 125          returning String
-        cdateFUNC,        //# 126          returning String
-        ctimeFUNC,        //# 127          returning String
+	datetimeFUNC,     //# 115          returning Date
+	mjdtodateFUNC,    //# 116          returning Date
+	mjdFUNC,          //# 117          returning Double
+	dateFUNC,         //# 118          returning Date
+	timeFUNC,         //# 119          returning Double (in radians)
+	yearFUNC,         //# 120          returning Int
+	monthFUNC,        //# 121          returning Int
+	dayFUNC,          //# 122          returning Int
+	cmonthFUNC,       //# 123          returning String
+	weekdayFUNC,      //# 124          returning Int
+	cdowFUNC,         //# 125          returning String
+	weekFUNC,         //# 126          returning Int
+        ctodFUNC,         //# 127          returning String
+        cdateFUNC,        //# 128          returning String
+        ctimeFUNC,        //# 129          returning String
             // return values as strings
-        stringFUNC,       //# 128
+        stringFUNC,       //# 130
             // return angles as hms strings
-        hmsFUNC,          //# 129
+        hmsFUNC,          //# 131
             // return angles as dms strings
-        dmsFUNC,          //# 130
+        dmsFUNC,          //# 132
             // return angles as hms/dms strings
-        hdmsFUNC,         //# 131
+        hdmsFUNC,         //# 133
 	    // special function returning a random Double number
-	randFUNC,         //# 132
+	randFUNC,         //# 134
             // special function returning Int row number
-	rownrFUNC,        //# 133
+	rownrFUNC,        //# 135
             // special function returning Int row id (meant for GIVING)
-	rowidFUNC,        //# 134
+	rowidFUNC,        //# 136
             // special function resembling if statement
-	iifFUNC,          //# 135
+	iifFUNC,          //# 137
             // angular distance returning radians
-        angdistFUNC,      //# 136
-        angdistxFUNC,     //# 137
+        angdistFUNC,      //# 138
+        angdistxFUNC,     //# 139
 	    // cone search functions, implemented in derived class
-	conesFUNC,        //# 138
-	cones3FUNC,       //# 139
-	anyconeFUNC,      //# 140
-	anycone3FUNC,     //# 141
-	findconeFUNC,     //# 142
-	findcone3FUNC,    //# 143
+	conesFUNC,        //# 140
+	cones3FUNC,       //# 141
+	anyconeFUNC,      //# 142
+	anycone3FUNC,     //# 143
+	findconeFUNC,     //# 144
+	findcone3FUNC,    //# 145
             // for Int, Double, Complex or String returning Bool
-        boolFUNC,         //# 144
+        boolFUNC,         //# 146
 	    // for any type returning array of that type
-	diagonalFUNC,     //# 145
+	diagonalFUNC,     //# 147
             // masked array functions
-        marrayFUNC,       //# 146
-        arrdataFUNC,      //# 147
-        arrmaskFUNC,      //# 148
-        negatemaskFUNC,   //# 149
-        iifmaskFUNC,      //# 150
-        arrflatFUNC,      //# 151
+        marrayFUNC,       //# 148
+        arrdataFUNC,      //# 149
+        arrmaskFUNC,      //# 150
+        negatemaskFUNC,   //# 151
+        replmaskedFUNC,   //# 152
+        replunmaskedFUNC, //# 153
+        arrflatFUNC,      //# 154
         //# AGGREGATE functions must be the last ones.
-        FirstAggrFunc,    //# 152
+        FirstAggrFunc,    //# 155
         countallFUNC = FirstAggrFunc,
         gcountFUNC,
         gfirstFUNC,
         glastFUNC,
         //# Grouping doing aggregation on the fly; reducing to a scalar per group
-        gminFUNC,         //# 156
+        gminFUNC,         //# 159
         gmaxFUNC,
         gsumFUNC,
         gproductFUNC,
@@ -286,7 +289,7 @@ public:
         gntrueFUNC,
         gnfalseFUNC,
         //# Grouping doing aggregation on the fly; reducing to an array per group
-        FirstAggrArrayFunc,//# 169
+        FirstAggrArrayFunc,//# 172
         gminsFUNC = FirstAggrArrayFunc,
         gmaxsFUNC,
         gsumsFUNC,
@@ -300,10 +303,10 @@ public:
         gallsFUNC,
         gntruesFUNC,
         gnfalsesFUNC,
-        LastAggrArrayFunc,//# 182
+        LastAggrArrayFunc,//# 185
         ghistFUNC = LastAggrArrayFunc,
         //# Grouping requiring aggregation of rows when getting result
-        gaggrFUNC,        //# 183
+        gaggrFUNC,        //# 186
         growidFUNC,
         gmedianFUNC,
         gfractileFUNC,
@@ -313,7 +316,8 @@ public:
 
     // Constructor
     TableExprFuncNode (FunctionType, NodeDataType, ValueType,
-		       const TableExprNodeSet& source);
+		       const TableExprNodeSet& source,
+                       const Table& = Table());
 
     // Destructor
     ~TableExprFuncNode ();
@@ -448,6 +452,7 @@ private:
     NodeDataType argDataType_p;     // common argument data type
     Double       scale_p;           // possible scaling for unit conversion
                                     // (needed for sqrt)
+    Table        table_p;           // table (for iscolumn and iskeyword)
 };
 
 

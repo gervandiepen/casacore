@@ -596,6 +596,19 @@ public:
   // An exception is thrown if the node uses an aggregate function.
   static void checkAggrFuncs (const TableExprNode& node);
 
+  // Split a name into its parts (shorthand, column and field names).
+  // True is returned if the name contained a keyword part.
+  // In that case fieldNames contains the keyword name and the possible
+  // subfields. The possible shorthand and the column name are
+  // filled in if it is a column keyword.
+  // If the name represents a column, fieldNames contains the subfields
+  // of the column (for the case where the column contains records).
+  // If the name is invalid, an exception is thrown if checkError=True.
+  // Otherwise the name is treated as a normal name without keyword.
+  static Bool splitName (String& shorthand, String& columnName,
+                         Vector<String>& fieldNames, const String& name,
+                         Bool checkError, Bool isKeyword);
+
 private:
   // Test if groupby or aggregate functions are given.
   // <br> bit 0:  on = groupby is given
@@ -756,19 +769,6 @@ private:
   // Evaluate an int scalar expression.
   Int64 evalIntScaExpr (const TableExprNode& expr) const;
 
-  // Split a name into its parts (shorthand, column and field names).
-  // True is returned if the name contained a keyword part.
-  // In that case fieldNames contains the keyword name and the possible
-  // subfields. The possible shorthand and the column name are
-  // filled in if it is a column keyword.
-  // If the name represents a column, fieldNames contains the subfields
-  // of the column (for the case where the column contains records).
-  // If the name is invalid, an exception is thrown if checkError=True.
-  // Otherwise the name is treated as a normal name without keyword.
-  Bool splitName (String& shorthand, String& columnName,
-		  Vector<String>& fieldNames, const String& name,
-		  Bool checkError, Bool isKeyword) const;
-
   // Find a table for the given shorthand.
   // If no shorthand is given, the first table is returned (if there).
   // If not found, a null Table object is returned.
@@ -818,7 +818,7 @@ private:
     // is the index in a vector of a set of aggregate function objects.
     vector<CountedPtr<TableExprGroupFuncSet> > funcSets;
     std::map<T, int> keyFuncMap;
-    T lastKey = std::numeric_limits<Double>::max();
+    T lastKey = std::numeric_limits<T>::max();
     int groupnr = -1;
     // Loop through all rows.
     // For each row generate the key to get the right entry.

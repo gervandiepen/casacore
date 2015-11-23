@@ -35,6 +35,7 @@ ttaql
 tTableGramCretab
 tTableGramAlttab
 tTableGramUpdate
+tTableGramMasked
 tTableGramGroupAggr
 tTableGramGroupAggrAll
 tTableGramGroupAggrMaskAll

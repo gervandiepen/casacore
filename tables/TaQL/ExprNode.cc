@@ -1390,7 +1390,7 @@ TableExprNode TableExprNode::newFunctionNode
     TableExprNode res;
     if (resVT == TableExprNodeRep::VTScalar) {
         TableExprFuncNode* fnode = new TableExprFuncNode (ftype, resDT,
-							  resVT, set);
+							  resVT, set, table);
         SPtrHolder<TableExprFuncNode> fnodeHold(fnode);
 	res = TableExprFuncNode::fillNode (fnode, par, dtypeOper);
         fnodeHold.release();

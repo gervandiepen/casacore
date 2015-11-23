@@ -376,7 +376,7 @@ Bool TableParseSelect::splitName (String& shorthand, String& columnName,
 				  Vector<String>& fieldNames,
 				  const String& name,
 				  Bool checkError,
-                                  Bool isKeyword) const
+                                  Bool isKeyword)
 {
   //# Make a copy, because some String functions are non-const.
   //# Usually the name consists of a columnName only, so use that.
@@ -434,11 +434,11 @@ Bool TableParseSelect::splitName (String& shorthand, String& columnName,
     // The name is a column name optionally preceeded by a shorthand
     // and optionally followed by subfields in case the column contains
     // records. The separator is a dot.
-    // A name like a.b is ambiguous because:
+    // A name like a.b is in principle ambiguous because:
     // - it can be shorthand.column
     // - it can be column.subfield
-    // If a is a shorthand, that case it taken. Otherwise it's a column.
-    // Users can make it unambiguous by preceeding it with a dot
+    // It is assumed to be a shorthand.
+    // Users can use column.subfield by preceeding it with a dot
     // (.a.b always means column.subfield).
     fldNam = stringToVector (columnName, '.');
     if (fldNam.nelements() == 1) {
@@ -446,11 +446,8 @@ Bool TableParseSelect::splitName (String& shorthand, String& columnName,
     } else if (fldNam(0).empty()) {
       stfld = 1;                      // .column was used
     } else {
-      Table tab = findTable(fldNam(0));
-      if (! tab.isNull()) {
-	shorthand = fldNam(0);      // a known shorthand is used
-	stfld = 1;
-      }
+      shorthand = fldNam(0);      // a known shorthand is used
+      stfld = 1;
     }
     columnName = fldNam(stfld++);
     if (columnName.empty()) {
@@ -795,6 +792,10 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::isfiniteFUNC;
   } else if (funcName == "isdefined") {
     ftype = TableExprFuncNode::isdefFUNC;
+  } else if (funcName == "iscolumn") {
+    ftype = TableExprFuncNode::iscolFUNC;
+  } else if (funcName == "iskeyword") {
+    ftype = TableExprFuncNode::iskeyFUNC;
   } else if (funcName == "nelements"  ||  funcName == "count") {
     ftype = TableExprFuncNode::nelemFUNC;
   } else if (funcName == "ndim") {
@@ -899,8 +900,10 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::arrmaskFUNC;
   } else if (funcName == "negatemask") {
     ftype = TableExprFuncNode::negatemaskFUNC;
-  } else if (funcName == "iifmask") {
-    ftype = TableExprFuncNode::iifmaskFUNC;
+  } else if (funcName == "replacemasked") {
+    ftype = TableExprFuncNode::replmaskedFUNC;
+  } else if (funcName == "replaceunmasked") {
+    ftype = TableExprFuncNode::replunmaskedFUNC;
   } else if (funcName == "flatten"  ||  funcName == "arrayflatten") {
     ftype = TableExprFuncNode::arrflatFUNC;
   } else if (funcName == "countall") {
@@ -1045,12 +1048,25 @@ TableExprNode TableParseSelect::makeUDFNode (TableParseSelect* sel,
 //# Parse the name of a function.
 TableExprNode TableParseSelect::makeFuncNode
                                          (TableParseSelect* sel,
-                                          const String& name,
+                                          const String& fname,
 					  const TableExprNodeSet& arguments,
 					  const Vector<int>& ignoreFuncs,
-					  const Table& table,
+					  const Table& tabin,
 					  const TaQLStyle& style)
 {
+  Table table(tabin);
+  String name = fname;
+  // See if something like xx.func is given.
+  // xx can be a shorthand or a user defined function library.
+  Vector<String> parts = stringToVector (name, '.');
+  if (sel  &&  parts.size() == 2) {
+    // See if xx is a shorthand. If so, use that table.
+    Table tab = sel->findTable (parts[0]);
+    if (! tab.isNull()) {
+      table = tab;
+      name = parts[1];
+    }
+  }
   //# Determine the function type.
   TableExprFuncNode::FunctionType ftype = findFunc (name,
 						    arguments.nelements(),

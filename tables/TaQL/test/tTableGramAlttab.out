@@ -290,3 +290,12 @@ Keywords of main table
     emvec: Float array with shape [0]
       []
 
+alter table [create table tTableGramAlttab_tmp.tab3 (ab R4)] set keyword ac=3
+    has been executed
+    alttab result of 0 rows
+0 selected columns: 
+select iscolumn("col1b"), iskeyword("ac"), iscolumn("col2b"), iskeyword("col1::subrec"), iskeyword("col1::subrec.k2"), iskeyword("key1n"), t2.iscolumn("ab"), t2.iskeyword("ac"), t2.iscolumn("col2b"), t2.iskeyword("key1n") from tTableGramAlttab_tmp.tab2, tTableGramAlttab_tmp.tab3 as t2 limit 1
+    has been executed
+    select result of 1 rows
+10 selected columns:  Col_1 Col_2 Col_3 Col_4 Col_5 Col_6 Col_7 Col_8 Col_9 Col_10
+ 0 0 1 1 1 1 1 1 0 0

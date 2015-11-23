@@ -1,0 +1,42 @@
+select sum(arr1),sum(arr1[arr1%3>0]),sum(arr1[arr1%3==0]) from tTableGramMasked_tmp.tab
+    has been executed
+    select result of 10 rows
+3 selected columns:  Col_1 Col_2 Col_3
+ 276 84 192
+ 852 276 576
+ 1428 468 960
+ 2004 660 1344
+ 2580 852 1728
+ 3156 1044 2112
+ 3732 1236 2496
+ 4308 1428 2880
+ 4884 1620 3264
+ 5460 1812 3648
+select sum(arraydata(replacemasked(arr1[arr1%3>0], 1))) from tTableGramMasked_tmp.tab
+    has been executed
+    select result of 10 rows
+1 selected columns:  Col_1
+ 100
+ 292
+ 484
+ 676
+ 868
+ 1060
+ 1252
+ 1444
+ 1636
+ 1828
+select sum(arraydata(replaceunmasked(arr1[arr1%3>0], 1))) from tTableGramMasked_tmp.tab
+    has been executed
+    select result of 10 rows
+1 selected columns:  Col_1
+ 200
+ 584
+ 968
+ 1352
+ 1736
+ 2120
+ 2504
+ 2888
+ 3272
+ 3656

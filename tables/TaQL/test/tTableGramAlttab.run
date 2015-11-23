@@ -44,5 +44,8 @@ $casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 RENAME COLUM
 
 $casa_checktool ./tTableGram 'alter table tTableGramAlttab_tmp.tab2 DELETE COLUMN col1b,col2 ,ADDrows 4 +5, set keyword col1::emvec=[] as R4'
 ../../apps/showtable in=tTableGramAlttab_tmp.tab2 colkey=T | grep -v 'showtable:' | sed -e "s%$curdir/%%"
- 
+
+$casa_checktool ./tTableGram 'alter table [create table tTableGramAlttab_tmp.tab3 (ab R4)] set keyword ac=3'
+$casa_checktool ./tTableGram 'select iscolumn("col1b"), iskeyword("ac"), iscolumn("col2b"), iskeyword("col1::subrec"), iskeyword("col1::subrec.k2"), iskeyword("key1n"), t2.iscolumn("ab"), t2.iskeyword("ac"), t2.iscolumn("col2b"), t2.iskeyword("key1n") from tTableGramAlttab_tmp.tab2, tTableGramAlttab_tmp.tab3 as t2 limit 1'
+
 exit 0

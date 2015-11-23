@@ -26,11 +26,13 @@
 //# $Id: ExprFuncNode.cc 21277 2012-10-31 16:07:31Z gervandiepen $
 
 #include <casacore/tables/TaQL/ExprFuncNode.h>
-#include <casacore/tables/Tables/TableError.h>
+#include <casacore/tables/TaQL/TableParse.h>
 #include <casacore/tables/TaQL/ExprNode.h>
 #include <casacore/tables/TaQL/ExprNodeSet.h>
 #include <casacore/tables/TaQL/ExprDerNode.h>
 #include <casacore/tables/TaQL/ExprUnitNode.h>
+#include <casacore/tables/Tables/TableRecord.h>
+#include <casacore/tables/Tables/TableError.h>
 #include <casacore/casa/Arrays/Vector.h>
 #include <casacore/casa/Arrays/MArrayMath.h>
 #include <casacore/casa/Arrays/MArrayLogical.h>
@@ -48,11 +50,13 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
 TableExprFuncNode::TableExprFuncNode (FunctionType ftype, NodeDataType dtype,
 				      ValueType vtype,
-				      const TableExprNodeSet& source)
+				      const TableExprNodeSet& source,
+                                      const Table& table)
 : TableExprNodeMulti (dtype, vtype, OtFunc, source),
   funcType_p         (ftype),
   argDataType_p      (dtype),
-  scale_p            (1)
+  scale_p            (1),
+  table_p            (table)
 {}
 
 TableExprFuncNode::~TableExprFuncNode()
@@ -315,6 +319,10 @@ void TableExprFuncNode::tryToConst()
 	    exprtype_p = Constant;
 	}
 	break;
+    case iscolFUNC:
+    case iskeyFUNC:
+        exprtype_p = Constant;
+        break;
     default:
 	break;
     }
@@ -363,6 +371,36 @@ Bool TableExprFuncNode::getBool (const TableExprId& id)
         return isFinite(operands_p[0]->getDouble(id));
     case isdefFUNC:
 	return operands_p[0]->isDefined (id);
+    case iscolFUNC:
+        return table_p.tableDesc().isColumn (operands_p[0]->getString (id));
+    case iskeyFUNC:
+      {
+        String name = operands_p[0]->getString (id);
+        String shand, columnName;
+        Vector<String> fieldNames;
+        TableParseSelect::splitName (shand, columnName, fieldNames,
+                                     name, True, True);
+        if (! shand.empty()) {
+          return False;
+        }
+        const TableRecord* rec;
+        String fullName;
+        try {
+          if (columnName.empty()) {
+            rec = TableExprNode::findLastKeyRec (table_p.keywordSet(),
+                                                 fieldNames, fullName);
+          } else {
+            const TableRecord& colkeys
+              (TableColumn(table_p, columnName).keywordSet());
+            rec = TableExprNode::findLastKeyRec (colkeys,
+                                                 fieldNames, fullName);
+          }
+        } catch (const std::exception&) {
+          return False;
+        }
+        String keyName = fieldNames[fieldNames.size() -1 ];
+        return rec->isDefined (keyName);
+      }
     case near2FUNC:
 	if (argDataType_p == NTDouble) {
 	    return near (operands_p[0]->getDouble(id),
@@ -1273,6 +1311,10 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
     case isdefFUNC:
 	checkNumOfArg (1, 1, nodes);
 	return checkDT (dtypeOper, NTAny, NTBool, nodes);
+    case iscolFUNC:
+    case iskeyFUNC:
+	checkNumOfArg (1, 1, nodes);
+	return checkDT (dtypeOper, NTString, NTBool, nodes);
     case angdistFUNC:
     case angdistxFUNC:
         checkNumOfArg (2, 2, nodes);
@@ -1307,7 +1349,8 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
         resVT = VTArray;
 	return checkDT (dtypeOper, NTAny, NTBool, nodes);
         break;
-    case iifmaskFUNC:
+    case replmaskedFUNC:
+    case replunmaskedFUNC:
         checkNumOfArg (2, 2, nodes);
         resVT = VTArray;
 	checkDT (dtypeOper, NTAny, NTAny, nodes);
