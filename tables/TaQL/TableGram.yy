@@ -735,7 +735,7 @@ brackval:  LBRACKET recexpr RBRACKET {
            }
          | LBRACKET RBRACKET AS NAME {
                /* empty vector of the given type */
-           $$ = new TaQLRecFldNodeRep ("", TaQLNode(), $4->getString());
+               $$ = new TaQLRecFldNodeRep ("", TaQLNode(), $4->getString());
            }
 
 dminfo:    {      /* no datamans */
@@ -1806,8 +1806,8 @@ recfield:  srecfield {
 srecfield: NAME EQASS srecval {
                $$ = new TaQLNode(
                     new TaQLRecFldNodeRep ($1->getString(), *$3));
-               delete $3;
 	       TaQLNode::theirNodesCreated.push_back ($$);
+               delete $3;
            }
       ;
 
@@ -1822,6 +1822,7 @@ rrecfield: NAME EQASS brackval {
 	       $$ = new TaQLNode(
                     new TaQLRecFldNodeRep ($1->getString(), *$3));
 	       TaQLNode::theirNodesCreated.push_back ($$);
+               delete $3;
            }
        ;
 
