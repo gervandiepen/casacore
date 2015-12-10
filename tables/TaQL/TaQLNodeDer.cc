@@ -709,9 +709,11 @@ TaQLJoinNodeRep* TaQLJoinNodeRep::restore (AipsIO& aio)
   return new TaQLJoinNodeRep (tables, condition);
 }
 
-TaQLKeyColNodeRep::TaQLKeyColNodeRep (const String& name)
+TaQLKeyColNodeRep::TaQLKeyColNodeRep (const String& name,
+                                      const String& nameMask)
 : TaQLNodeRep (TaQLNode_KeyCol),
-  itsName (name)
+  itsName     (name),
+  itsNameMask (nameMask)
 {}
 TaQLKeyColNodeRep::~TaQLKeyColNodeRep()
 {}
@@ -721,17 +723,21 @@ TaQLNodeResult TaQLKeyColNodeRep::visit (TaQLNodeVisitor& visitor) const
 }
 void TaQLKeyColNodeRep::show (std::ostream& os) const
 {
-  os << itsName;
+  if (itsNameMask.empty()) {
+    os << itsName;
+  } else {
+    os << '(' << itsName << ',' << itsNameMask << ')';
+  }
 }
 void TaQLKeyColNodeRep::save (AipsIO& aio) const
 {
-  aio << itsName;
+  aio << itsName << itsNameMask;
 }
 TaQLKeyColNodeRep* TaQLKeyColNodeRep::restore (AipsIO& aio)
 {
-  String name;
-  aio >> name;
-  return new TaQLKeyColNodeRep (name);
+  String name, nameMask;
+  aio >> name >> nameMask;
+  return new TaQLKeyColNodeRep (name, nameMask);
 }
 
 TaQLTableNodeRep::TaQLTableNodeRep (const TaQLNode& table,
@@ -766,11 +772,12 @@ TaQLTableNodeRep* TaQLTableNodeRep::restore (AipsIO& aio)
 }
 
 TaQLColNodeRep::TaQLColNodeRep (const TaQLNode& expr, const String& name,
-                                const String& dtype)
+                                const String& nameMask, const String& dtype)
   : TaQLNodeRep (TaQLNode_Col),
-    itsExpr  (expr),
-    itsName  (name),
-    itsDtype (checkDataType(dtype))
+    itsExpr     (expr),
+    itsName     (name),
+    itsNameMask (nameMask),
+    itsDtype    (checkDataType(dtype))
 {}
 TaQLColNodeRep::~TaQLColNodeRep()
 {}
@@ -782,7 +789,12 @@ void TaQLColNodeRep::show (std::ostream& os) const
 {
   itsExpr.show (os);
   if (! itsName.empty()) {
-    os << " AS " << itsName;
+    os << " AS " ;
+    if (itsNameMask.empty()) {
+      os << itsName;
+    } else {
+      os << '(' << itsName << ',' << itsNameMask << ')';
+    }
     if (! itsDtype.empty()) {
       os << ' ' << itsDtype;
     }
@@ -790,16 +802,15 @@ void TaQLColNodeRep::show (std::ostream& os) const
 }
 void TaQLColNodeRep::save (AipsIO& aio) const
 {
-  aio << itsName;
-  aio << itsDtype;
+  aio << itsName << itsNameMask << itsDtype;
   itsExpr.saveNode (aio);
 }
 TaQLColNodeRep* TaQLColNodeRep::restore (AipsIO& aio)
 {
-  String name, dtype;
-  aio >> name >> dtype;
+  String name, nameMask, dtype;
+  aio >> name >> nameMask >> dtype;
   TaQLColNodeRep* node = new TaQLColNodeRep (TaQLNode::restoreNode(aio),
-					     name, dtype);
+					     name, nameMask, dtype);
   return node;
 }
 

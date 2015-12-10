@@ -353,7 +353,12 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       TaQLNodeResult result = visitNode(node.itsExpr);
       hrval->setExpr (getHR(result).getExpr());
     }
+    if (hrval->getExpr().isNull()  &&  ! node.itsNameMask.empty()) {
+      throw TableInvExpr("value AS (col,mask) can only be given if value "
+                         "is an expression");
+    }
     hrval->setAlias (node.itsName);
+    hrval->setNameMask (node.itsNameMask);
     hrval->setDtype (node.itsDtype);
     return res;
   }
@@ -366,8 +371,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       for (uInt i=0; i<nodes.size(); ++i) {
 	TaQLNodeResult result = visitNode (nodes[i]);
 	const TaQLNodeHRValue& res = getHR(result);
-	topStack()->handleColumn (res.getInt(), res.getString(), res.getExpr(),
-				  res.getAlias(), res.getDtype());
+	topStack()->handleColumn (res.getInt(),
+                                  res.getString(), res.getExpr(),
+				  res.getAlias(), res.getNameMask(),
+                                  res.getDtype());
       }
     }
     topStack()->handleColumnFinish (node.itsDistinct);
@@ -987,7 +994,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       // Handle each column name.
       AlwaysAssert (nodes[i].nodeType() == TaQLNode_KeyCol, AipsError);
       TaQLKeyColNodeRep* colNode = (TaQLKeyColNodeRep*)(nodes[i].getRep());
-      topStack()->handleColumn (-1, colNode->itsName, TableExprNode(), "", "");
+      topStack()->handleColumn (-1, colNode->itsName, TableExprNode(),
+                                "", colNode->itsNameMask, "");
     }
   }
 

@@ -925,17 +925,30 @@ columns:   {          /* no column names given (thus take all) */
 
 colexpr:   orexpr {
 	       $$ = new TaQLNode(
-	            new TaQLColNodeRep (*$1, "", ""));
+                    new TaQLColNodeRep (*$1, "", "", ""));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | orexpr AS NAME {
 	       $$ = new TaQLNode(
-	            new TaQLColNodeRep (*$1, $3->getString(), ""));
+                    new TaQLColNodeRep (*$1, $3->getString(), "", ""));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | orexpr AS LPAREN NAME COMMA NAME RPAREN {
+	       $$ = new TaQLNode(
+                    new TaQLColNodeRep (*$1, $4->getString(),
+                                        $6->getString(), ""));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | orexpr AS NAME NAME {
 	       $$ = new TaQLNode(
-	            new TaQLColNodeRep (*$1, $3->getString(), $4->getString()));
+	            new TaQLColNodeRep (*$1, $3->getString(),
+                                        "", $4->getString()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | orexpr AS LPAREN NAME COMMA NAME RPAREN NAME {
+	       $$ = new TaQLNode(
+                    new TaQLColNodeRep (*$1, $4->getString(),
+                                        $6->getString(), $8->getString()));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
 	 | wildcol {
@@ -945,11 +958,11 @@ colexpr:   orexpr {
 
 wildcol:   TIMES {          /* SELECT * FROM ... */
                TaQLRegexNode p (new TaQLRegexNodeRep ("~p/*/"));
-               $$ = new TaQLNode (new TaQLColNodeRep (p, "", ""));
+               $$ = new TaQLNode (new TaQLColNodeRep (p, "", "", ""));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
 	 | REGEX {
-               $$ = new TaQLNode (new TaQLColNodeRep (*$1, "", ""));
+               $$ = new TaQLNode (new TaQLColNodeRep (*$1, "", "", ""));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          ;
@@ -959,9 +972,20 @@ nmcolumns: NAME {
 	       TaQLNode::theirNodesCreated.push_back ($$);
                $$->add (new TaQLKeyColNodeRep ($1->getString()));
 	   }
+         | LPAREN NAME COMMA NAME RPAREN {
+               $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (new TaQLKeyColNodeRep ($2->getString(),
+                                               $4->getString()));
+	   }
          | nmcolumns COMMA NAME {
 	       $$ = $1;
                $$->add (new TaQLKeyColNodeRep ($3->getString()));
+	   }
+         | nmcolumns COMMA LPAREN NAME COMMA NAME RPAREN {
+	       $$ = $1;
+               $$->add (new TaQLKeyColNodeRep ($4->getString(),
+                                               $6->getString()));
 	   }
          ;
 

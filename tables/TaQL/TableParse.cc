@@ -217,6 +217,7 @@ TableParseSelect::TableParseSelect (CommandType commandType)
     nrSelExprUsed_p (0),
     distinct_p      (False),
     resultType_p    (0),
+    resultCreated_p (False),
     endianFormat_p  (Table::AipsrcEndian),
     overwrite_p     (True),
     resultSet_p     (0),
@@ -508,12 +509,17 @@ TableExprNode TableParseSelect::handleKeyCol (const String& name, Bool tryProj)
   if (!hasKey) {
     if (tryProj && shand.empty() && fieldNames.empty()) {
       // Only the column name is given; so first try if the column is
-      // a new name of a projected column.
+      // a new name of a projected column. It can also be a column created
+      // from the mask of a masked array.
       Bool found;
       Int inx = linearSearchBrackets (found, columnNames_p, columnName,
                                       columnNames_p.size());
+      if (!found) {
+        inx = linearSearchBrackets (found, columnNameMasks_p, columnName,
+                                    columnNameMasks_p.size());
+      }
       if (found) {
-        // If a table resulting from a projection is used, take column from it.
+        // If a table resulting from projection is used, take column from it.
         if (!projectExprTable_p.isNull()  &&
             projectExprTable_p.tableDesc().isColumn (columnName)) {
           uInt nc = projectExprSubset_p.size();
@@ -548,8 +554,8 @@ TableExprNode TableParseSelect::handleKeyCol (const String& name, Bool tryProj)
       addApplySelNode (node);
       return node;
     } catch (const TableError&) {
-      throw TableInvExpr (name + " is an unknown column (or keyword) in table "
-                          + tab.tableName());
+      throw TableInvExpr(name + " is an unknown column (or keyword) in table "
+                         + tab.tableName());
     }
   }
   //# If no column name, we have a table keyword.
@@ -1198,6 +1204,7 @@ void TableParseSelect::handleColumn (Int stringType,
 				     const String& name,
 				     const TableExprNode& expr,
 				     const String& newName,
+                                     const String& newNameMask,
 				     const String& newDtype)
 {
   if (expr.isNull()  &&  stringType >= 0) {
@@ -1206,11 +1213,12 @@ void TableParseSelect::handleColumn (Int stringType,
   } else {
     // A single column is given.
     Int nrcol = columnNames_p.nelements();
-    columnNames_p.resize (nrcol+1);
-    columnExpr_p.resize (nrcol+1);
-    columnOldNames_p.resize (nrcol+1);
-    columnDtypes_p.resize (nrcol+1);
-    columnKeywords_p.resize (nrcol+1);
+    columnNames_p.resize     (nrcol+1);
+    columnNameMasks_p.resize (nrcol+1);
+    columnExpr_p.resize      (nrcol+1);
+    columnOldNames_p.resize  (nrcol+1);
+    columnDtypes_p.resize    (nrcol+1);
+    columnKeywords_p.resize  (nrcol+1);
     if (expr.isNull()) {
       // A true column name is given.
       String oldName;
@@ -1251,8 +1259,9 @@ void TableParseSelect::handleColumn (Int stringType,
       columnExpr_p[nrcol] = expr;
       nrSelExprUsed_p++;
     }
-    columnDtypes_p[nrcol] = newDtype;
-    columnNames_p[nrcol]  = newName;
+    columnDtypes_p[nrcol]    = newDtype;
+    columnNames_p[nrcol]     = newName;
+    columnNameMasks_p[nrcol] = newNameMask;
     if (newName.empty()) {
       columnNames_p[nrcol] = columnOldNames_p[nrcol];
     }
@@ -1316,11 +1325,12 @@ void TableParseSelect::handleWildColumn (Int stringType, const String& name)
       }
     }
     // Add them to the list of column names.
-    columnNames_p.resize    (nrcol+nr);
-    columnExpr_p.resize     (nrcol+nr);
-    columnOldNames_p.resize (nrcol+nr);
-    columnDtypes_p.resize   (nrcol+nr);
-    columnKeywords_p.resize (nrcol+nr);
+    columnNames_p.resize     (nrcol+nr);
+    columnNameMasks_p.resize (nrcol+nr);
+    columnExpr_p.resize      (nrcol+nr);
+    columnOldNames_p.resize  (nrcol+nr);
+    columnDtypes_p.resize    (nrcol+nr);
+    columnKeywords_p.resize  (nrcol+nr);
     for (uInt i=0; i<columns.size(); ++i) {
       if (! columns[i].empty()) {
 	// Add the shorthand to the name, so negation takes that into account.
@@ -1367,6 +1377,7 @@ void TableParseSelect::handleColumnFinish (Bool distinct)
                          "not both");
     }
     Block<String> names(nrcol);
+    Block<String> nameMasks(nrcol);
     Block<String> oldNames(nrcol);
     Block<TableExprNode> exprs(nrcol);
     Block<String> dtypes(nrcol);
@@ -1374,11 +1385,12 @@ void TableParseSelect::handleColumnFinish (Bool distinct)
     Int nr = 0;
     for (Int i=0; i<nrcol; ++i) {
       if (! (columnExpr_p[i].isNull()  &&  columnNames_p[i].empty())) {
-	names[nr]    = columnNames_p[i];
-	oldNames[nr] = columnOldNames_p[i];
-	exprs[nr]    = columnExpr_p[i];
-	dtypes[nr]   = columnDtypes_p[i];
-        keywords[nr] = columnKeywords_p[i];
+	names[nr]     = columnNames_p[i];
+        nameMasks[nr] = columnNameMasks_p[i];
+	oldNames[nr]  = columnOldNames_p[i];
+	exprs[nr]     = columnExpr_p[i];
+	dtypes[nr]    = columnDtypes_p[i];
+        keywords[nr]  = columnKeywords_p[i];
 	// Create an Expr object if needed.
 	if (exprs[nr].isNull()) {
 	  // That can only be the case if no old name is filled in.
@@ -1404,11 +1416,12 @@ void TableParseSelect::handleColumnFinish (Bool distinct)
     exprs.resize    (nr, True);
     dtypes.resize   (nr, True);
     keywords.resize (nr, True);
-    columnNames_p    = names;
-    columnOldNames_p = oldNames;
-    columnExpr_p     = exprs;
-    columnDtypes_p   = dtypes;
-    columnKeywords_p = keywords;
+    columnNames_p     = names;
+    columnNameMasks_p = nameMasks;
+    columnOldNames_p  = oldNames;
+    columnExpr_p      = exprs;
+    columnDtypes_p    = dtypes;
+    columnKeywords_p  = keywords;
   }
   if (distinct_p  &&  columnNames_p.nelements() == 0) {
     throw TableInvExpr ("SELECT DISTINCT can only be given with at least "
@@ -1424,7 +1437,6 @@ void TableParseSelect::handleColumnFinish (Bool distinct)
 Table TableParseSelect::createTable (const TableDesc& td,
                                      Int64 nrow, const Record& dmInfo)
 {
-  AlwaysAssert (resultType_p >= 0, AipsError);
   // Create the table.
   // The types are defined in function handleGiving.
   Table::TableType   ttype = Table::Plain;
@@ -1440,7 +1452,9 @@ Table TableParseSelect::createTable (const TableDesc& td,
   }
   SetupNewTable newtab(resultName_p, td, topt, storageOption_p);
   newtab.bindCreate (dmInfo);
-  return Table(newtab, ttype, nrow, False, endianFormat_p);
+  Table tab(newtab, ttype, nrow, False, endianFormat_p);
+  resultCreated_p = True;
+  return tab;
 }
 
 void TableParseSelect::makeProjectExprTable()
@@ -1476,6 +1490,13 @@ void TableParseSelect::makeProjectExprTable()
 		   IPosition(), "", "", "",
                    columnKeywords_p[i],
 		   columnExpr_p[i].unit().getName());
+    if (! columnNameMasks_p[i].empty()) {
+      addColumnDesc (td, TpBool, columnNameMasks_p[i], 0,
+                     columnExpr_p[i].isScalar() ? -1:0,    //ndim
+                     IPosition(), "", "", "",
+                     TableRecord(),
+                     String());
+    }
   }
   // Create the table.
   projectExprTable_p = createTable (td, 0, dminfo_p);
@@ -1483,7 +1504,8 @@ void TableParseSelect::makeProjectExprTable()
 
 void TableParseSelect::makeProjectExprSel()
 {
-  // Create/initialize the block of indices of projected columns used elsewhere.
+  // Create/initialize the block of indices of projected columns used
+  // elsewhere.
   projectExprSelColumn_p.resize (columnNames_p.size());
   std::fill (projectExprSelColumn_p.begin(),
              projectExprSelColumn_p.end(), False);
@@ -2074,6 +2096,7 @@ void TableParseSelect::handleInsert()
   // are the target columns.
   if (columnNames_p.nelements() == 0) {
     columnNames_p = getStoredColumns (fromTables_p[0].table());
+    columnNameMasks_p.resize (columnNames_p.size());
   }
   // Check if #columns and values match.
   // Copy the names to the update objects.
@@ -2085,7 +2108,8 @@ void TableParseSelect::handleInsert()
 			String::toString(Int(update_p.size())) + ")");
   }
   for (uInt i=0; i<update_p.size(); i++) {
-    update_p[i]->setColumnName (columnNames_p[i]);
+    update_p[i]->setColumnName     (columnNames_p[i]);
+    update_p[i]->setColumnNameMask (columnNameMasks_p[i]);
   }
 }
 
@@ -3216,7 +3240,8 @@ Table TableParseSelect::doProjectExpr
     for (uInt i=0; i<columnExpr_p.nelements(); i++) {
       if (! columnExpr_p[i].isNull()) {
         if (projectExprSelColumn_p[i] == useSel) {
-          addUpdate (new TableParseUpdate (columnNames_p[i], "",
+          addUpdate (new TableParseUpdate (columnNames_p[i],
+                                           columnNameMasks_p[i],
                                            columnExpr_p[i], False));
         }
       }
@@ -3225,33 +3250,29 @@ Table TableParseSelect::doProjectExpr
     doUpdate (False, Table(), projectExprTable_p, rownrs_p, groups);
     projectExprTable_p.flush();
   }
-  // Indicate that no table needs to be created anymore.
-  resultName_p = "";
-  resultType_p = 0;
   return projectExprTable_p;
 }
 
 Table TableParseSelect::doFinish (Bool showTimings, Table& table)
 {
   Timer timer;
-  Table result;
+  Table result(table);;
   if (resultType_p == 1) {
-    if (table.tableType() == Table::Memory) {
-      result = table;
-    } else {
+    if (table.tableType() != Table::Memory) {
       result = table.copyToMemoryTable (resultName_p);
     }
-  } else if (resultType_p > 0){
-    table.deepCopy (resultName_p, dminfo_p, storageOption_p,
-                    overwrite_p ? Table::New : Table::NewNoReplace,
-                    True, endianFormat_p);
-    result = Table(resultName_p);
-  } else {
-    // Normal reference table.
-    table.rename (resultName_p,
-                  overwrite_p ? Table::New : Table::NewNoReplace);
-    table.flush();
-    result = table;
+  } else if (! resultCreated_p) {
+    if (resultType_p > 0) {
+      table.deepCopy (resultName_p, dminfo_p, storageOption_p,
+                      overwrite_p ? Table::New : Table::NewNoReplace,
+                      True, endianFormat_p);
+      result = Table(resultName_p);
+    } else {
+      // Normal reference table.
+      table.rename (resultName_p,
+                    overwrite_p ? Table::New : Table::NewNoReplace);
+      table.flush();
+    }
   }
   if (showTimings) {
     timer.show ("  Giving      ");
@@ -3658,7 +3679,7 @@ void TableParseSelect::execute (Bool showTimings, Bool setInGiving,
   &&  node_p.isNull()  &&  sort_p.size() == 0
   &&  columnNames_p.nelements() == 0  &&  resultSet_p == 0
   &&  limit_p == 0  &&  endrow_p == 0  &&  stride_p == 1  &&  offset_p == 0) {
-    throw (TableError
+    throw (TableInvExpr
 	   ("TableParse error: no projection, selection, sorting, "
 	    "limit, offset, or giving-set given in SELECT command"));
   }
@@ -3748,7 +3769,7 @@ void TableParseSelect::execute (Bool showTimings, Bool setInGiving,
     }
   }
   // Do the projection of SELECT columns used in HAVING or ORDERBY.
-  // It requires to adjust the column nodes to use rownrs 0..n.
+  // Thereafter the column nodes need to use rownrs 0..n.
   if (! projectExprSubset_p.empty()) {
     doProjectExpr (True, groupResult);
     resultTable = adjustApplySelNodes(table);
@@ -3784,10 +3805,26 @@ void TableParseSelect::execute (Bool showTimings, Bool setInGiving,
     }
   }
   // Take the correct rows of the projected table (if not empty).
-  if (projectExprTable_p.nrow() > 0) {
-    projectExprTable_p = projectExprTable_p(rownrs_p);
-  }
   resultTable = table(rownrs_p);
+  if (projectExprTable_p.nrow() > 0) {
+    if (rownrs_p.size() < projectExprTable_p.nrow()  ||  sort_p.size() > 0) {
+      projectExprTable_p = projectExprTable_p(rownrs_p);
+      // Make deep copy if stored in a table.
+      if (resultType_p == 3) {
+        projectExprTable_p.rename (resultName_p + "_tmpproject",
+                                   Table::New);
+        projectExprTable_p.deepCopy
+          (resultName_p, dminfo_p, storageOption_p,
+           overwrite_p ? Table::New : Table::NewNoReplace,
+           True, endianFormat_p);
+        projectExprTable_p = Table(resultName_p);
+        Table::deleteTable (resultName_p + "_tmpproject");
+        // Indicate it does not have to be created anymore.
+        resultCreated_p = True;
+      }
+      resultTable = projectExprTable_p;
+    }
+  }
   //# Then do the update, delete, insert, or projection and so.
   if (commandType_p == PUPDATE) {
     doUpdate (showTimings, table, resultTable, rownrs_p);

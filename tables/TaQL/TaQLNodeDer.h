@@ -426,7 +426,7 @@ public:
 class TaQLKeyColNodeRep: public TaQLNodeRep
 {
 public:
-  TaQLKeyColNodeRep (const String& name);
+  TaQLKeyColNodeRep (const String& name, const String& nameMask = String());
   virtual ~TaQLKeyColNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void show (std::ostream& os) const;
@@ -434,6 +434,7 @@ public:
   static TaQLKeyColNodeRep* restore (AipsIO& aio);
 
   String itsName;
+  String itsNameMask;
 };
 
 
@@ -490,7 +491,7 @@ class TaQLColNodeRep: public TaQLNodeRep
 {
 public:
   TaQLColNodeRep (const TaQLNode& expr, const String& name,
-		  const String& dtype);
+		  const String& nameMask, const String& dtype);
   virtual ~TaQLColNodeRep();
   virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
   virtual void show (std::ostream& os) const;
@@ -499,6 +500,7 @@ public:
 
   TaQLNode itsExpr;
   String   itsName;
+  String   itsNameMask;
   String   itsDtype;
 };
 

@@ -155,11 +155,12 @@ $casa_checktool ./tTaQLNode 'update tTaQLNode_tmp.tab set arr1[arr1>0][1,,]=4, a
 $casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab limit 3 offset 2'
 $casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab orderby desc ab limit 1 offset 2'
 $casa_checktool ./tTaQLNode 'select ab from tTaQLNode_tmp.tab'
+$casa_checktool ./tTaQLNode 'select ab[am] as (c1,c2) from tTaQLNode_tmp.tab'
 $casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab'
 $casa_checktool ./tTaQLNode 'delete from tTaQLNode_tmp.tab where ab%2==0'
 
 $casa_checktool ./tTaQLNode 'insert into tTaQLNode_tmp.tab select from tTaQLNode_tmp.tabc'
-$casa_checktool ./tTaQLNode 'insert into tTaQLNode_tmp.tab (ab,ac) values (1+2,3*ab + sum([select ab from tTaQLNode_tmp.tab]))'
+$casa_checktool ./tTaQLNode 'insert into tTaQLNode_tmp.tab ((ab1,ab2),ac) values (1+2,3*ab + sum([select ab from tTaQLNode_tmp.tab]))'
 $casa_checktool ./tTaQLNode 'insert into tTaQLNode_tmp.tab values (1+2),(8),(9),(10)'
 $casa_checktool ./tTaQLNode 'insert limit 10 into tTaQLNode_tmp.tab values (1)'
 

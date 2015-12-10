@@ -298,12 +298,14 @@ public:
   // Set the column name.
   void setColumnName (const String& name);
 
+  // Set the column name forthe mask.
+  void setColumnNameMask (const String& name);
+
   // Get the column name.
   const String& columnName() const;
 
   // Get the possible column name for the mask.
-  const String& columnNameMask() const
-    { return columnNameMask_p; }
+  const String& columnNameMask() const;
 
   // Tell if the mask is given first (i.e., before slice).
   Bool maskFirst() const
@@ -572,7 +574,8 @@ public:
 
   // Add a column to the list of column names.
   void handleColumn (Int type, const String& name, const TableExprNode& expr,
-		     const String& newName, const String& newDtype);
+		     const String& newName, const String& nameMask,
+                     const String& newDtype);
 
   // Finish the addition of columns to the list of column names.
   void handleColumnFinish (Bool distinct);
@@ -858,6 +861,8 @@ private:
   vector<TableParse> fromTables_p;
   //# Block of selected column names (new name in case of select).
   Block<String> columnNames_p;
+  //# Block of selected mask column names (for masked arrays).
+  Block<String> columnNameMasks_p;
   //# Block of selected column expressions.
   Block<TableExprNode> columnExpr_p;
   //# The old name for a selected column.
@@ -872,7 +877,8 @@ private:
   Bool distinct_p;
   //# Name and type of the resulting table (from GIVING part).
   String resultName_p;
-  Int    resultType_p;
+  uInt   resultType_p;    //# 0-unknown 1=memory 2=scratch 3=plain
+  Bool   resultCreated_p; //# Has the result table been created?
   StorageOption storageOption_p;
   Table::EndianFormat endianFormat_p;
   Bool overwrite_p;
@@ -941,8 +947,12 @@ inline const Table& TableParse::table() const
 
 inline void TableParseUpdate::setColumnName (const String& name)
   { columnName_p = name; }
+inline void TableParseUpdate::setColumnNameMask (const String& name)
+  { columnNameMask_p = name; }
 inline const String& TableParseUpdate::columnName() const
   { return columnName_p; }
+inline const String& TableParseUpdate::columnNameMask() const
+  { return columnNameMask_p; }
 inline TableExprNodeIndex* TableParseUpdate::indexPtr() const
   { return indexPtr_p; }
 inline const TableExprNode& TableParseUpdate::indexNode() const

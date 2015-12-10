@@ -245,6 +245,8 @@ public:
     { return itsString; }
   const String& getAlias() const
     { return itsAlias; }
+  const String& getNameMask() const
+    { return itsNameMask; }
   const String& getDtype() const
     { return itsDtype; }
   const Record& getRecord() const
@@ -272,6 +274,8 @@ public:
     { itsString = str; }
   void setAlias (const String& alias)
     { itsAlias = alias; }
+  void setNameMask (const String& nameMask)
+    { itsNameMask = nameMask; }
   void setDtype (const String& dtype)
     { itsDtype = dtype; }
   void setRecord (const Record& record)
@@ -294,6 +298,7 @@ private:
   Int    itsInt;
   String itsString;
   String itsAlias;
+  String itsNameMask;
   String itsDtype;
   Record itsRecord;
   ValueHolder itsVH;

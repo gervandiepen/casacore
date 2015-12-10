@@ -210,7 +210,7 @@ private:
 
 
 // <summary>
-// Envelope class for a node containing a select command.
+// Envelope class for a node containing a list of nodes.
 // </summary>
 // <use visibility=local>
 // <reviewed reviewer="" date="" tests="tTaQLNode">
