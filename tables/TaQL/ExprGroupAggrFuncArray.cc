@@ -33,8 +33,8 @@
 #include <casacore/tables/Tables/TableColumn.h>
 #include <casacore/tables/Tables/TableError.h>
 #include <casacore/casa/Utilities/Sort.h>
-#include <casacore/casa/Arrays/MArrayMath.h>
-#include <casacore/casa/Arrays/MArrayLogical.h>
+#include <casacore/tables/TaQL/MArrayMath.h>
+#include <casacore/tables/TaQL/MArrayLogical.h>
 #include <vector>
 #include <limits>
 

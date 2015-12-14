@@ -28,7 +28,7 @@
 #include <casacore/tables/TaQL/ExprUnitNode.h>
 #include <casacore/tables/Tables/TableError.h>
 #include <casacore/casa/Quanta/Quantum.h>
-#include <casacore/casa/Arrays/MArray.h>
+#include <casacore/tables/TaQL/MArray.h>
 #include <casacore/casa/Arrays/ArrayMath.h>
 
 

@@ -25,8 +25,8 @@
 //#
 //# $Id: tMArrayUtil.cc 21273 2012-10-31 15:25:10Z gervandiepen $
 
-#include <casacore/casa/Arrays/MArray.h>
-#include <casacore/casa/Arrays/MArrayUtil.h>
+#include <casacore/tables/TaQL/MArray.h>
+#include <casacore/tables/TaQL/MArrayUtil.h>
 #include <casacore/casa/Arrays/ArrayMath.h>
 #include <casacore/casa/Arrays/ArrayLogical.h>
 #include <iostream>

@@ -30,7 +30,7 @@
 
 //# Includes
 #include <casacore/casa/aips.h>
-#include <casacore/casa/Arrays/MArrayBase.h>
+#include <casacore/tables/TaQL/MArrayBase.h>
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 

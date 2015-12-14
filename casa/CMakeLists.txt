@@ -22,7 +22,6 @@ Arrays/AxesSpecifier.cc
 Arrays/ExtendSpecifier.cc
 Arrays/IPosition.cc
 Arrays/IPosition2.cc
-Arrays/MArrayBase.cc
 Arrays/MaskArrMath2.cc
 Arrays/Matrix2Math.cc
 Arrays/Slice.cc
@@ -267,12 +266,6 @@ Arrays/LogiArray.h
 Arrays/LogiCube.h
 Arrays/LogiMatrix.h
 Arrays/LogiVector.h
-Arrays/MArrayBase.h
-Arrays/MArrayLogical.h
-Arrays/MArrayMathBase.h
-Arrays/MArrayMath.h
-Arrays/MArrayUtil.h
-Arrays/MArray.h
 Arrays/MaskArrIO.h
 Arrays/MaskArrIO.tcc
 Arrays/MaskArrLogi.h

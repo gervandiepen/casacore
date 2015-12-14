@@ -254,7 +254,7 @@ namespace casacore {
                                       const TableExprId& id,
                                       Array<MDirection>& directions)
   {
-    Array<Double> values = operand.getArrayDouble(id).array();
+    Array<Double> values = operand.getArrayDouble(id);
     IPosition shape = values.shape();
     if (shape[0] % 2 != 0) {
       throw AipsError ("Number of values in a direction in a MEAS function "

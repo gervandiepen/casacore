@@ -25,8 +25,8 @@
 //#
 //# $Id: tMArrayMath.cc 21262 2012-09-07 12:38:36Z gervandiepen $
 
-#include <casacore/casa/Arrays/MArrayMath.h>
-#include <casacore/casa/Arrays/MArrayLogical.h>
+#include <casacore/tables/TaQL/MArrayMath.h>
+#include <casacore/tables/TaQL/MArrayLogical.h>
 #include <casacore/casa/Arrays/ArrayPartMath.h>
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/casa/Arrays/Cube.h>

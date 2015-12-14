@@ -31,9 +31,9 @@
 #include <casacore/tables/TaQL/ExprDerNode.h>
 #include <casacore/tables/TaQL/ExprNodeSet.h>
 #include <casacore/casa/Arrays/Vector.h>
-#include <casacore/casa/Arrays/MArrayMath.h>
-#include <casacore/casa/Arrays/MArrayLogical.h>
-#include <casacore/casa/Arrays/MArrayUtil.h>
+#include <casacore/tables/TaQL/MArrayMath.h>
+#include <casacore/tables/TaQL/MArrayLogical.h>
+#include <casacore/tables/TaQL/MArrayUtil.h>
 #include <casacore/casa/Quanta/MVTime.h>
 #include <casacore/casa/BasicSL/Constants.h>
 #include <casacore/casa/BasicMath/Math.h>

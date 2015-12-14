@@ -153,6 +153,7 @@ TaQL/ExprRange.cc
 TaQL/ExprUDFNode.cc
 TaQL/ExprUDFNodeArray.cc
 TaQL/ExprUnitNode.cc
+TaQL/MArrayBase.cc
 TaQL/RecordExpr.cc
 TaQL/RecordGram.cc
 TaQL/TaQLNode.cc
@@ -380,6 +381,12 @@ TaQL/ExprRange.h
 TaQL/ExprUDFNode.h
 TaQL/ExprUDFNodeArray.h
 TaQL/ExprUnitNode.h
+TaQL/MArrayBase.h
+TaQL/MArrayLogical.h
+TaQL/MArrayMathBase.h
+TaQL/MArrayMath.h
+TaQL/MArrayUtil.h
+TaQL/MArray.h
 TaQL/RecordExpr.h
 TaQL/RecordGram.h
 TaQL/TaQLNode.h

@@ -488,25 +488,23 @@ void showExpr(const TableExprNode& expr)
       }
       switch (expr.dataType()) {
       case TpBool:
-        showArray (expr.getArrayBool(i).array());
+        showArray (expr.getArrayBool(i));
         break;
       case TpInt:
-        showArray (expr.getArrayInt(i).array());
+        showArray (expr.getArrayInt(i));
         break;
       case TpDouble:
-        showArray (expr.getArrayDouble(i).array());
+        showArray (expr.getArrayDouble(i));
         break;
       case TpDComplex:
-        showArray (expr.getArrayDComplex(i).array());
+        showArray (expr.getArrayDComplex(i));
         break;
       case TpString:
-        showArray (expr.getArrayString(i).array());
+        showArray (expr.getArrayString(i));
         break;
       default:
         if (expr.getNodeRep()->dataType() == TableExprNodeRep::NTDate) {
-          MArray<MVTime> arr;
-          expr.get (i, arr);
-          showArray (arr.array());
+          showArray (expr.getArrayDate(i));
         } else {
           cout << "Unknown expression array type " << expr.dataType();
         }

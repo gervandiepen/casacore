@@ -34,8 +34,8 @@
 #include <casacore/tables/Tables/TableRecord.h>
 #include <casacore/tables/Tables/TableError.h>
 #include <casacore/casa/Arrays/Vector.h>
-#include <casacore/casa/Arrays/MArrayMath.h>
-#include <casacore/casa/Arrays/MArrayLogical.h>
+#include <casacore/tables/TaQL/MArrayMath.h>
+#include <casacore/tables/TaQL/MArrayLogical.h>
 #include <casacore/casa/Quanta/MVTime.h>
 #include <casacore/casa/Quanta/MVAngle.h>
 #include <casacore/casa/Quanta/Quantum.h>

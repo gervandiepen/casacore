@@ -27,8 +27,8 @@
 
 #include <casacore/tables/TaQL/ExprLogicNodeArray.h>
 #include <casacore/tables/Tables/TableError.h>
-#include <casacore/casa/Arrays/MArray.h>
-#include <casacore/casa/Arrays/MArrayLogical.h>
+#include <casacore/tables/TaQL/MArray.h>
+#include <casacore/tables/TaQL/MArrayLogical.h>
 #include <casacore/casa/Quanta/MVTime.h>
 #include <casacore/casa/Utilities/Regex.h>
 

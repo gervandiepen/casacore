@@ -751,11 +751,11 @@ namespace casacore {
       {
         Array<Bool> out;
         // Combine the flags.
-        itsStokesConv.convert (out, itsDataNode.getArrayBool (id).array());
+        itsStokesConv.convert (out, itsDataNode.getArrayBool (id));
         return MArray<Bool>(out);
       }
     case GETVALUE:
-      return itsDataNode.getArrayBool (getRowNr(id));
+      return itsDataNode.getBoolAS (getRowNr(id));
     default:
       throw AipsError ("UDFMSCal: unexpected getArrayBool function");
     }
@@ -765,7 +765,7 @@ namespace casacore {
   {
     switch (itsType) {
     case GETVALUE:
-      return itsDataNode.getArrayInt (getRowNr(id));
+      return itsDataNode.getIntAS (getRowNr(id));
     default:
       throw AipsError ("UDFMSCal: unexpected getArrayInt function");
     }
@@ -816,7 +816,7 @@ namespace casacore {
         return MArray<Double>(outd);
       }
     case GETVALUE:
-      return itsDataNode.getArrayDouble (getRowNr(id));
+      return itsDataNode.getDoubleAS (getRowNr(id));
     default:
       throw AipsError ("UDFMSCal: unexpected getArrayDouble function");
     }
@@ -844,7 +844,7 @@ namespace casacore {
         return MArray<DComplex>(outd);
       }
     case GETVALUE:
-      return itsDataNode.getArrayDComplex (getRowNr(id));
+      return itsDataNode.getDComplexAS (getRowNr(id));
     default:
       throw AipsError ("UDFMSCal: unexpected getArrayDComplex function");
     }
@@ -854,7 +854,7 @@ namespace casacore {
   {
     switch (itsType) {
     case GETVALUE:
-      return itsDataNode.getArrayString (getRowNr(id));
+      return itsDataNode.getStringAS (getRowNr(id));
     default:
       throw AipsError ("UDFMSCal: unexpected getArrayString function");
     }

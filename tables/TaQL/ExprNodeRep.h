@@ -33,7 +33,7 @@
 #include <casacore/tables/Tables/Table.h>
 #include <casacore/tables/TaQL/TableExprId.h>
 #include <casacore/tables/TaQL/ExprRange.h>
-#include <casacore/casa/Arrays/MArray.h>
+#include <casacore/tables/TaQL/MArray.h>
 #include <casacore/casa/BasicSL/Complex.h>
 #include <casacore/casa/Quanta/MVTime.h>
 #include <casacore/casa/Quanta/Unit.h>

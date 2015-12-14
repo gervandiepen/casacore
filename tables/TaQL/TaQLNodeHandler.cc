@@ -719,35 +719,35 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
           if (expr.isScalar()) {
             vh = ValueHolder(expr.getBool (0));
           } else {
-            vh = ValueHolder(expr.getArrayBool(0).array());
+            vh = ValueHolder(expr.getArrayBool(0));
           }
           break;
         case TpInt:
           if (expr.isScalar()) {
             vh = ValueHolder(expr.getInt (0));
           } else {
-            vh = ValueHolder(expr.getArrayInt(0).array());
+            vh = ValueHolder(expr.getArrayInt(0));
           }
           break;
         case TpDouble:
           if (expr.isScalar()) {
             vh = ValueHolder(expr.getDouble (0));
           } else {
-            vh = ValueHolder(expr.getArrayDouble(0).array());
+            vh = ValueHolder(expr.getArrayDouble(0));
           }
           break;
         case TpDComplex:
           if (expr.isScalar()) {
             vh = ValueHolder(expr.getDComplex (0));
           } else {
-            vh = ValueHolder(expr.getArrayDComplex(0).array());
+            vh = ValueHolder(expr.getArrayDComplex(0));
           }
           break;
         case TpString:
           if (expr.isScalar()) {
             vh = ValueHolder(expr.getString (0));
           } else {
-            vh = ValueHolder(expr.getArrayString(0).array());
+            vh = ValueHolder(expr.getArrayString(0));
           }
           break;
         default:

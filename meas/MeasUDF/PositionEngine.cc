@@ -394,7 +394,7 @@ namespace casacore {
                                      const TableExprId& id,
                                      Array<MPosition>& positions)
   {
-    Array<Double> values = operand.getArrayDouble(id).array();
+    Array<Double> values = operand.getArrayDouble(id);
     const IPosition& shape = values.shape();
     if (shape[0] % itsValueType != 0) {
       throw AipsError ("Number of values in a position in a MEAS function "

@@ -27,7 +27,7 @@
 
 //# Includes
 #include <casacore/casa/Arrays/ArrayMath.h>  //# needed for correct build
-#include <casacore/casa/Arrays/MArray.h>
+#include <casacore/tables/TaQL/MArray.h>
 #include <casacore/casa/Utilities/Assert.h>
 #include <casacore/casa/Exceptions/Error.h>
 #include <iostream>

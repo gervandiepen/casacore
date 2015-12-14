@@ -35,6 +35,7 @@
 #include <casacore/tables/TaQL/ExprFuncNode.h>
 #include <casacore/tables/TaQL/ExprConeNode.h>
 #include <casacore/tables/TaQL/TaQLStyle.h>
+#include <casacore/tables/TaQL/MArray.h>
 #include <casacore/casa/Utilities/DataType.h>
 #include <casacore/casa/BasicSL/Complex.h>
 
@@ -1001,16 +1002,23 @@ public:
     void get (const TableExprId& id, MArray<DComplex>& value) const;
     void get (const TableExprId& id, MArray<String>& value) const;
     void get (const TableExprId& id, MArray<MVTime>& value) const;
+    void get (const TableExprId& id, Array<Bool>& value) const;
+    void get (const TableExprId& id, Array<Int64>& value) const;
+    void get (const TableExprId& id, Array<Double>& value) const;
+    void get (const TableExprId& id, Array<DComplex>& value) const;
+    void get (const TableExprId& id, Array<String>& value) const;
+    void get (const TableExprId& id, Array<MVTime>& value) const;
     Bool     getBool     (const TableExprId& id) const;
     Int64    getInt      (const TableExprId& id) const;
     Double   getDouble   (const TableExprId& id) const;
     DComplex getDComplex (const TableExprId& id) const;
     String   getString   (const TableExprId& id) const;
-    MArray<Bool>     getArrayBool     (const TableExprId& id) const;
-    MArray<Int64>    getArrayInt      (const TableExprId& id) const;
-    MArray<Double>   getArrayDouble   (const TableExprId& id) const;
-    MArray<DComplex> getArrayDComplex (const TableExprId& id) const;
-    MArray<String>   getArrayString   (const TableExprId& id) const;
+    Array<Bool>     getArrayBool     (const TableExprId& id) const;
+    Array<Int64>    getArrayInt      (const TableExprId& id) const;
+    Array<Double>   getArrayDouble   (const TableExprId& id) const;
+    Array<DComplex> getArrayDComplex (const TableExprId& id) const;
+    Array<String>   getArrayString   (const TableExprId& id) const;
+    Array<MVTime>   getArrayDate     (const TableExprId& id) const;
     // Get a value as an array, even it it is a scalar.
     // This is useful in case one can give an argument as scalar or array.
     // <group>
@@ -1019,6 +1027,7 @@ public:
     MArray<Double>   getDoubleAS   (const TableExprId& id) const;
     MArray<DComplex> getDComplexAS (const TableExprId& id) const;
     MArray<String>   getStringAS   (const TableExprId& id) const;
+    MArray<MVTime>   getDateAS     (const TableExprId& id) const;
     // </group>
 
     // </group>
@@ -1236,6 +1245,24 @@ inline void TableExprNode::get (const TableExprId& id,
 inline void TableExprNode::get (const TableExprId& id,
 				MArray<MVTime>& value) const
     { value = node_p->getArrayDate (id); }
+inline void TableExprNode::get (const TableExprId& id,
+				Array<Bool>& value) const
+    { value = node_p->getArrayBool (id).array(); }
+inline void TableExprNode::get (const TableExprId& id,
+				Array<Int64>& value) const
+    { value = node_p->getArrayInt (id).array(); }
+inline void TableExprNode::get (const TableExprId& id,
+				Array<Double>& value) const
+    { value = node_p->getArrayDouble (id).array(); }
+inline void TableExprNode::get (const TableExprId& id,
+				Array<DComplex>& value) const
+    { value = node_p->getArrayDComplex (id).array(); }
+inline void TableExprNode::get (const TableExprId& id,
+				Array<String>& value) const
+    { value = node_p->getArrayString (id).array(); }
+inline void TableExprNode::get (const TableExprId& id,
+				Array<MVTime>& value) const
+    { value = node_p->getArrayDate (id).array(); }
 inline Bool TableExprNode::getBool (const TableExprId& id) const
     { return node_p->getBool (id); }
 inline Int64 TableExprNode::getInt (const TableExprId& id) const
@@ -1246,16 +1273,18 @@ inline DComplex TableExprNode::getDComplex (const TableExprId& id) const
     { return node_p->getDComplex (id); }
 inline String TableExprNode::getString (const TableExprId& id) const
     { return node_p->getString (id); }
-inline MArray<Bool> TableExprNode::getArrayBool (const TableExprId& id) const
-    { return node_p->getArrayBool (id); }
-inline MArray<Int64> TableExprNode::getArrayInt (const TableExprId& id) const
-    { return node_p->getArrayInt (id); }
-inline MArray<Double> TableExprNode::getArrayDouble (const TableExprId& id) const
-    { return node_p->getArrayDouble (id); }
-inline MArray<DComplex> TableExprNode::getArrayDComplex (const TableExprId& id) const
-    { return node_p->getArrayDComplex (id); }
-inline MArray<String> TableExprNode::getArrayString (const TableExprId& id) const
-    { return node_p->getArrayString (id); }
+inline Array<Bool> TableExprNode::getArrayBool (const TableExprId& id) const
+    { return node_p->getArrayBool (id).array(); }
+inline Array<Int64> TableExprNode::getArrayInt (const TableExprId& id) const
+    { return node_p->getArrayInt (id).array(); }
+inline Array<Double> TableExprNode::getArrayDouble (const TableExprId& id) const
+    { return node_p->getArrayDouble (id).array(); }
+inline Array<DComplex> TableExprNode::getArrayDComplex (const TableExprId& id) const
+    { return node_p->getArrayDComplex (id).array(); }
+inline Array<String> TableExprNode::getArrayString (const TableExprId& id) const
+    { return node_p->getArrayString (id).array(); }
+inline Array<MVTime> TableExprNode::getArrayDate (const TableExprId& id) const
+    { return node_p->getArrayDate (id).array(); }
 inline MArray<Bool> TableExprNode::getBoolAS (const TableExprId& id) const
     { return node_p->getBoolAS (id); }
 inline MArray<Int64> TableExprNode::getIntAS (const TableExprId& id) const
@@ -1266,6 +1295,8 @@ inline MArray<DComplex> TableExprNode::getDComplexAS (const TableExprId& id) con
     { return node_p->getDComplexAS (id); }
 inline MArray<String> TableExprNode::getStringAS (const TableExprId& id) const
     { return node_p->getStringAS (id); }
+inline MArray<MVTime> TableExprNode::getDateAS (const TableExprId& id) const
+    { return node_p->getDateAS (id); }
 
 inline Array<Bool>      TableExprNode::getColumnBool (const Vector<uInt>& rownrs) const
     { return node_p->getColumnBool (rownrs); }

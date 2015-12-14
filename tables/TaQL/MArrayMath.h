@@ -30,8 +30,8 @@
 
 //# Includes
 #include <casacore/casa/aips.h>
-#include <casacore/casa/Arrays/MArray.h>
-#include <casacore/casa/Arrays/MArrayMathBase.h>
+#include <casacore/tables/TaQL/MArray.h>
+#include <casacore/tables/TaQL/MArrayMathBase.h>
 #include <casacore/casa/Arrays/ArrayPartMath.h>
 #include <casacore/casa/Arrays/ArrayIter.h>
 

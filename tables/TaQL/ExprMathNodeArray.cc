@@ -28,37 +28,9 @@
 #include <casacore/tables/TaQL/ExprMathNodeArray.h>
 #include <casacore/tables/TaQL/ExprUnitNode.h>
 #include <casacore/tables/Tables/TableError.h>
-#include <casacore/casa/Arrays/MArray.h>
-#include <casacore/casa/Arrays/MArrayMath.h>
+#include <casacore/tables/TaQL/MArray.h>
+#include <casacore/tables/TaQL/MArrayMath.h>
 #include <casacore/casa/Quanta/MVTime.h>
-
-#define ARR_OPER_SCA(T, NM, OP, id)              \
-{ \
-  MArray<T> a1 = lnode_p->aips_name2(getArray,NM) (id);      \
-  T a2 = rnode_p->aips_name2(get,NM) (id); \
-  return MArray<T> (a1.array() OP a2, a1.mask()); \
-}
-#define SCA_OPER_ARR(T, OP, id) \
-{ \
-  T a1 = lnode_p->aips_name2(get,NM) (id); \
-  MArray<T> a2 = rnode_p->aips_name2(getArray,NM) (id); \
-  return MArray<T> (a1 OP a1.array(), a2.mask()); \
-}
-#define ARR_OPER_ARR(T, OP, id) \
-{ \
-  MArray<T> a1 = lnode_p->aips_name2(getArray,NM) (id); \
-  MArray<T> a2 = rnode_p->aips_name2(getArray,NM) (id); \
-  Array<Bool> m1 = a1.mask(); \
-  Array<Bool> m2 = a2.mask(); \
-  if (!m2.empty()) { \
-    if (m1.empty()) { \
-      m1.reference (m2); \
-    } else { \
-      m1.reference (m1 || m2); \
-    } \
-  } \
-  return MArray<T> (a1 OP a1.array(), m1); \
-}
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
