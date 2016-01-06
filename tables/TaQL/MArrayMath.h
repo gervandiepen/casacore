@@ -187,6 +187,10 @@ namespace casacore {
                          const IPosition& collapseAxes,
                          const MArrayFunctorBase<T,RES>& funcObj)
   {
+    if (a.isNull()) {
+      res = MArray<RES>();
+      return;
+    }
     // This can also be done as boxedArrayMath with a removeDegenerate thereafter.
     //
     // It should be possible to parallelize this loop.
@@ -249,6 +253,10 @@ namespace casacore {
                        const IPosition& boxShape,
                        const MArrayFunctorBase<T,RES>& funcObj)
   {
+    if (array.isNull()) {
+      res = MArray<RES>();
+      return;
+    }
     const IPosition& shape = array.shape();
     uInt ndim = shape.size();
     IPosition fullBoxShape, resShape;
@@ -306,6 +314,10 @@ namespace casacore {
                          const MArrayFunctorBase<T,RES>& funcObj,
                          Bool fillEdge=True)
   {
+    if (array.isNull()) {
+      res = MArray<RES>();
+      return;
+    }
     const IPosition& shape = array.shape();
     uInt ndim = shape.size();
     IPosition boxEnd, resShape;
@@ -366,297 +378,310 @@ namespace casacore {
   // <group>
   template<typename T>
   MArray<T> operator+ (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() + right.array(),
-                        left.combineMask(right)); }
+  { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+            MArray<T> (left.array() + right.array(),
+                       left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator- (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() - right.array(),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (left.array() - right.array(),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator* (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() * right.array(),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (left.array() * right.array(),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator/ (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() / right.array(),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (left.array() / right.array(),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator% (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() % right.array(),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (left.array() % right.array(),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator& (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() & right.array(),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (left.array() & right.array(),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator| (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() | right.array(),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (left.array() | right.array(),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator^ (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (left.array() ^ right.array(),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (left.array() ^ right.array(),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> operator+ (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() + right, left.mask()); }
+  { return MArray<T> (left.array() + right, left); }
 
   template<typename T>
   MArray<T> operator- (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() - right, left.mask()); }
+    { return MArray<T> (left.array() - right, left); }
 
   template<typename T>
   MArray<T> operator* (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() * right, left.mask()); }
+    { return MArray<T> (left.array() * right, left); }
 
   template<typename T>
   MArray<T> operator/ (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() / right, left.mask()); }
+    { return MArray<T> (left.array() / right, left); }
 
   template<typename T>
   MArray<T> operator% (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() % right, left.mask()); }
+    { return MArray<T> (left.array() % right, left); }
 
   template<typename T>
   MArray<T> operator& (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() & right, left.mask()); }
+    { return MArray<T> (left.array() & right, left); }
 
   template<typename T>
   MArray<T> operator| (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() | right, left.mask()); }
+    { return MArray<T> (left.array() | right, left); }
 
   template<typename T>
   MArray<T> operator^ (const MArray<T>& left, const T& right)
-    { return MArray<T> (left.array() ^ right, left.mask()); }
+    { return MArray<T> (left.array() ^ right, left); }
 
   template<typename T>
   MArray<T> operator+ (const T& left, const MArray<T>& right)
-    { return MArray<T> (left + right.array(), right.mask()); }
+    { return MArray<T> (left + right.array(), right); }
 
   template<typename T>
   MArray<T> operator- (const T& left, const MArray<T>& right)
-    { return MArray<T> (left - right.array(), right.mask()); }
+    { return MArray<T> (left - right.array(), right); }
 
   template<typename T>
   MArray<T> operator* (const T& left, const MArray<T>& right)
-    { return MArray<T> (left * right.array(), right.mask()); }
+    { return MArray<T> (left * right.array(), right); }
 
   template<typename T>
   MArray<T> operator/ (const T& left, const MArray<T>& right)
-    { return MArray<T> (left / right.array(), right.mask()); }
+    { return MArray<T> (left / right.array(), right); }
 
   template<typename T>
   MArray<T> operator% (const T& left, const MArray<T>& right)
-    { return MArray<T> (left % right.array(), right.mask()); }
+    { return MArray<T> (left % right.array(), right); }
 
   template<typename T>
   MArray<T> operator& (const T& left, const MArray<T>& right)
-    { return MArray<T> (left & right.array(), right.mask()); }
+    { return MArray<T> (left & right.array(), right); }
 
   template<typename T>
   MArray<T> operator| (const T& left, const MArray<T>& right)
-    { return MArray<T> (left | right.array(), right.mask()); }
+    { return MArray<T> (left | right.array(), right); }
 
   template<typename T>
   MArray<T> operator^ (const T& left, const MArray<T>& right)
-    { return MArray<T> (left ^ right.array(), right.mask()); }
+    { return MArray<T> (left ^ right.array(), right); }
   // </group>
 
   // Negate the elements in an array.
   template<typename T>
   MArray<T> operator- (const MArray<T>& a)
-    { return MArray<T> (-a.array(), a.mask()); }
+    { return MArray<T> (-a.array(), a); }
 
   // Take the complement of the elements in an array.
   template<typename T>
   MArray<T> operator~ (const MArray<T>& a)
-    { return MArray<T> (~a.array(), a.mask()); }
+    { return MArray<T> (~a.array(), a); }
 
   // Perform mathematical function on each element in an array.
   // <group>
   template<typename T>
   MArray<T> sin(const MArray<T>& a)
-    { return MArray<T> (sin(a.array()), a.mask()); }
+    { return MArray<T> (sin(a.array()), a); }
 
   template<typename T>
   MArray<T> cos(const MArray<T>& a)
-    { return MArray<T> (cos(a.array()), a.mask()); }
+    { return MArray<T> (cos(a.array()), a); }
 
   template<typename T>
   MArray<T> tan(const MArray<T>& a)
-    { return MArray<T> (tan(a.array()), a.mask()); }
+    { return MArray<T> (tan(a.array()), a); }
 
   template<typename T>
   MArray<T> sinh(const MArray<T>& a)
-    { return MArray<T> (sinh(a.array()), a.mask()); }
+    { return MArray<T> (sinh(a.array()), a); }
 
   template<typename T>
   MArray<T> cosh(const MArray<T>& a)
-    { return MArray<T> (cosh(a.array()), a.mask()); }
+    { return MArray<T> (cosh(a.array()), a); }
 
   template<typename T>
   MArray<T> tanh(const MArray<T>& a)
-    { return MArray<T> (tanh(a.array()), a.mask()); }
+    { return MArray<T> (tanh(a.array()), a); }
 
   template<typename T>
   MArray<T> asin(const MArray<T>& a)
-    { return MArray<T> (asin(a.array()), a.mask()); }
+    { return MArray<T> (asin(a.array()), a); }
 
   template<typename T>
   MArray<T> acos(const MArray<T>& a)
-    { return MArray<T> (acos(a.array()), a.mask()); }
+    { return MArray<T> (acos(a.array()), a); }
 
   template<typename T>
   MArray<T> atan(const MArray<T>& a)
-    { return MArray<T> (atan(a.array()), a.mask()); }
+    { return MArray<T> (atan(a.array()), a); }
 
   template<typename T>
   MArray<T> atan2(const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (atan2(left.array(), right.array()),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (atan2(left.array(), right.array()),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> atan2(const MArray<T>& left, const T& right)
-    { return MArray<T> (atan2(left.array(), right), left.mask()); }
+    { return MArray<T> (atan2(left.array(), right), left); }
 
   template<typename T>
   MArray<T> atan2(const T& left, const MArray<T>& right)
-    { return MArray<T> (atan2(left, right.array()), right.mask()); }
+    { return MArray<T> (atan2(left, right.array()), right); }
 
   template<typename T>
   MArray<T> exp(const MArray<T>& a)
-    { return MArray<T> (exp(a.array()), a.mask()); }
+    { return MArray<T> (exp(a.array()), a); }
 
   template<typename T>
   MArray<T> log(const MArray<T>& a)
-    { return MArray<T> (log(a.array()), a.mask()); }
+    { return MArray<T> (log(a.array()), a); }
 
   template<typename T>
   MArray<T> log10(const MArray<T>& a)
-    { return MArray<T> (log10(a.array()), a.mask()); }
+    { return MArray<T> (log10(a.array()), a); }
 
   template<typename T>
   MArray<T> sqrt(const MArray<T>& a)
-    { return MArray<T> (sqrt(a.array()), a.mask()); }
+    { return MArray<T> (sqrt(a.array()), a); }
 
   template<typename T>
   MArray<T> square(const MArray<T>& a)
-    { return MArray<T> (square(a.array()), a.mask()); }
+    { return MArray<T> (square(a.array()), a); }
 
   template<typename T>
   MArray<T> cube(const MArray<T>& a)
-    { return MArray<T> (cube(a.array()), a.mask()); }
+    { return MArray<T> (cube(a.array()), a); }
 
   template<typename T>
   MArray<T> pow(const MArray<T>& a, const MArray<T>& exp)
-    { return MArray<T> (pow(a.array(), exp.array()),
-                        a.combineMask(exp)); }
+    { return (a.isNull() || exp.isNull()  ?  MArray<T>() :
+              MArray<T> (pow(a.array(), exp.array()),
+                         a.combineMask(exp))); }
 
   template<typename T>
   MArray<T> pow(const T& a, const MArray<T>& exp)
-    { return MArray<T> (pow(a, exp.array()), exp.mask()); }
+    { return MArray<T> (pow(a, exp.array()), exp); }
 
   template<typename T>
   MArray<T> pow(const MArray<T>& a, const Double& exp)
-    { return MArray<T> (pow(a.array(), exp), a.mask()); }
+    { return MArray<T> (pow(a.array(), exp), a); }
 
   template<typename T>
   MArray<T> min(const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (min(left.array(), right.array()),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (min(left.array(), right.array()),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> min(const MArray<T>& left, const T& right)
-    { return MArray<T> (min(left.array(), right), left.mask()); }
+    { return MArray<T> (min(left.array(), right), left); }
 
   template<typename T>
   MArray<T> min(const T& left, const MArray<T>& right)
-    { return MArray<T> (min(left, right.array()), right.mask()); }
+    { return MArray<T> (min(left, right.array()), right); }
 
   template<typename T>
   MArray<T> max(const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (max(left.array(), right.array()),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (max(left.array(), right.array()),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> max(const MArray<T>& left, const T& right)
-    { return MArray<T> (max(left.array(), right), left.mask()); }
+    { return MArray<T> (max(left.array(), right), left); }
 
   template<typename T>
   MArray<T> max(const T& left, const MArray<T>& right)
-    { return MArray<T> (max(left, right.array()), right.mask()); }
+    { return MArray<T> (max(left, right.array()), right); }
 
   template<typename T>
   MArray<T> ceil(const MArray<T>& a)
-    { return MArray<T> (ceil(a.array()), a.mask()); }
+    { return MArray<T> (ceil(a.array()), a); }
 
   template<typename T>
   MArray<T> floor(const MArray<T>& a)
-    { return MArray<T> (floor(a.array()), a.mask()); }
+    { return MArray<T> (floor(a.array()), a); }
 
   template<typename T>
   MArray<T> round(const MArray<T>& a)
-    { return MArray<T> (round(a.array()), a.mask()); }
+    { return MArray<T> (round(a.array()), a); }
 
   template<typename T>
   MArray<T> sign(const MArray<T>& a)
-    { return MArray<T> (sign(a.array()), a.mask()); }
+    { return MArray<T> (sign(a.array()), a); }
 
   template<typename T>
   MArray<T> abs(const MArray<T>& a)
-    { return MArray<T> (abs(a.array()), a.mask()); }
+    { return MArray<T> (abs(a.array()), a); }
 
   template<typename T>
   MArray<T> fabs(const MArray<T>& a)
-    { return MArray<T> (fabs(a.array()), a.mask()); }
+    { return MArray<T> (fabs(a.array()), a); }
 
   template<typename T>
   MArray<T> fmod(const MArray<T>& left, const MArray<T>& right)
-    { return MArray<T> (fmod(left.array(), right.array()),
-                        left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<T>() :
+              MArray<T> (fmod(left.array(), right.array()),
+                         left.combineMask(right))); }
 
   template<typename T>
   MArray<T> fmod(const MArray<T>& left, const T& right)
-    { return MArray<T> (fmod(left.array(), right), left.mask()); }
+    { return MArray<T> (fmod(left.array(), right), left); }
 
   template<typename T>
   MArray<T> fmod(const T& left, const MArray<T>& right)
-    { return MArray<T> (fmod(left, right.array()), right.mask()); }
+    { return MArray<T> (fmod(left, right.array()), right); }
 
   template<typename T>
   MArray<T> conj(const MArray<T>& arr)
-    { return MArray<T> (conj(arr.array()), arr.mask()); }
+    { return MArray<T> (conj(arr.array()), arr); }
 
   inline MArray<Float> real(const MArray<Complex> &arr)
-    { return MArray<Float> (real(arr.array()), arr.mask()); }
+    { return MArray<Float> (real(arr.array()), arr); }
 
   inline MArray<Float> imag(const MArray<Complex> &arr)
-    { return MArray<Float> (imag(arr.array()), arr.mask()); }
+    { return MArray<Float> (imag(arr.array()), arr); }
 
   inline MArray<Float> amplitude(const MArray<Complex> &arr)
-    { return MArray<Float> (amplitude(arr.array()), arr.mask()); }
+    { return MArray<Float> (amplitude(arr.array()), arr); }
 
   inline MArray<Float> phase(const MArray<Complex> &arr)
-    { return MArray<Float> (phase(arr.array()), arr.mask()); }
+    { return MArray<Float> (phase(arr.array()), arr); }
 
   inline MArray<Double> real(const MArray<DComplex> &arr)
-    { return MArray<Double> (real(arr.array()), arr.mask()); }
+    { return MArray<Double> (real(arr.array()), arr); }
 
   inline MArray<Double> imag(const MArray<DComplex> &arr)
-    { return MArray<Double> (imag(arr.array()), arr.mask()); }
+    { return MArray<Double> (imag(arr.array()), arr); }
 
   inline MArray<Double> amplitude(const MArray<DComplex> &arr)
-    { return MArray<Double> (amplitude(arr.array()), arr.mask()); }
+    { return MArray<Double> (amplitude(arr.array()), arr); }
 
   inline MArray<Double> phase(const MArray<DComplex> &arr)
-    { return MArray<Double> (phase(arr.array()), arr.mask()); }
+    { return MArray<Double> (phase(arr.array()), arr); }
   // </group>
 
 
@@ -853,7 +878,9 @@ namespace casacore {
   MArray<T> partialSums (const MArray<T>& a,
                          const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialSums (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MSumFunc<T>());
@@ -862,7 +889,9 @@ namespace casacore {
   MArray<T> partialSumSqrs (const MArray<T>& a,
                             const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialArrayMath (a.array(), collapseAxes,
                                          SumSqrFunc<T>()));
     }
@@ -872,7 +901,9 @@ namespace casacore {
   MArray<T> partialProducts (const MArray<T>& a,
                              const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialProducts (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MProductFunc<T>());
@@ -881,7 +912,9 @@ namespace casacore {
   MArray<T> partialMins (const MArray<T>& a,
                          const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialMins (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MMinFunc<T>());
@@ -890,7 +923,9 @@ namespace casacore {
   MArray<T> partialMaxs (const MArray<T>& a,
                          const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialMaxs (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MMaxFunc<T>());
@@ -899,7 +934,9 @@ namespace casacore {
   MArray<T> partialMeans (const MArray<T>& a,
                           const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialMeans (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MMeanFunc<T>());
@@ -908,7 +945,9 @@ namespace casacore {
   MArray<T> partialVariances (const MArray<T>& a,
                               const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialVariances (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MVarianceFunc<T>());
@@ -917,7 +956,9 @@ namespace casacore {
   MArray<T> partialStddevs (const MArray<T>& a,
                             const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialStddevs (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MStddevFunc<T>());
@@ -926,7 +967,9 @@ namespace casacore {
   MArray<T> partialAvdevs (const MArray<T>& a,
                            const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialAvdevs (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MAvdevFunc<T>());
@@ -935,7 +978,9 @@ namespace casacore {
   MArray<T> partialRmss (const MArray<T>& a,
                          const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialRmss (a.array(), collapseAxes));
     }
     return partialArrayMath (a, collapseAxes, MRmsFunc<T>());
@@ -946,7 +991,9 @@ namespace casacore {
                             Bool takeEvenMean=False,
                             Bool inPlace=False)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialMedians (a.array(), collapseAxes,
                                        takeEvenMean, inPlace));
     }
@@ -959,7 +1006,9 @@ namespace casacore {
                               Float fraction,
                               Bool inPlace=False)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(partialFractiles (a.array(), collapseAxes,
                                          fraction, inPlace));
     }
@@ -974,7 +1023,9 @@ namespace casacore {
   MArray<T> slidingSums (const MArray<T>& a,
                          const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           SumFunc<T>(), fillEdge));
     }
@@ -984,7 +1035,9 @@ namespace casacore {
   MArray<T> slidingSumSqrs (const MArray<T>& a,
                             const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                          SumSqrFunc<T>(), fillEdge));
     }
@@ -994,7 +1047,9 @@ namespace casacore {
   MArray<T> slidingProducts (const MArray<T>& a,
                              const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           ProductFunc<T>(), fillEdge));
     }
@@ -1004,7 +1059,9 @@ namespace casacore {
   MArray<T> slidingMins (const MArray<T>& a,
                          const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           MinFunc<T>(), fillEdge));
     }
@@ -1014,7 +1071,9 @@ namespace casacore {
   MArray<T> slidingMaxs (const MArray<T>& a,
                          const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           MaxFunc<T>(), fillEdge));
     }
@@ -1024,7 +1083,9 @@ namespace casacore {
   MArray<T> slidingMeans (const MArray<T>& a,
                           const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           MeanFunc<T>(), fillEdge));
     }
@@ -1034,7 +1095,9 @@ namespace casacore {
   MArray<T> slidingVariances (const MArray<T>& a,
                               const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           VarianceFunc<T>(), fillEdge));
     }
@@ -1044,7 +1107,9 @@ namespace casacore {
   MArray<T> slidingStddevs (const MArray<T>& a,
                             const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           StddevFunc<T>(), fillEdge));
     }
@@ -1054,7 +1119,9 @@ namespace casacore {
   MArray<T> slidingAvdevs (const MArray<T>& a,
                            const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           AvdevFunc<T>(), fillEdge));
     }
@@ -1064,7 +1131,9 @@ namespace casacore {
   MArray<T> slidingRmss (const MArray<T>& a,
                          const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                           RmsFunc<T>(), fillEdge));
     }
@@ -1077,7 +1146,9 @@ namespace casacore {
                             Bool inPlace=False,
                             Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                          MedianFunc<T>(False, takeEvenMean,
                                                        inPlace),
@@ -1094,7 +1165,9 @@ namespace casacore {
                               Bool inPlace=False,
                               Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(slidingArrayMath (a.array(), halfBoxSize,
                                          FractileFunc<T>(fraction, False,
                                                          inPlace),
@@ -1112,7 +1185,9 @@ namespace casacore {
   MArray<T> boxedSums (const MArray<T>& a,
                        const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, SumFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MSumFunc<T>());
@@ -1121,7 +1196,9 @@ namespace casacore {
   MArray<T> boxedSumSqrs (const MArray<T>& a,
                           const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, SumSqrFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MSumSqrFunc<T>());
@@ -1130,7 +1207,9 @@ namespace casacore {
   MArray<T> boxedProducts (const MArray<T>& a,
                            const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, ProductFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MProductFunc<T>());
@@ -1139,7 +1218,9 @@ namespace casacore {
   MArray<T> boxedMins (const MArray<T>& a,
                        const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, MinFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MMinFunc<T>());
@@ -1148,7 +1229,9 @@ namespace casacore {
   MArray<T> boxedMaxs (const MArray<T>& a,
                        const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, MaxFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MMaxFunc<T>());
@@ -1157,7 +1240,9 @@ namespace casacore {
   MArray<T> boxedMeans (const MArray<T>& a,
                         const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, MeanFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MMeanFunc<T>());
@@ -1166,7 +1251,9 @@ namespace casacore {
   MArray<T> boxedVariances (const MArray<T>& a,
                             const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, VarianceFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MVarianceFunc<T>());
@@ -1175,7 +1262,9 @@ namespace casacore {
   MArray<T> boxedStddevs (const MArray<T>& a,
                           const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, StddevFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MStddevFunc<T>());
@@ -1184,7 +1273,9 @@ namespace casacore {
   MArray<T> boxedAvdevs (const MArray<T>& a,
                          const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, AvdevFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MAvdevFunc<T>());
@@ -1193,7 +1284,9 @@ namespace casacore {
   MArray<T> boxedRmss (const MArray<T>& a,
                        const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize, RmsFunc<T>()));
     }
     return boxedArrayMath (a, boxSize, MRmsFunc<T>());
@@ -1204,7 +1297,9 @@ namespace casacore {
                           Bool takeEvenMean=False,
                           Bool inPlace=False)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize,
                                        MedianFunc<T>(False, takeEvenMean,
                                                      inPlace)));
@@ -1218,7 +1313,9 @@ namespace casacore {
                             Float fraction,
                             Bool inPlace=False)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<T>();
+    } else if (! a.hasMask()) {
       return MArray<T>(boxedArrayMath (a.array(), boxSize,
                                        FractileFunc<T>(fraction, False,
                                                        inPlace)));

@@ -2495,12 +2495,10 @@ void TableParseSelect::updateSlice (uInt row, const TableExprId& rowid,
       arr = static_cast<TCOL>(val);
       col.putSlice (row, slice, arr);
     } else {
-      // Only put if defined.
-      if (node.isResultDefined(rowid)) {
-        Array<TCOL> arr(res.shape());
-        convertArray (arr, res);
-        col.putSlice (row, slice, arr);
-      }
+      // Note that the calling function tests if the MArray is null.
+      Array<TCOL> arr(res.shape());
+      convertArray (arr, res);
+      col.putSlice (row, slice, arr);
     }
   }
 }
@@ -2541,6 +2539,9 @@ void TableParseSelect::updateValue (uInt row, const TableExprId& rowid,
     MArray<TNODE> aval;
     if (! node.isScalar()) {
       node.get (rowid, aval);
+      if (aval.isNull()) {
+        return;
+      }
     }
     checkMaskColumn (aval.hasMask(), maskCol, col);
     ArrayColumn<TCOL> acol(col);

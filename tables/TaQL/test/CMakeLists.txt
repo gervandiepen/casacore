@@ -21,6 +21,7 @@ tExprNode
 tExprNodeSet
 tExprUnitNode
 tExprNodeUDF
+tMArray
 tMArrayMath
 tMArrayUtil
 tRecordExpr

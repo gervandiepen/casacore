@@ -314,6 +314,7 @@ void TableExprFuncNode::tryToConst()
 	break;
     case nelemFUNC:
     case isdefFUNC:
+    case isnullFUNC:
 	if (operands_p[0]->ndim() == 0
         ||  operands_p[0]->shape().nelements() > 0  ) {
 	    exprtype_p = Constant;
@@ -371,6 +372,27 @@ Bool TableExprFuncNode::getBool (const TableExprId& id)
         return isFinite(operands_p[0]->getDouble(id));
     case isdefFUNC:
 	return operands_p[0]->isDefined (id);
+    case isnullFUNC:
+        if (operands_p[0]->valueType() == VTArray) {
+          switch (operands()[0]->dataType()) {
+          case NTBool:
+            return (operands()[0]->getArrayBool(id).isNull());
+          case NTInt:
+            return (operands()[0]->getArrayInt(id).isNull());
+          case NTDouble:
+            return (operands()[0]->getArrayDouble(id).isNull());
+          case NTComplex:
+            return (operands()[0]->getArrayDComplex(id).isNull());
+          case NTString:
+            return (operands()[0]->getArrayString(id).isNull());
+          case NTDate:
+            return (operands()[0]->getArrayDate(id).isNull());
+          default:
+            throw TableInvExpr ("TableExprFuncNode::getBool, "
+                                "unknown datatype in isNull function");
+          }
+        }
+        return False;
     case iscolFUNC:
         return table_p.tableDesc().isColumn (operands_p[0]->getString (id));
     case iskeyFUNC:
@@ -1309,6 +1331,7 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
 	}
 	return checkDT (dtypeOper, NTAny, NTInt, nodes);
     case isdefFUNC:
+    case isnullFUNC:
 	checkNumOfArg (1, 1, nodes);
 	return checkDT (dtypeOper, NTAny, NTBool, nodes);
     case iscolFUNC:

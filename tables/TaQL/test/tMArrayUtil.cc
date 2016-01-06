@@ -84,5 +84,8 @@ int main()
   AlwaysAssertExit (arr.data() != res4.array().data());
   AlwaysAssertExit (mask.data() != res4.mask().data());
 
+  // Check if a reordered null array is null.
+  AlwaysAssertExit (reorderArray (MArray<Int>(), IPosition()).isNull());
+
   return 0;
 }

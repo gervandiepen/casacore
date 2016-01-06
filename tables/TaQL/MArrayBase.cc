@@ -36,18 +36,37 @@
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   // Construct from a mask.
-  MArrayBase::MArrayBase (const Array<Bool>& mask, const ArrayBase& arr)
+  MArrayBase::MArrayBase (const ArrayBase& arr, const Array<Bool>& mask,
+                          Bool isNull)
     : itsMask   (mask),
       itsShape  (arr.shape()),
       itsSize   (arr.size()),
-      itsNValid (arr.size())
+      itsNValid (arr.size()),
+      itsNull   (isNull)
   {
-    if (! mask.empty()) {
+    init();
+  }
+
+  MArrayBase::MArrayBase (const ArrayBase& arr, const MArrayBase& marray)
+    : itsMask   (marray.mask()),
+      itsShape  (arr.shape()),
+      itsSize   (arr.size()),
+      itsNValid (arr.size()),
+      itsNull   (marray.isNull())
+  {
+    init();
+  }
+
+  void MArrayBase::init()
+  {
+    if (itsNull) {
+      AlwaysAssert (itsShape.empty()  &&  itsMask.empty(), AipsError);
+    } else if (! itsMask.empty()) {
       itsNValid = -1;
-      if (! itsShape.isEqual (mask.shape())) {
+      if (! itsShape.isEqual (itsMask.shape())) {
         std::ostringstream os;
         os << "MArrayBase - array shape " << itsShape 
-           << " and mask shape " << mask.shape() << " mismatch";
+           << " and mask shape " << itsMask.shape() << " mismatch";
         throw ArrayError (os.str());
       }
     }
@@ -58,6 +77,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     itsShape.resize (arr.ndim());
     itsShape = arr.shape();
     itsSize  = arr.size();
+    itsNull  = False;
     if (useMask) {
       itsMask.resize (arr.shape());
       itsNValid = -1;
@@ -73,13 +93,15 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     itsShape  = other.itsShape;
     itsSize   = other.itsSize;
     itsNValid = other.itsNValid;
+    itsNull   = other.itsNull;
   }
 
-  void MArrayBase::setBase (const Array<Bool>& mask, const ArrayBase& arr)
+  void MArrayBase::setBase (const ArrayBase& arr, const Array<Bool>& mask)
   {
     itsShape.resize (arr.ndim());
     itsShape = arr.shape();
     itsSize  = arr.size();
+    itsNull  = False;
     setMask (mask);
   }
 
@@ -102,21 +124,13 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       return itsMask;
     }
     // Combine the flags of masked-off values.
-    if (MArrayInvalid) {
-      return itsMask || other.itsMask;
-    } else {
-      return itsMask && other.itsMask;
-    }
+    return itsMask || other.itsMask;
   }
 
   void MArrayBase::fillNValid() const
   {
     if (hasMask()) {
-      if (MArrayInvalid) {
-        itsNValid = nfalse(itsMask);
-      } else {
-        itsNValid = ntrue(itsMask);
-      }
+      itsNValid = nfalse(itsMask);
     } else {
       itsNValid = itsSize;
     }

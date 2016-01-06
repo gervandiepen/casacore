@@ -122,115 +122,123 @@ namespace casacore {
   // <group>
   template<typename T>
   MArray<Bool> operator== (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() == right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() == right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator<= (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() <= right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() <= right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator< (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() < right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() < right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator>= (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() >= right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() >= right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator> (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() > right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() > right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator!= (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() != right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() != right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator|| (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() || right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() || right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator&& (const MArray<T>& left, const MArray<T>& right)
-    { return MArray<Bool> (left.array() && right.array(),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (left.array() && right.array(),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> operator== (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() == right, left.mask()); }
+    { return MArray<Bool> (left.array() == right, left); }
 
   template<typename T>
   MArray<Bool> operator<= (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() <= right, left.mask()); }
+    { return MArray<Bool> (left.array() <= right, left); }
 
   template<typename T>
   MArray<Bool> operator< (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() < right, left.mask()); }
+    { return MArray<Bool> (left.array() < right, left); }
 
   template<typename T>
   MArray<Bool> operator>= (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() >= right, left.mask()); }
+    { return MArray<Bool> (left.array() >= right, left); }
 
   template<typename T>
   MArray<Bool> operator> (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() > right, left.mask()); }
+    { return MArray<Bool> (left.array() > right, left); }
 
   template<typename T>
   MArray<Bool> operator!= (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() != right, left.mask()); }
+    { return MArray<Bool> (left.array() != right, left); }
 
   template<typename T>
   MArray<Bool> operator|| (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() || right, left.mask()); }
+    { return MArray<Bool> (left.array() || right, left); }
 
   template<typename T>
   MArray<Bool> operator&& (const MArray<T>& left, const T& right)
-    { return MArray<Bool> (left.array() && right, left.mask()); }
+    { return MArray<Bool> (left.array() && right, left); }
 
   template<typename T>
   MArray<Bool> operator== (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left == right.array(), right.mask()); }
+    { return MArray<Bool> (left == right.array(), right); }
 
   template<typename T>
   MArray<Bool> operator<= (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left <= right.array(), right.mask()); }
+    { return MArray<Bool> (left <= right.array(), right); }
 
   template<typename T>
   MArray<Bool> operator< (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left < right.array(), right.mask()); }
+    { return MArray<Bool> (left < right.array(), right); }
 
   template<typename T>
   MArray<Bool> operator>= (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left >= right.array(), right.mask()); }
+    { return MArray<Bool> (left >= right.array(), right); }
 
   template<typename T>
   MArray<Bool> operator> (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left > right.array(), right.mask()); }
+    { return MArray<Bool> (left > right.array(), right); }
 
   template<typename T>
   MArray<Bool> operator!= (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left != right.array(), right.mask()); }
+    { return MArray<Bool> (left != right.array(), right); }
   // </group>
 
   // The logical OR of 2 MArray objects (normally Bool type)
   template<typename T>
   MArray<Bool> operator|| (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left || right.array(), right.mask()); }
+    { return MArray<Bool> (left || right.array(), right); }
 
   // The logical AND of 2 MArray objects (normally Bool type).
   template<typename T>
   MArray<Bool> operator&& (const T& left, const MArray<T>& right)
-    { return MArray<Bool> (left && right.array(), right.mask()); }
+    { return MArray<Bool> (left && right.array(), right); }
 
   // The logical NOT of an MArray object (normally Bool type).
   template<typename T>
   MArray<Bool> operator! (const MArray<T>& a)
-    { return MArray<Bool> (!a.array(), a.mask()); }
+    { return MArray<Bool> (!a.array(), a); }
 
 
   // Compare with a given relative or absolute tolerance.
@@ -238,55 +246,53 @@ namespace casacore {
   template<typename T>
   MArray<Bool> near (const MArray<T>& left, const MArray<T>& right,
                      Double tol)
-    { return MArray<Bool> (near(left.array(), right.array(), tol),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (near(left.array(), right.array(), tol),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> nearAbs (const MArray<T>& left, const MArray<T>& right,
                         Double tol)
-    { return MArray<Bool> (nearAbs(left.array(), right.array(), tol),
-                           left.combineMask(right)); }
+    { return (left.isNull() || right.isNull()  ?  MArray<Bool>() :
+              MArray<Bool> (nearAbs(left.array(), right.array(), tol),
+                            left.combineMask(right))); }
 
   template<typename T>
   MArray<Bool> near (const MArray<T>& left, const T& right,
                      Double tol)
-    { return MArray<Bool> (near(left.array(), right, tol),
-                           left.mask()); }
+    { return MArray<Bool> (near(left.array(), right, tol), left); }
 
   template<typename T>
   MArray<Bool> nearAbs (const MArray<T>& left, const T& right,
                      Double tol)
-    { return MArray<Bool> (nearAbs(left.array(), right, tol),
-                           left.mask()); }
+    { return MArray<Bool> (nearAbs(left.array(), right, tol), left); }
 
   template<typename T>
   MArray<Bool> near (const T& left, const MArray<T>& right,
                      Double tol)
-    { return MArray<Bool> (near(left, right.array(), tol),
-                           right.mask()); }
+    { return MArray<Bool> (near(left, right.array(), tol), right); }
 
   template<typename T>
   MArray<Bool> nearAbs (const T& left, const MArray<T>& right,
                         Double tol)
-    { return MArray<Bool> (nearAbs(left, right.array(), tol),
-                           right.mask()); }
+    { return MArray<Bool> (nearAbs(left, right.array(), tol), right); }
   // </group>
 
 
   // Test which elements are NaN.
   template<typename T>
   MArray<Bool> isNaN (const MArray<T>& arr)
-    { return MArray<Bool> (isNaN(arr.array()), arr.mask()); }
+    { return MArray<Bool> (isNaN(arr.array()), arr); }
 
   // Test which elements are infinite.
   template<typename T>
   MArray<Bool> isInf (const MArray<T>& arr)
-    { return MArray<Bool> (isInf(arr.array()), arr.mask()); }
+    { return MArray<Bool> (isInf(arr.array()), arr); }
 
   // Test which elements have a finite value.
   template<typename T>
   MArray<Bool> isFinite (const MArray<T>& arr)
-    { return MArray<Bool> (isFinite(arr.array()), arr.mask()); }
+    { return MArray<Bool> (isFinite(arr.array()), arr); }
 
 
   // Are all unmasked elements equal?
@@ -294,27 +300,33 @@ namespace casacore {
   // <group>
   template <typename T>
   Bool allEQ (const MArray<T>& left, const MArray<T>& right)
-  { return left.hasMask() ?
-        (right.hasMask() ?
-           compareAllMasked (left.array().begin(), left.array().end(),
-                             right.array.begin(), left.mask().begin(),
-                             right.mask().begin(), std::equal_to<T>())
-         : compareAllMasked (left.array().begin(), left.array().end(),
-                             right.array.begin(), left.mask().begin(),
-                             std::equal_to<T>()))
-      : (right.hasMask() ?
-           compareAllMasked (left.array().begin(), left.array().end(),
-                             right.array.begin(), right.mask().begin(),
-                             std::equal_to<T>())
-         : allEQ (left.array(), right.array()));
-  }
+    { if (left.isNull() || right.isNull()) {
+        return False;
+      } else if (left.hasMask()) {
+        if (right.hasMask()) {
+          return compareAllMasked (left.array().begin(), left.array().end(),
+                                   right.array.begin(), left.mask().begin(),
+                                   right.mask().begin(), std::equal_to<T>());
+        } else {
+          return compareAllMasked (left.array().begin(), left.array().end(),
+                                   right.array.begin(), left.mask().begin(),
+                                   std::equal_to<T>());
+        }
+      } else if (right.hasMask()) {
+        return compareAllMasked (left.array().begin(), left.array().end(),
+                                 right.array.begin(), right.mask().begin(),
+                                 std::equal_to<T>());
+      }
+      return allEQ (left.array(), right.array());
+    }
   template <typename T>
   Bool allEQ (const MArray<T>& array, const T& value)
-  { return array.hasMask() ?
-      compareAllRightMasked (array.array().begin(), array.array().end(),
-                             value, array.mask().begin(), std::equal_to<T>())
-      : allEQ (array.array(), value);
-  }
+    { return array.isNull()  ?  False :
+        array.hasMask() ?
+        compareAllRightMasked (array.array().begin(), array.array().end(),
+                               value, array.mask().begin(), std::equal_to<T>())
+        : allEQ (array.array(), value);
+    }
   template <typename T>
   inline Bool allEQ (const T& value, const MArray<T>& array)
     { return allEQ (array, value); }
@@ -325,26 +337,32 @@ namespace casacore {
   // <group>
   template <typename T>
   Bool anyEQ (const MArray<T>& left, const MArray<T>& right)
-  { return left.hasMask() ?
-        (right.hasMask() ?
-           compareAnyMasked (left.array().begin(), left.array().end(),
-                             right.array.begin(), left.mask().begin(),
-                             right.mask().begin(), std::equal_to<T>())
-         : compareAnyMasked (left.array().begin(), left.array().end(),
-                             right.array.begin(), left.mask().begin(),
-                             std::equal_to<T>()))
-      : (right.hasMask() ?
-           compareAnyMasked (left.array().begin(), left.array().end(),
-                             right.array.begin(), right.mask().begin(),
-                             std::equal_to<T>())
-         : anyEQ (left.array(), right.array()));
-  }
+    { if (left.isNull() || right.isNull()) {
+        return False;
+      } else if (left.hasMask()) {
+        if (right.hasMask()) {
+          return compareAnyMasked (left.array().begin(), left.array().end(),
+                                   right.array.begin(), left.mask().begin(),
+                                   right.mask().begin(), std::equal_to<T>());
+        } else {
+          return compareAnyMasked (left.array().begin(), left.array().end(),
+                                   right.array.begin(), left.mask().begin(),
+                                   std::equal_to<T>());
+        }
+      } else if (right.hasMask()) {
+        return compareAnyMasked (left.array().begin(), left.array().end(),
+                                 right.array.begin(), right.mask().begin(),
+                                 std::equal_to<T>());
+      }
+      return anyEQ (left.array(), right.array());
+    }
   template <typename T>
   Bool anyEQ (const MArray<T>& array, const T& value)
-  { return array.hasMask() ?
-      compareAnyRightMasked (array.array().begin(), array.array().end(),
-                             value, array.mask().begin(), std::equal_to<T>())
-      : anyEQ (array.array(), value);
+    { return array.isNull()  ?  False :
+        array.hasMask() ?
+        compareAnyRightMasked (array.array().begin(), array.array().end(),
+                               value, array.mask().begin(), std::equal_to<T>())
+        : anyEQ (array.array(), value);
   }
   template <typename T>
   inline Bool anyEQ (const T& value, const MArray<T>& array)
@@ -393,7 +411,9 @@ namespace casacore {
   MArray<uInt> partialNTrue (const MArray<T>& a,
                              const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<uInt>();
+    } else if (! a.hasMask()) {
       return MArray<uInt>(partialNTrue (a.array(), collapseAxes));
     }
     MArray<uInt> res;
@@ -405,7 +425,9 @@ namespace casacore {
   MArray<uInt> partialNFalse (const MArray<T>& a,
                               const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<uInt>();
+    } else if (! a.hasMask()) {
       return MArray<uInt>(partialNFalse (a.array(), collapseAxes));
     }
     MArray<uInt> res;
@@ -417,7 +439,9 @@ namespace casacore {
   MArray<Bool> partialAlls (const MArray<T>& a,
                             const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<Bool>();
+    } else if (! a.hasMask()) {
       Array<Bool> res;
       partialArrayMath (res, a.array(), collapseAxes, AllFunc<T>());
       return MArray<Bool>(res);
@@ -431,7 +455,9 @@ namespace casacore {
   MArray<Bool> partialAnys (const MArray<T>& a,
                             const IPosition& collapseAxes)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<Bool>();
+    } else if (! a.hasMask()) {
       Array<Bool> res;
       partialArrayMath (res, a.array(), collapseAxes, AnyFunc<T>());
       return MArray<Bool>(res);
@@ -446,7 +472,9 @@ namespace casacore {
   MArray<uInt> slidingNTrue (const MArray<T>& a,
                              const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<uInt>();
+    } else if (! a.hasMask()) {
       return MArray<uInt>(slidingNTrue (a.array(), halfBoxSize, fillEdge));
     }
     MArray<uInt> res;
@@ -458,7 +486,9 @@ namespace casacore {
   MArray<uInt> slidingNFalse (const MArray<T>& a,
                               const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<uInt>();
+    } else if (! a.hasMask()) {
       return MArray<uInt>(slidingNFalse (a.array(), halfBoxSize, fillEdge));
     }
     MArray<uInt> res;
@@ -470,7 +500,9 @@ namespace casacore {
   MArray<Bool> slidingAlls (const MArray<T>& a,
                             const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<Bool>();
+    } else if (! a.hasMask()) {
       Array<Bool> res;
       slidingArrayMath (res, a.array(), halfBoxSize, AllFunc<T>(), fillEdge);
       return MArray<Bool>(res);
@@ -484,7 +516,9 @@ namespace casacore {
   MArray<Bool> slidingAnys (const MArray<T>& a,
                             const IPosition& halfBoxSize, Bool fillEdge=True)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<Bool>();
+    } else if (! a.hasMask()) {
       Array<Bool> res;
       slidingArrayMath (res, a.array(), halfBoxSize, AnyFunc<T>(), fillEdge);
       return MArray<Bool>(res);
@@ -499,7 +533,9 @@ namespace casacore {
   MArray<uInt> boxedNTrue (const MArray<T>& a,
                            const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<uInt>();
+    } else if (! a.hasMask()) {
       return MArray<uInt>(boxedNTrue (a.array(), boxSize));
     }
     MArray<uInt> res;
@@ -511,7 +547,9 @@ namespace casacore {
   MArray<uInt> boxedNFalse (const MArray<T>& a,
                             const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<uInt>();
+    } else if (! a.hasMask()) {
       return MArray<uInt>(boxedNFalse (a.array(), boxSize));
     }
     MArray<uInt> res;
@@ -523,7 +561,9 @@ namespace casacore {
   MArray<Bool> boxedAlls (const MArray<T>& a,
                           const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<Bool>();
+    } else if (! a.hasMask()) {
       Array<Bool> res;
       boxedArrayMath (res, a.array(), boxSize, AllFunc<T>());
       return MArray<Bool>(res);
@@ -537,7 +577,9 @@ namespace casacore {
   MArray<Bool> boxedAnys (const MArray<T>& a,
                           const IPosition& boxSize)
   {
-    if (! a.hasMask()) {
+    if (a.isNull()) {
+      return MArray<Bool>();
+    } else if (! a.hasMask()) {
       Array<Bool> res;
       boxedArrayMath (res, a.array(), boxSize, AnyFunc<T>());
       return MArray<Bool>(res);

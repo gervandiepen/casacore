@@ -39,8 +39,8 @@
 //# in the MeasurementSet's FLAG column.
 //# But the opposite value sounds somewhat better (same as MaskedArray)
 //# because something like DATA[isnan(DATA)] = 0 is much more intuitive.
-#define MArrayValid False
-#define MArrayInvalid True
+//#  #define MArrayValid False
+//#  #define MArrayInvalid True
 
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
@@ -74,22 +74,31 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   // processed because testing the mask value is more expensive than an
   // addition (even if the value is a NaN). For an operation with multiple
   // operands, the mask of the result is the OR of the operand masks.
+  //
+  // MArray can be null meaning that the array is a null value. It can be
+  // used to indicate that a table cell does not contain an array.
+  // A null MArray has an empty array and mask. Operations where an operand
+  // is a null MArray, result in a null MArray.
   // </synopsis> 
 
   class MArrayBase
   {
   protected:
     // The default constructor creates an empty mask.
-    explicit MArrayBase()
+    explicit MArrayBase (Bool isNull)
       : itsSize   (0),
-        itsNValid (0)
+        itsNValid (0),
+        itsNull   (isNull)
     {}
 
-    // Construct from a given mask.
-    MArrayBase (const Array<Bool>& mask, const ArrayBase& arr);
+    // Construct from a given array shape and mask.
+    MArrayBase (const ArrayBase& arr, const Array<Bool>& mask, Bool isNull);
+
+    // Construct from a given array shape and mask from another MArray.
+    MArrayBase (const ArrayBase& arr, const MArrayBase& marray);
 
     // Reference the mask and set the shape.
-    void setBase (const Array<Bool>& mask, const ArrayBase& arr);
+    void setBase (const ArrayBase& arr, const Array<Bool>& mask);
 
     // Reference another MArray.
     void referenceBase (const MArrayBase& other);
@@ -98,6 +107,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     void resizeBase (const ArrayBase& arr, Bool useMask);
 
   public:
+    // Is the array null?
+    Bool isNull() const
+      { return itsNull; }
+
     // Remove the mask.
     void removeMask()
       { itsMask.resize(); itsNValid = itsSize; }
@@ -122,26 +135,43 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       return itsNValid;
     }
 
+    // Is the array empty?
+    Bool empty() const
+      { return itsSize == 0; }
+
+    // Get the dimensionality.
+    uInt ndim() const
+      { return itsShape.size(); }
+
     // Get the shape.
     const IPosition& shape() const
       { return itsShape; }
 
     // Get the size.
-    Int64 size() const
+    // <group>
+    size_t size() const
       { return itsSize; }
+    size_t nelements() const
+      { return itsSize; }
+    // </group>
 
     // Combine this and the other mask.
+    // One or both MArray-s can be unmasked.
     Array<Bool> combineMask (const MArrayBase& other) const;
 
   private:
+    // Initialize and check.
+    void init();
+
     // Fill the number of valid values.
     void fillNValid() const;
 
     //# Data members.
     Array<Bool>   itsMask;
     IPosition     itsShape;
-    Int64         itsSize;
+    size_t        itsSize;
     mutable Int64 itsNValid;
+    Bool          itsNull;   // True = array is null, thus undefined in a column
   };
 
 } //# NAMESPACE CASACORE - END

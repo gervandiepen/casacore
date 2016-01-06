@@ -54,6 +54,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   // The array is always present, but the mask is optional. The mask is
   // contained in the non-templated base class MArrayBase and functions
   // to operate on the mask are defined there.
+  // <br> The class is primarily developed for TaQL masked arrays, but
+  // could be used elsewhere as well.
   //
   // A mask value True means that the corresponding value is masked off, thus
   // not taken into account in reduction functions like <src>sum</src>. This
@@ -67,24 +69,46 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   class MArray: public MArrayBase
   {
   public:
-    // Default constructor creates empty array.
+    // Default constructor creates a null array.
     MArray()
-      : MArrayBase()
+      : MArrayBase (True)
     {}
 
-    // Construct from an array.
+    // Construct from an array without a mask.
+    // It references the given array.
     explicit MArray (const Array<T>& array)
-      : MArrayBase(),
+      : MArrayBase (False),
         itsArray  (array)
     {
       resizeBase (array, False);
     }
 
-    // Construct from an array with mask.
-    MArray (const Array<T>& array, const Array<Bool>& mask)
-      : MArrayBase (mask, array),
+    // Construct from an array and a mask.
+    // It references the given arrays.
+    // <src>isNull=True</src> requires the arrays to be empty.
+    MArray (const Array<T>& array, const Array<Bool>& mask, Bool isNull=False)
+      : MArrayBase (array, mask, isNull),
         itsArray   (array)
     {}
+
+    // Construct from an array with the mask and null from another MArray.
+    // It references the given arrays.
+    // The shapes of both arrays must match.
+    MArray (const Array<T>& array, const MArrayBase& marray)
+      : MArrayBase (array, marray),
+        itsArray   (array)
+    {}
+
+    // Construct from two MArrays, one the array, the other the mask.
+    // If one of them is null, the constructed MArray is null.
+    MArray (const MArray<T>& array, const MArray<Bool>& mask)
+      : MArrayBase (array.isNull()  ||  mask.isNull())
+    {
+      if (! isNull()) {
+        itsArray.reference (array.array());
+        setBase (itsArray, mask.array());
+      }
+    }
 
     // Reference another array.
     void reference (const MArray<T>& other)
@@ -94,22 +118,28 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     }
 
     // Resize the array and optionally the mask.
+    // It always sets the MArray to non-null.
     void resize (const IPosition& shape, Bool useMask)
     {
       itsArray.resize (shape);
       resizeBase (itsArray, useMask);
     }
 
-    // Fill the array data and mask from another one.
+    // Copy the array data and possible mask from another one.
+    // The shapes do not need to match.
+    // The array data is copied, but the new mask references the possible
+    // mask in <src>from</src>.
     template <typename U>
     void fill (const MArray<U>& from)
     {
       itsArray.resize (from.shape());
       convertArray (itsArray, from.array());
-      setBase (from.mask(), itsArray);
+      setBase (itsArray, from.mask());
     }
 
-    // Fill the array from a normal Array. The possible mask is removed.
+    // Copy the array from a normal Array. The possible mask is removed.
+    // The shapes do not need to match.
+    // The array data is always copied.
     template <typename U>
     void fill (const Array<U>& from)
     {
@@ -117,25 +147,6 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       convertArray (itsArray, from);
       resizeBase (itsArray, False);
     }
-
-    // Get the number of elements.
-    // <group>
-    size_t size() const
-      { return itsArray.size(); }
-    size_t nelements() const
-      { return itsArray.size(); }
-    // </group>
-
-    Bool empty() const
-      { return itsArray.empty(); }
-
-    // Get the dimensionality.
-    uInt ndim() const
-      { return itsArray.ndim(); }
-
-    // Get the shape.
-    const IPosition& shape() const
-      { return itsArray.shape(); }
 
     // Get access to the array.
     // <group>

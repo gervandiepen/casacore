@@ -401,35 +401,52 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
         return MArray<T>(result);
       }
       // Array values are returned as an array with one more axis.
-      // Get the first value to determine the shape and if masked.
+      // Use the first non-null value to determine the shape and if masked.
       MArray<T> arr;
-      itsOperand->get (ids[0], arr);
-      IPosition shp = arr.shape();
-      Bool hasMask = arr.hasMask();
-      shp.append (IPosition (1, ids.size()));
+      size_t id;
+      Bool hasMask = False;
+      IPosition shp;
+      for (id=0; id<ids.size(); ++id) {
+        itsOperand->get (ids[id], arr);
+        if (! arr.isNull()) {
+          hasMask = arr.hasMask();
+          shp = arr.shape();
+          shp.append (IPosition (1, ids.size()));
+          break;
+        }
+      }
+      size_t ndef = 0;
+      if (id == ids.size()) {
+        // All arrays are null.
+        return MArray<T>();
+      }
       Array<T> result(shp);
       ArrayIterator<T> iter (result, arr.ndim());
-      iter.array() = arr.array();
-      iter.next();
       Array<Bool> mask;
       CountedPtr<ArrayIterator<Bool> > miter;
       if (hasMask) {
         mask.resize (shp);
         miter = new ArrayIterator<Bool> (mask, arr.ndim());
-        miter->array() = arr.mask();
-        miter->next();
       }
-      int i=1;
-      while (! iter.pastEnd()) {
+      for (; id<ids.size(); ++id) {
         MArray<T> values;
-        itsOperand->get (ids[i], values);
-        iter.array() = values.array();
-        iter.next();
-        if (hasMask) {
-          miter->array() = values.mask();
-          miter->next();
+        itsOperand->get (ids[id], values);
+        if (! values.isNull()) {
+          ndef++;
+          iter.array() = values.array();
+          iter.next();
+          if (hasMask) {
+            miter->array() = values.mask();
+            miter->next();
+          }
         }
-        i++;
+      }
+      if (ndef < ids.size()) {
+        shp[shp.size() - 1] = ndef;
+        result.resize (shp, True);
+        if (hasMask) {
+          mask.resize (shp, True);
+        }
       }
       return MArray<T>(result, mask);
     }

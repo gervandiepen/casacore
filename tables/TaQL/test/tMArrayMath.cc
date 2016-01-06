@@ -37,12 +37,12 @@ using namespace casacore;
 using namespace std;
 
 template <typename T>
-void check (const MArray<T>& ma, const T& v, Bool m, Bool empty=False)
+void check (const MArray<T>& ma, const T& v, Bool m, Bool unmasked=False)
 {
-  // Check if data and mask hve the expected value.
+  // Check if data and mask have the expected value.
   AlwaysAssertExit (allEQ(ma.array(), v));
-  AlwaysAssertExit (empty == ma.mask().empty());
-  if (!empty) {
+  AlwaysAssertExit (ma.hasMask() == !unmasked);
+  if (!unmasked) {
     AlwaysAssertExit (allEQ(ma.mask(), m));
   }
 }
@@ -669,6 +669,20 @@ void doTestSliding()
                     allEQ(mad.mask(), mres));
 }
 
+void doTestNull()
+{
+  MArray<Int> m1 (Vector<Int>(2,16), Vector<Bool>(2,True));
+  MArray<Int> m2;
+  AlwaysAssertExit ((m1+m2).isNull());
+  AlwaysAssertExit ((m2-m1).isNull());
+  AlwaysAssertExit (sin(m2).isNull());
+  AlwaysAssertExit ((-m2).isNull());
+  AlwaysAssertExit (sum(m2) == 0);
+  AlwaysAssertExit (partialSums(m2, IPosition()).isNull());
+  AlwaysAssertExit (boxedMedians(m2, IPosition()).isNull());
+  AlwaysAssertExit (slidingMeans(m2, IPosition()).isNull());
+}
+
 void doPerf()
 {
   // Do a bit of performance testing.
@@ -714,6 +728,8 @@ int main()
     doTestBoxed();
     cout << "doTestSliding" << endl;
     doTestSliding();
+    cout << "doTestNull" << endl;
+    doTestNull();
     cout << "doPerf" << endl;
     doPerf();
   } catch (AipsError& x) {

@@ -77,10 +77,12 @@ MArray<T> reorderArray (const MArray<T>& array,
                         const IPosition& newAxisOrder,
                         Bool alwaysCopy = True)
 {
-  return (array.hasMask()  ?
-    MArray<T> (reorderArray(array.array(), newAxisOrder, alwaysCopy),
-               reorderArray(array.mask(),  newAxisOrder, alwaysCopy)) :
-    MArray<T> (reorderArray(array.array(), newAxisOrder, alwaysCopy)));
+  return (array.isNull()  ?
+          MArray<T>() :
+          (array.hasMask()  ?
+           MArray<T> (reorderArray(array.array(), newAxisOrder, alwaysCopy),
+                      reorderArray(array.mask(),  newAxisOrder, alwaysCopy)) :
+           MArray<T> (reorderArray(array.array(), newAxisOrder, alwaysCopy))));
 }
 // </group>
 
