@@ -13,7 +13,6 @@ ln -s tTableGram tTableGramUpdate
 # Execute all kind of table update commands, especially a mix of
 # array slices and masks and various data types.
 # Check the result using a select command.
-curdir=`pwd`
 
 # Create and print reference tables.
 ../../apps/taql -nopr "create table tTableGramUpdate_tmp.ref1 (cola I2 [shape=[1,2,5]], colv I2 [ndim=1], cols I2)"

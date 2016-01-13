@@ -798,6 +798,8 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::isfiniteFUNC;
   } else if (funcName == "isdefined") {
     ftype = TableExprFuncNode::isdefFUNC;
+  } else if (funcName == "isnull") {
+    ftype = TableExprFuncNode::isnullFUNC;
   } else if (funcName == "iscolumn") {
     ftype = TableExprFuncNode::iscolFUNC;
   } else if (funcName == "iskeyword") {
@@ -900,6 +902,10 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::angdistFUNC;
   } else if (funcName == "angdistx"  ||  funcName == "angulardistancex") {
     ftype = TableExprFuncNode::angdistxFUNC;
+  } else if (funcName == "nullarray") {
+    ftype = TableExprFuncNode::nullarrayFUNC;
+  } else if (funcName == "marray") {
+    ftype = TableExprFuncNode::marrayFUNC;
   } else if (funcName == "arraydata") {
     ftype = TableExprFuncNode::arrdataFUNC;
   } else if (funcName == "mask"  ||  funcName == "arraymask") {

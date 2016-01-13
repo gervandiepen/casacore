@@ -402,6 +402,9 @@ void TableExprFuncNodeArray::tryToConst()
 	    constAxes_p = True;
 	}
         break;
+    case TableExprFuncNode::nullarrayFUNC:
+        exprtype_p = Constant;
+        break;
     case TableExprFuncNode::marrayFUNC:
     case TableExprFuncNode::arrdataFUNC:
     case TableExprFuncNode::arrmaskFUNC:
@@ -835,6 +838,8 @@ MArray<Bool> TableExprFuncNodeArray::getArrayBool (const TableExprId& id)
         }
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<Bool> (operands(), id);
+    case TableExprFuncNode::nullarrayFUNC:
+        return MArray<Bool>();
     case TableExprFuncNode::marrayFUNC:
         return MArray<Bool> (operands()[0]->getBoolAS(id),
                              operands()[1]->getBoolAS(id));
@@ -1194,6 +1199,8 @@ MArray<Int64> TableExprFuncNodeArray::getArrayInt (const TableExprId& id)
         return TEFResize (operands()[0]->getArrayInt(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<Int64> (operands(), id);
+    case TableExprFuncNode::nullarrayFUNC:
+        return MArray<Int64>();
     case TableExprFuncNode::marrayFUNC:
         return MArray<Int64> (operands()[0]->getIntAS(id),
                               operands()[1]->getBoolAS(id));
@@ -1607,6 +1614,8 @@ MArray<Double> TableExprFuncNodeArray::getArrayDouble (const TableExprId& id)
         return TEFResize (operands()[0]->getArrayDouble(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<Double> (operands(), id);
+    case TableExprFuncNode::nullarrayFUNC:
+        return MArray<Double>();
     case TableExprFuncNode::marrayFUNC:
         return MArray<Double> (operands()[0]->getDoubleAS(id),
                                operands()[1]->getBoolAS(id));
@@ -1898,6 +1907,8 @@ MArray<DComplex> TableExprFuncNodeArray::getArrayDComplex
       }
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<DComplex> (operands(), id);
+    case TableExprFuncNode::nullarrayFUNC:
+        return MArray<DComplex>();
     case TableExprFuncNode::marrayFUNC:
         return MArray<DComplex> (operands()[0]->getDComplexAS(id),
                                  operands()[1]->getBoolAS(id));
@@ -2220,6 +2231,8 @@ MArray<String> TableExprFuncNodeArray::getArrayString (const TableExprId& id)
         return TEFResize (operands()[0]->getArrayString(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<String> (operands(), id);
+    case TableExprFuncNode::nullarrayFUNC:
+        return MArray<String>();
     case TableExprFuncNode::marrayFUNC:
         return MArray<String> (operands()[0]->getStringAS(id),
                                operands()[1]->getBoolAS(id));
@@ -2340,6 +2353,8 @@ MArray<MVTime> TableExprFuncNodeArray::getArrayDate (const TableExprId& id)
         return TEFResize (operands()[0]->getArrayDate(id), id);
     case TableExprFuncNode::iifFUNC:
         return TEFNAiif<MVTime> (operands(), id);
+    case TableExprFuncNode::nullarrayFUNC:
+        return MArray<MVTime>();
     case TableExprFuncNode::marrayFUNC:
         return MArray<MVTime> (operands()[0]->getDateAS(id),
                                operands()[1]->getBoolAS(id));

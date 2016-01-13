@@ -262,21 +262,22 @@ public:
 	    // for any type returning array of that type
 	diagonalFUNC,     //# 148
             // masked array functions
-        marrayFUNC,       //# 149
-        arrdataFUNC,      //# 150
-        arrmaskFUNC,      //# 151
-        negatemaskFUNC,   //# 152
-        replmaskedFUNC,   //# 153
-        replunmaskedFUNC, //# 154
-        arrflatFUNC,      //# 155
+        nullarrayFUNC,    //# 149
+        marrayFUNC,       //# 150
+        arrdataFUNC,      //# 151
+        arrmaskFUNC,      //# 152
+        negatemaskFUNC,   //# 153
+        replmaskedFUNC,   //# 154
+        replunmaskedFUNC, //# 155
+        arrflatFUNC,      //# 156
         //# AGGREGATE functions must be the last ones.
-        FirstAggrFunc,    //# 156
+        FirstAggrFunc,    //# 157
         countallFUNC = FirstAggrFunc,
         gcountFUNC,
         gfirstFUNC,
         glastFUNC,
         //# Grouping doing aggregation on the fly; reducing to a scalar per group
-        gminFUNC,         //# 160
+        gminFUNC,         //# 161
         gmaxFUNC,
         gsumFUNC,
         gproductFUNC,
@@ -290,7 +291,7 @@ public:
         gntrueFUNC,
         gnfalseFUNC,
         //# Grouping doing aggregation on the fly; reducing to an array per group
-        FirstAggrArrayFunc,//# 173
+        FirstAggrArrayFunc,//# 174
         gminsFUNC = FirstAggrArrayFunc,
         gmaxsFUNC,
         gsumsFUNC,
@@ -304,15 +305,15 @@ public:
         gallsFUNC,
         gntruesFUNC,
         gnfalsesFUNC,
-        LastAggrArrayFunc,//# 186
+        LastAggrArrayFunc,//# 187
         ghistFUNC = LastAggrArrayFunc,
         //# Grouping requiring aggregation of rows when getting result
-        gaggrFUNC,        //# 187
+        gaggrFUNC,        //# 188
         growidFUNC,
         gmedianFUNC,
         gfractileFUNC,
         gexpridFUNC,      //# special function (can be inserted by TableParse)
-	NRFUNC            //# should be last
+	NRFUNC            //# 193  should be last
 	};
 
     // Constructor

@@ -1185,3 +1185,9 @@ select gcount() from [tTableGram_tmp.tst as t1,tTableGram_tmp.tst as t2,[[tTable
     select result of 1 rows
 1 selected columns:  Col_1
  12
+CALC isnull(sums(nullarray(1),1))
+    has been executed
+[1]
+CALC isnull(nullarray(1)+1)
+    has been executed
+[1]

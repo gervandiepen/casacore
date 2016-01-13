@@ -1360,6 +1360,7 @@ TableExprNodeRep::NodeDataType TableExprFuncNode::checkOperands
         checkDT (dtypeOper, NTAny, NTBool, nodes);
         return nodes[0]->dataType();
         break;
+    case nullarrayFUNC:
     case arrdataFUNC:
     case negatemaskFUNC:
     case arrflatFUNC:

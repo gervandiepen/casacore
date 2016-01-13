@@ -63,6 +63,13 @@ using namespace std;
 // Define the type for the map of name to (resulttable,command).
 typedef map<String, pair<Table,String> > TableMap;
 
+void removeCR (String& line)
+{
+  // Remove possible carriage-return (in DOS files).
+  if (line.size() > 0  &&  line[line.size() - 1] == '\r') {
+    line = line.substr(0, line.size()-1);
+  }
+}
 
 uInt lskipws (const String& value, uInt st, uInt end)
 {
@@ -135,11 +142,12 @@ vector<String> splitLine (const String& line)
 
 
 #ifdef HAVE_READLINE
-bool readLine (string& line, const string& prompt)
+bool readLine (String& line, const string& prompt)
 {
   char* str = readline(prompt.c_str());
   if (!str) return false;
   line = string(str);
+  removeCR (line);
   free(str);
   return true;
 }
@@ -148,7 +156,8 @@ bool readLine (String& line, const String& prompt)
 {
   if (!prompt.empty()) cerr << prompt;
   getline (cin, line);
-  return cin;
+  removeCR (line);
+  return cin.good();
 }
 #endif
 
@@ -163,9 +172,7 @@ bool readLineSkip (String& line, const String& prompt)
     }
     if (parts.size() > 1) {
       cerr << "A single TaQL command must be given" << endl;
-    } else if (parts.empty()) {                            
-      cerr << "h or help gives help info" << endl;
-    } else {
+    } else if (! parts.empty()) {                            
       line = parts[0];
       fnd  = true;
     }
@@ -883,12 +890,13 @@ vector<String> fileCommands (const string& fname)
   vector<String> commands;
   bool appendLast = false;
   std::ifstream ifs(fname.c_str());
-  if (! ifs) {
+  if (! ifs.good()) {
     throw AipsError("Cannot open file " + fname);
   }
   String line;
   getline (ifs, line);
-  while (ifs) {
+  while (ifs.good()) {
+    removeCR (line);
     vector<String> parts = splitLine(line);
     for (size_t i=0; i<parts.size(); ++i) {
       if (! parts[i].empty()) {
