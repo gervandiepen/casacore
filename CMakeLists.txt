@@ -57,10 +57,13 @@ enable_language (Fortran)
 
 set (CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-# By default build the Python bindings
+# By default build only Python2 bindings
 option (BUILD_PYTHON "Build the python bindings" YES)
+option (BUILD_PYTHON3 "Build the python3 bindings" NO)
+
 # By default build shared libraries
 option (ENABLE_SHARED "Build shared libraries" YES)
+
 option (ENABLE_RPATH "Include rpath in executables and shared libraries" YES)
 
 # By default do not use HDF5, FFTW3, threads
@@ -74,6 +77,13 @@ option (USE_STACKTRACE "Show stacktrace in case of exception" NO)
 option (CASA_BUILD "Building the in the CASA (http://casa.nrao.edu) environment" NO)
 
 set(CASA_DEFAULT_ALIGNMENT "32" CACHE STRING "Default alignment of casa::AlignedAllocator")
+
+# basic setup for building within CASA environment
+if( CASA_BUILD )
+   if( NOT DATA_DIR )
+      set(DATA_DIR "%CASAROOT%/data")
+   endif( )
+endif( )
 
 # Test if shared libraries have to be built.
 if (ENABLE_SHARED)
@@ -109,7 +119,7 @@ endif (ENABLE_SHARED)
 # Casacore uses longlong, so no warnings for it.
 # Clang gives warning on bison generated code; disable unneeded-internal-declaration.
 if (NOT CMAKE_CXX_FLAGS)
-    set (CMAKE_CXX_FLAGS "-Wextra -Wall -W -Wpointer-arith -Woverloaded-virtual -Wwrite-strings -pedantic -Wno-long-long")
+    set (CMAKE_CXX_FLAGS "-Wextra -Wall -W -Wpointer-arith -Woverloaded-virtual -Wwrite-strings -pedantic -Wno-long-long -fsigned-char")
 #SET(CMAKE_CXX_FLAGS="-g -O0 -Wall -Wextra -Wshadow -Wunused-variable
 # -Wunused-parameter -Wunused-function -Wunused -Wno-system-headers
 # -Wno-deprecated -Woverloaded-virtual -Wwrite-strings -fprofile-arcs
@@ -231,12 +241,15 @@ if (NOT ${MODULE} STREQUAL "casa")
         endif (NOT ${MODULE} STREQUAL "measures")
     endif (NOT ${MODULE} STREQUAL "tables")
 endif (NOT ${MODULE} STREQUAL "casa")
+
 if (BUILD_PYTHON)
     set (_modules ${_modules} python)
-    find_package(Boost REQUIRED COMPONENTS python)
-    find_package(Python REQUIRED)
-    find_package (NUMPY REQUIRED)
 endif (BUILD_PYTHON)
+
+if (BUILD_PYTHON3)
+    set (_modules ${_modules} python3)
+endif (BUILD_PYTHON3)
+
 
 # Determine which external packages to use.
 include (CTest)
@@ -332,6 +345,18 @@ if(USE_THREADS)
     endif(CMAKE_COMPILER_IS_GNUCXX)
 endif(USE_THREADS)
 
+# Check whether DATA_DIR contains data (only if measures is build)
+if (NOT DATA_DIR)
+   set (DATA_DIR ${CMAKE_INSTALL_PREFIX}/share/data/casacore)
+endif (NOT DATA_DIR)
+if (";${_modules};" MATCHES ";measures;")
+    get_filename_component(ABS_DATA_DIR "${DATA_DIR}" ABSOLUTE)
+    if (NOT EXISTS "${ABS_DATA_DIR}/ephemerides/")
+        message(WARNING "No ephemerides data found in the specified DATA_DIR (\"${DATA_DIR}\"), so the location must be specified at runtime. If you have preinstalled casacore data, specify the location with -DDATA_DIR.")
+    endif()
+endif()
+
+
 # Set compiler flag in no table locking.
 if (NOT ENABLE_TABLELOCKING)
     add_definitions(-DAIPS_TABLE_NOLOCKING)
@@ -361,6 +386,11 @@ foreach (module ${_modules})
               SOVERSION "${PROJECT_VERSION_MAJOR}"
         )
     endif( )
+    if (CASA_BUILD)
+        if (PYTHON_SHARED_LINKER_FLAGS AND ${module} STREQUAL python)
+            set_target_properties(casa_python PROPERTIES LINK_FLAGS ${PYTHON_SHARED_LINKER_FLAGS})
+        endif (PYTHON_SHARED_LINKER_FLAGS AND ${module} STREQUAL python)
+    endif (CASA_BUILD)
     if (APPLE)
         if (${module} STREQUAL scimath_f OR ${module} STREQUAL fits OR ${module} STREQUAL mirlib OR ${module} STREQUAL coordinates)
             set_target_properties(casa_${module} PROPERTIES LINK_FLAGS -single_module)
@@ -380,6 +410,7 @@ message (STATUS "USE_STACKTRACE ........ = ${USE_STACKTRACE}")
 message (STATUS "CMAKE_CXX_COMPILER .... = ${CMAKE_CXX_COMPILER}")
 message (STATUS "CMAKE_CXX_FLAGS ....... = ${CMAKE_CXX_FLAGS}")
 message (STATUS "C++11 support ......... = ${CXX11}")
+message (STATUS "DATA directory ........ = ${DATA_DIR}")
 message (STATUS "DL library? ........... = ${DL_LIBRARIES}")
 message (STATUS "Pthreads library? ..... = ${PTHREADS_LIBRARIES}")
 message (STATUS "Readline library? ..... = ${READLINE_LIBRARIES}")
@@ -390,14 +421,25 @@ message (STATUS "SOFA library? ......... = ${SOFA_LIBRARIES}")
 message (STATUS "CFitsio library? ...... = ${CFITSIO_LIBRARIES}")
 message (STATUS "HDF5 library? ......... = ${HDF5_hdf5_LIBRARY}")
 message (STATUS "FFTW3 library? ........ = ${FFTW3_LIBRARIES}")
+
 message (STATUS "BUILD_PYTHON .......... = ${BUILD_PYTHON}")
+message (STATUS "BUILD_PYTHON3 .......... = ${BUILD_PYTHON3}")
+
 if (BUILD_PYTHON)
-    message (STATUS "PYTHON library? ....... = ${PYTHON_LIBRARIES}")
-    message (STATUS "NUMPY include? ........ = ${NUMPY_INCLUDE_DIRS}")
-    message (STATUS "Boost library? ........ = ${Boost_LIBRARIES}")
-    message (STATUS "Boost includes? ....... = ${Boost_INCLUDE_DIRS}")
+    message (STATUS "PYTHON2_EXECUTABLE ......... = ${PYTHON2_EXECUTABLE}")
+    message (STATUS "PYTHON2_LIBRARIES........... = ${PYTHON2_LIBRARIES}")
+    message (STATUS "PYTHON2_NUMPY_INCLUDE_DIRS . = ${PYTHON2_NUMPY_INCLUDE_DIRS}")
+    message (STATUS "PYTHON2_Boost_LIBRARIES .... = ${PYTHON2_Boost_LIBRARIES}")
+    message (STATUS "PYTHON2_Boost_INCLUDE_DIRS . = ${PYTHON2_Boost_INCLUDE_DIRS}")
 endif (BUILD_PYTHON)
 
+if (BUILD_PYTHON3)
+    message (STATUS "PYTHON3_EXECUTABLE ......... = ${PYTHON3_EXECUTABLE}")
+    message (STATUS "PYTHON3_LIBRARIES .......... = ${PYTHON3_LIBRARIES}")
+    message (STATUS "PYTHON3_NUMPY_INCLUDE_DIRS . = ${PYTHON3_NUMPY_INCLUDE_DIRS}")
+    message (STATUS "PYTHON3_Boost_LIBRARIES .... = ${PYTHON3_Boost_LIBRARIES}")
+    message (STATUS "PYTHON3_Boost_INCLUDE_DIRS . = ${PYTHON3_Boost_INCLUDE_DIRS}")
+endif (BUILD_PYTHON3)
 
 # List of build variables and defaults.
 #  BUILD_PYTHON                  NO
@@ -410,7 +452,7 @@ endif (BUILD_PYTHON)
 #  USE_THREADS                   NO
 #  USE_OPENMP                    NO
 #  USE_STACKTRACE                NO
-#  DATA_DIR                      ""
+#  DATA_DIR                      ${CMAKE_INSTALL_PREFIX}/share/casacore/data
 #  MODULE                        all
 #                                Values for MODULE (incremental list):
 #                                - casa
