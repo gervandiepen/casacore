@@ -188,79 +188,78 @@ public:
 	arrayFUNC,        //# 91
 	transposeFUNC,    //# 92
         resizeFUNC,       //# 93
+	diagonalFUNC,     //# 94
 	    // for Int, Double or DComplex array returning Bool
-	isnanFUNC,        //# 94
-	isinfFUNC,        //# 95
-        isfiniteFUNC,     //# 96
+	isnanFUNC,        //# 95
+	isinfFUNC,        //# 96
+        isfiniteFUNC,     //# 97
 	    // for any array returning Bool scalar
-	isdefFUNC,        //# 97
-        isnullFUNC,       //# 98
-        iscolFUNC,        //# 99
-        iskeyFUNC,        //# 100
+	isdefFUNC,        //# 98
+        isnullFUNC,       //# 99
+        iscolFUNC,        //# 100
+        iskeyFUNC,        //# 101
 	    // for any array returning Int scalar
-	ndimFUNC,         //# 101
-	nelemFUNC,        //# 102
+	ndimFUNC,         //# 102
+	nelemFUNC,        //# 103
 	    // for any array returning Int array
-	shapeFUNC,        //# 103
+	shapeFUNC,        //# 104
             // for String
-	strlengthFUNC,    //# 104          returning Int
-	upcaseFUNC,       //# 105          returning String
-	downcaseFUNC,     //# 106          returning String
-	capitalizeFUNC,   //# 107          returning String
-	trimFUNC,         //# 108          returning String
-	ltrimFUNC,        //# 109          returning String
-	rtrimFUNC,        //# 110          returning String
-	substrFUNC,       //# 111          returning String
-        replaceFUNC,      //# 112          returning String
-	regexFUNC,        //# 113          returning TaqlRegex
-	patternFUNC,      //# 114          returning TaqlRegex
-	sqlpatternFUNC,   //# 115          returning TaqlRegex
+	strlengthFUNC,    //# 105          returning Int
+	upcaseFUNC,       //# 106          returning String
+	downcaseFUNC,     //# 107          returning String
+	capitalizeFUNC,   //# 108          returning String
+	trimFUNC,         //# 109          returning String
+	ltrimFUNC,        //# 110          returning String
+	rtrimFUNC,        //# 111          returning String
+	substrFUNC,       //# 112          returning String
+        replaceFUNC,      //# 113          returning String
+	regexFUNC,        //# 114          returning TaqlRegex
+	patternFUNC,      //# 115          returning TaqlRegex
+	sqlpatternFUNC,   //# 116          returning TaqlRegex
             // for Date
-	datetimeFUNC,     //# 116          returning Date
-	mjdtodateFUNC,    //# 117          returning Date
-	mjdFUNC,          //# 118          returning Double
-	dateFUNC,         //# 119          returning Date
-	timeFUNC,         //# 120          returning Double (in radians)
-	yearFUNC,         //# 121          returning Int
-	monthFUNC,        //# 122          returning Int
-	dayFUNC,          //# 123          returning Int
-	cmonthFUNC,       //# 124          returning String
-	weekdayFUNC,      //# 125          returning Int
-	cdowFUNC,         //# 126          returning String
-	weekFUNC,         //# 127          returning Int
-        ctodFUNC,         //# 128          returning String
-        cdateFUNC,        //# 129          returning String
-        ctimeFUNC,        //# 130          returning String
+	datetimeFUNC,     //# 117          returning Date
+	mjdtodateFUNC,    //# 118          returning Date
+	mjdFUNC,          //# 119          returning Double
+	dateFUNC,         //# 120          returning Date
+	timeFUNC,         //# 121          returning Double (in radians)
+	yearFUNC,         //# 122          returning Int
+	monthFUNC,        //# 123          returning Int
+	dayFUNC,          //# 124          returning Int
+	cmonthFUNC,       //# 125          returning String
+	weekdayFUNC,      //# 126          returning Int
+	cdowFUNC,         //# 127          returning String
+	weekFUNC,         //# 128          returning Int
+        ctodFUNC,         //# 129          returning String
+        cdateFUNC,        //# 130          returning String
+        ctimeFUNC,        //# 131          returning String
             // return values as strings
-        stringFUNC,       //# 131
+        stringFUNC,       //# 132
             // return angles as hms strings
-        hmsFUNC,          //# 132
+        hmsFUNC,          //# 133
             // return angles as dms strings
-        dmsFUNC,          //# 133
+        dmsFUNC,          //# 134
             // return angles as hms/dms strings
-        hdmsFUNC,         //# 134
+        hdmsFUNC,         //# 135
 	    // special function returning a random Double number
-	randFUNC,         //# 135
+	randFUNC,         //# 136
             // special function returning Int row number
-	rownrFUNC,        //# 136
+	rownrFUNC,        //# 137
             // special function returning Int row id (meant for GIVING)
-	rowidFUNC,        //# 137
+	rowidFUNC,        //# 138
             // special function resembling if statement
-	iifFUNC,          //# 138
+	iifFUNC,          //# 139
             // angular distance returning radians
-        angdistFUNC,      //# 139
-        angdistxFUNC,     //# 140
+        angdistFUNC,      //# 140
+        angdistxFUNC,     //# 141
 	    // cone search functions, implemented in derived class
-	conesFUNC,        //# 141
-	cones3FUNC,       //# 142
-	anyconeFUNC,      //# 143
-	anycone3FUNC,     //# 144
-	findconeFUNC,     //# 145
-	findcone3FUNC,    //# 146
+	conesFUNC,        //# 142
+	cones3FUNC,       //# 143
+	anyconeFUNC,      //# 144
+	anycone3FUNC,     //# 145
+	findconeFUNC,     //# 146
+	findcone3FUNC,    //# 147
             // for Int, Double, Complex or String returning Bool
-        boolFUNC,         //# 147
-	    // for any type returning array of that type
-	diagonalFUNC,     //# 148
+        boolFUNC,         //# 148
             // masked array functions
         nullarrayFUNC,    //# 149
         marrayFUNC,       //# 150

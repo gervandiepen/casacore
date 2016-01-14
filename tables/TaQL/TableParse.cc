@@ -611,21 +611,10 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     if (narguments == 3) {
       ftype = TableExprFuncNode::nearabs3FUNC;
     }
-  } else if (funcName == "cones") {
-    ftype = TableExprConeNode::conesFUNC;
-    if (narguments == 3) {
-      ftype = TableExprConeNode::cones3FUNC;
-    }
-  } else if (funcName == "anycone") {
-    ftype = TableExprConeNode::anyconeFUNC;
-    if (narguments == 3) {
-      ftype = TableExprConeNode::anycone3FUNC;
-    }
-  } else if (funcName == "findcone") {
-    ftype = TableExprConeNode::findconeFUNC;
-    if (narguments == 3) {
-      ftype = TableExprConeNode::findcone3FUNC;
-    }
+  } else if (funcName == "sin") {
+    ftype = TableExprFuncNode::sinFUNC;
+  } else if (funcName == "sinh") {
+    ftype = TableExprFuncNode::sinhFUNC;
   } else if (funcName == "cos") {
     ftype = TableExprFuncNode::cosFUNC;
   } else if (funcName == "cosh") {
@@ -636,64 +625,62 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::logFUNC;
   } else if (funcName == "log10") {
     ftype = TableExprFuncNode::log10FUNC;
-  } else if (funcName == "sin") {
-    ftype = TableExprFuncNode::sinFUNC;
-  } else if (funcName == "sinh") {
-    ftype = TableExprFuncNode::sinhFUNC;
+  } else if (funcName == "sqrt") {
+    ftype = TableExprFuncNode::sqrtFUNC;
+  } else if (funcName == "pow") {
+    ftype = TableExprFuncNode::powFUNC;
+  } else if (funcName == "conj") {
+    ftype = TableExprFuncNode::conjFUNC;
   } else if (funcName == "square"  ||  funcName == "sqr") {
     ftype = TableExprFuncNode::squareFUNC;
   } else if (funcName == "cube") {
     ftype = TableExprFuncNode::cubeFUNC;
-  } else if (funcName == "sqrt") {
-    ftype = TableExprFuncNode::sqrtFUNC;
-  } else if (funcName == "norm") {
-    ftype = TableExprFuncNode::normFUNC;
-  } else if (funcName == "acos") {
-    ftype = TableExprFuncNode::acosFUNC;
-  } else if (funcName == "asin") {
-    ftype = TableExprFuncNode::asinFUNC;
-  } else if (funcName == "atan") {
-    ftype = TableExprFuncNode::atanFUNC;
-  } else if (funcName == "sign") {
-    ftype = TableExprFuncNode::signFUNC;
-  } else if (funcName == "round") {
-    ftype = TableExprFuncNode::roundFUNC;
-  } else if (funcName == "ceil") {
-    ftype = TableExprFuncNode::ceilFUNC;
-  } else if (funcName == "floor") {
-    ftype = TableExprFuncNode::floorFUNC;
-  } else if (funcName == "tan") {
-    ftype = TableExprFuncNode::tanFUNC;
-  } else if (funcName == "tanh") {
-    ftype = TableExprFuncNode::tanhFUNC;
-  } else if (funcName == "pow") {
-    ftype = TableExprFuncNode::powFUNC;
-  } else if (funcName == "atan2") {
-    ftype = TableExprFuncNode::atan2FUNC;
-  } else if (funcName == "fmod") {
-    ftype = TableExprFuncNode::fmodFUNC;
   } else if (funcName == "min") {
     ftype = TableExprFuncNode::minFUNC;
     if (narguments == 1) {
       ftype = TableExprFuncNode::arrminFUNC;
     }
-  } else if (funcName == "mins") {
-    ftype = TableExprFuncNode::arrminsFUNC;
-  } else if (funcName == "runningmin") {
-    ftype = TableExprFuncNode::runminFUNC;
-  } else if (funcName == "boxedmin") {
-    ftype = TableExprFuncNode::boxminFUNC;
   } else if (funcName == "max") {
     ftype = TableExprFuncNode::maxFUNC;
     if (narguments == 1) {
       ftype = TableExprFuncNode::arrmaxFUNC;
     }
-  } else if (funcName == "maxs") {
-    ftype = TableExprFuncNode::arrmaxsFUNC;
-  } else if (funcName == "runningmax") {
-    ftype = TableExprFuncNode::runmaxFUNC;
-  } else if (funcName == "boxedmax") {
-    ftype = TableExprFuncNode::boxmaxFUNC;
+  } else if (funcName == "norm") {
+    ftype = TableExprFuncNode::normFUNC;
+  } else if (funcName == "abs"  ||  funcName == "amplitude") {
+    ftype = TableExprFuncNode::absFUNC;
+  } else if (funcName == "arg"  ||  funcName == "phase") {
+    ftype = TableExprFuncNode::argFUNC;
+  } else if (funcName == "real") {
+    ftype = TableExprFuncNode::realFUNC;
+  } else if (funcName == "imag") {
+    ftype = TableExprFuncNode::imagFUNC;
+  } else if (funcName == "int"  ||  funcName == "integer") {
+    ftype = TableExprFuncNode::intFUNC;
+  } else if (funcName == "asin") {
+    ftype = TableExprFuncNode::asinFUNC;
+  } else if (funcName == "acos") {
+    ftype = TableExprFuncNode::acosFUNC;
+  } else if (funcName == "atan") {
+    ftype = TableExprFuncNode::atanFUNC;
+  } else if (funcName == "atan2") {
+    ftype = TableExprFuncNode::atan2FUNC;
+  } else if (funcName == "tan") {
+    ftype = TableExprFuncNode::tanFUNC;
+  } else if (funcName == "tanh") {
+    ftype = TableExprFuncNode::tanhFUNC;
+  } else if (funcName == "sign") {
+    ftype = TableExprFuncNode::signFUNC;
+  } else if (funcName == "round") {
+    ftype = TableExprFuncNode::roundFUNC;
+  } else if (funcName == "floor") {
+    ftype = TableExprFuncNode::floorFUNC;
+  } else if (funcName == "ceil") {
+    ftype = TableExprFuncNode::ceilFUNC;
+  } else if (funcName == "fmod") {
+    ftype = TableExprFuncNode::fmodFUNC;
+  } else if (funcName == "complex"  ||  funcName == "formcomplex") {
+    ftype = TableExprFuncNode::complexFUNC;
   } else if (funcName == "sum") {
     ftype = TableExprFuncNode::arrsumFUNC;
   } else if (funcName == "sums") {
@@ -706,6 +693,18 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::arrsumsqrFUNC;
   } else if (funcName == "sumsqrs"  ||  funcName == "sumsquares") {
     ftype = TableExprFuncNode::arrsumsqrsFUNC;
+  } else if (funcName == "mins") {
+    ftype = TableExprFuncNode::arrminsFUNC;
+  } else if (funcName == "runningmin") {
+    ftype = TableExprFuncNode::runminFUNC;
+  } else if (funcName == "boxedmin") {
+    ftype = TableExprFuncNode::boxminFUNC;
+  } else if (funcName == "maxs") {
+    ftype = TableExprFuncNode::arrmaxsFUNC;
+  } else if (funcName == "runningmax") {
+    ftype = TableExprFuncNode::runmaxFUNC;
+  } else if (funcName == "boxedmax") {
+    ftype = TableExprFuncNode::boxmaxFUNC;
   } else if (funcName == "mean") {
     ftype = TableExprFuncNode::arrmeanFUNC;
   } else if (funcName == "means") {
@@ -804,66 +803,12 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::iscolFUNC;
   } else if (funcName == "iskeyword") {
     ftype = TableExprFuncNode::iskeyFUNC;
-  } else if (funcName == "nelements"  ||  funcName == "count") {
-    ftype = TableExprFuncNode::nelemFUNC;
   } else if (funcName == "ndim") {
     ftype = TableExprFuncNode::ndimFUNC;
+  } else if (funcName == "nelements"  ||  funcName == "count") {
+    ftype = TableExprFuncNode::nelemFUNC;
   } else if (funcName == "shape") {
     ftype = TableExprFuncNode::shapeFUNC;
-  } else if (funcName == "complex"  ||  funcName == "formcomplex") {
-    ftype = TableExprFuncNode::complexFUNC;
-  } else if (funcName == "abs"  ||  funcName == "amplitude") {
-    ftype = TableExprFuncNode::absFUNC;
-  } else if (funcName == "arg"  ||  funcName == "phase") {
-    ftype = TableExprFuncNode::argFUNC;
-  } else if (funcName == "conj") {
-    ftype = TableExprFuncNode::conjFUNC;
-  } else if (funcName == "real") {
-    ftype = TableExprFuncNode::realFUNC;
-  } else if (funcName == "imag") {
-    ftype = TableExprFuncNode::imagFUNC;
-  } else if (funcName == "int"  ||  funcName == "integer") {
-    ftype = TableExprFuncNode::intFUNC;
-  } else if (funcName == "bool"  ||  funcName == "boolean") {
-    ftype = TableExprFuncNode::boolFUNC;
-  } else if (funcName == "datetime") {
-    ftype = TableExprFuncNode::datetimeFUNC;
-  } else if (funcName == "mjdtodate") {
-    ftype = TableExprFuncNode::mjdtodateFUNC;
-  } else if (funcName == "mjd") {
-    ftype = TableExprFuncNode::mjdFUNC;
-  } else if (funcName == "date") {
-    ftype = TableExprFuncNode::dateFUNC;
-  } else if (funcName == "time") {
-    ftype = TableExprFuncNode::timeFUNC;
-  } else if (funcName == "weekday"   ||  funcName == "dow") {
-    ftype = TableExprFuncNode::weekdayFUNC;
-  } else if (funcName == "year") {
-    ftype = TableExprFuncNode::yearFUNC;
-  } else if (funcName == "month") {
-    ftype = TableExprFuncNode::monthFUNC;
-  } else if (funcName == "day") {
-    ftype = TableExprFuncNode::dayFUNC;
-  } else if (funcName == "cmonth") {
-    ftype = TableExprFuncNode::cmonthFUNC;
-  } else if (funcName == "cweekday"   ||  funcName == "cdow") {
-    ftype = TableExprFuncNode::cdowFUNC;
-  } else if (funcName == "week") {
-    ftype = TableExprFuncNode::weekFUNC;
-  } else if (funcName == "cdatetime"  ||  funcName == "ctod") {
-    ftype = TableExprFuncNode::ctodFUNC;
-  } else if (funcName == "cdate") {
-    ftype = TableExprFuncNode::cdateFUNC;
-  } else if (funcName == "ctime") {
-    ftype = TableExprFuncNode::ctimeFUNC;
-  } else if (funcName == "string"  ||  funcName == "str") {
-    ftype = TableExprFuncNode::stringFUNC;
-  } else if (funcName == "hms") {
-    ftype = TableExprFuncNode::hmsFUNC;
-  } else if (funcName == "dms") {
-    ftype = TableExprFuncNode::dmsFUNC;
-  } else if (funcName == "hdms") {
-    ftype = TableExprFuncNode::hdmsFUNC;
   } else if (funcName == "strlength" ||  funcName == "len") {
     ftype = TableExprFuncNode::strlengthFUNC;
   } else if (funcName == "upcase"    ||  funcName == "upper"  ||
@@ -890,18 +835,73 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::patternFUNC;
   } else if (funcName == "sqlpattern") {
     ftype = TableExprFuncNode::sqlpatternFUNC;
+  } else if (funcName == "datetime") {
+    ftype = TableExprFuncNode::datetimeFUNC;
+  } else if (funcName == "mjdtodate") {
+    ftype = TableExprFuncNode::mjdtodateFUNC;
+  } else if (funcName == "mjd") {
+    ftype = TableExprFuncNode::mjdFUNC;
+  } else if (funcName == "date") {
+    ftype = TableExprFuncNode::dateFUNC;
+  } else if (funcName == "time") {
+    ftype = TableExprFuncNode::timeFUNC;
+  } else if (funcName == "year") {
+    ftype = TableExprFuncNode::yearFUNC;
+  } else if (funcName == "month") {
+    ftype = TableExprFuncNode::monthFUNC;
+  } else if (funcName == "day") {
+    ftype = TableExprFuncNode::dayFUNC;
+  } else if (funcName == "cmonth") {
+    ftype = TableExprFuncNode::cmonthFUNC;
+  } else if (funcName == "weekday"   ||  funcName == "dow") {
+    ftype = TableExprFuncNode::weekdayFUNC;
+  } else if (funcName == "cweekday"   ||  funcName == "cdow") {
+    ftype = TableExprFuncNode::cdowFUNC;
+  } else if (funcName == "week") {
+    ftype = TableExprFuncNode::weekFUNC;
+  } else if (funcName == "cdatetime"  ||  funcName == "ctod") {
+    ftype = TableExprFuncNode::ctodFUNC;
+  } else if (funcName == "cdate") {
+    ftype = TableExprFuncNode::cdateFUNC;
+  } else if (funcName == "ctime") {
+    ftype = TableExprFuncNode::ctimeFUNC;
+  } else if (funcName == "string"  ||  funcName == "str") {
+    ftype = TableExprFuncNode::stringFUNC;
+  } else if (funcName == "hms") {
+    ftype = TableExprFuncNode::hmsFUNC;
+  } else if (funcName == "dms") {
+    ftype = TableExprFuncNode::dmsFUNC;
+  } else if (funcName == "hdms") {
+    ftype = TableExprFuncNode::hdmsFUNC;
+  } else if (funcName == "rand") {
+    ftype = TableExprFuncNode::randFUNC;
   } else if (funcName == "rownumber"  ||  funcName == "rownr") {
     ftype = TableExprFuncNode::rownrFUNC;
   } else if (funcName == "rowid") {
     ftype = TableExprFuncNode::rowidFUNC;
-  } else if (funcName == "rand") {
-    ftype = TableExprFuncNode::randFUNC;
   } else if (funcName == "iif") {
     ftype = TableExprFuncNode::iifFUNC;
   } else if (funcName == "angdist"  ||  funcName == "angulardistance") {
     ftype = TableExprFuncNode::angdistFUNC;
   } else if (funcName == "angdistx"  ||  funcName == "angulardistancex") {
     ftype = TableExprFuncNode::angdistxFUNC;
+  } else if (funcName == "cones") {
+    ftype = TableExprConeNode::conesFUNC;
+    if (narguments == 3) {
+      ftype = TableExprConeNode::cones3FUNC;
+    }
+  } else if (funcName == "anycone") {
+    ftype = TableExprConeNode::anyconeFUNC;
+    if (narguments == 3) {
+      ftype = TableExprConeNode::anycone3FUNC;
+    }
+  } else if (funcName == "findcone") {
+    ftype = TableExprConeNode::findconeFUNC;
+    if (narguments == 3) {
+      ftype = TableExprConeNode::findcone3FUNC;
+    }
+  } else if (funcName == "bool"  ||  funcName == "boolean") {
+    ftype = TableExprFuncNode::boolFUNC;
   } else if (funcName == "nullarray") {
     ftype = TableExprFuncNode::nullarrayFUNC;
   } else if (funcName == "marray") {
@@ -926,12 +926,6 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::gfirstFUNC;
   } else if (funcName == "glast") {
     ftype = TableExprFuncNode::glastFUNC;
-  } else if (funcName == "growid") {
-    ftype = TableExprFuncNode::growidFUNC;
-  } else if (funcName == "gaggr"  ||  funcName == "gstack") {
-    ftype = TableExprFuncNode::gaggrFUNC;
-  } else if (funcName == "ghist"  ||  funcName == "ghistogram") {
-    ftype = TableExprFuncNode::ghistFUNC;
   } else if (funcName == "gmin") {
     ftype = TableExprFuncNode::gminFUNC;
   } else if (funcName == "gmins") {
@@ -968,10 +962,6 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::grmsFUNC;
   } else if (funcName == "grmss") {
     ftype = TableExprFuncNode::grmssFUNC;
-  } else if (funcName == "gmedian") {
-    ftype = TableExprFuncNode::gmedianFUNC;
-  } else if (funcName == "gfractile") {
-    ftype = TableExprFuncNode::gfractileFUNC;
   } else if (funcName == "gany") {
     ftype = TableExprFuncNode::ganyFUNC;
   } else if (funcName == "ganys") {
@@ -988,6 +978,16 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::gnfalseFUNC;
   } else if (funcName == "gnfalses") {
     ftype = TableExprFuncNode::gnfalsesFUNC;
+  } else if (funcName == "ghist"  ||  funcName == "ghistogram") {
+    ftype = TableExprFuncNode::ghistFUNC;
+  } else if (funcName == "gaggr"  ||  funcName == "gstack") {
+    ftype = TableExprFuncNode::gaggrFUNC;
+  } else if (funcName == "growid") {
+    ftype = TableExprFuncNode::growidFUNC;
+  } else if (funcName == "gmedian") {
+    ftype = TableExprFuncNode::gmedianFUNC;
+  } else if (funcName == "gfractile") {
+    ftype = TableExprFuncNode::gfractileFUNC;
   } else {
     // unknown name can be a user-defined function.
     ftype = TableExprFuncNode::NRFUNC;
