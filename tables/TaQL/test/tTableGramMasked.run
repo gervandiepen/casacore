@@ -47,7 +47,9 @@ $casa_checktool ../../apps/taql 'select a1,m1 from tTableGramMasked_tmp.tab3'
 
 echo
 echo "Test (col,mask) in INSERT ..."
-$casa_checktool ./tTableGram 'insert into [create table tTableGramMasked_tmp.tab1 a1 I4 ndim=1, m1 B ndim=1] ((a1,m1)) VALUES (array([1:2],2)[array([T,F],2)])'
+$casa_checktool ./tTableGramMasked 'insert into [create table tTableGramMasked_tmp.tab1 a1 I4 ndim=1, m1 B ndim=1] ((a1,m1)) VALUES (array([1:2],2)[array([T,F],2)])'
 ../../apps/taql 'select * from tTableGramMasked_tmp.tab1'
 
-exit 0
+
+# Remove the symlink
+rm -f tTableGramMasked

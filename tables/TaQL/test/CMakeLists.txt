@@ -39,6 +39,7 @@ tTableGramCretab
 tTableGramAlttab
 tTableGramUpdate
 tTableGramMasked
+tTableGramNull
 tTableGramGroupAggr
 tTableGramGroupAggrAll
 tTableGramGroupAggrMaskAll
