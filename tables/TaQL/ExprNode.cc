@@ -320,7 +320,8 @@ TableExprNode TableExprNode::useUnit (const Unit& unit) const
 {
     if (node_p->dataType() != TableExprNodeRep::NTInt
     &&  node_p->dataType() != TableExprNodeRep::NTDouble
-    &&  node_p->dataType() != TableExprNodeRep::NTComplex) {
+    &&  node_p->dataType() != TableExprNodeRep::NTComplex
+    &&  node_p->dataType() != TableExprNodeRep::NTDate) {
         throwInvDT("units can only be used with numeric values");
     }
     return TableExprNodeUnit::useUnit (node_p, unit);
@@ -1544,6 +1545,8 @@ DataType TableExprNode::dataType() const
 	    return TpDComplex;
 	case TableExprNodeRep::NTString:
 	    return TpString;
+	case TableExprNodeRep::NTDate:
+	    return TpQuantity;
 	default:
             return TpOther;
 	}

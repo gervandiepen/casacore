@@ -73,6 +73,8 @@ String TaQLNodeRep::checkDataType (const String& dtype)
       dtstr = "C8";
     } else if (dtstr == "S"  ||  dtstr == "STRING") {
       dtstr = "S";
+    } else if (dtstr == "TIME"  ||  dtstr == "DATE"  ||  dtstr == "EPOCH") {
+      dtstr = "EPOCH";
     } else {
       throw TableError ("Datatype '" + dtype + "' is invalid");
     }

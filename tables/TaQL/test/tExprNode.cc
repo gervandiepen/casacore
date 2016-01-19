@@ -122,7 +122,7 @@ void checkScaDate (const String& str, TableExprId& exprid,
                    const MVTime& value)
 {
   cout << "checkScaDate " << str << endl;
-  AlwaysAssertExit (expr.dataType() == TpOther);
+  AlwaysAssertExit (expr.dataType() == TpQuantity);
   MVTime val;
   expr.get (exprid, val);
   if (!near (Double(val), Double(value), 1.e-10)) {

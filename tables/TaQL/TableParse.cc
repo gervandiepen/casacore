@@ -705,13 +705,13 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::runmaxFUNC;
   } else if (funcName == "boxedmax") {
     ftype = TableExprFuncNode::boxmaxFUNC;
-  } else if (funcName == "mean") {
+  } else if (funcName == "mean"  ||  funcName == "avg") {
     ftype = TableExprFuncNode::arrmeanFUNC;
-  } else if (funcName == "means") {
+  } else if (funcName == "means"  ||  funcName == "avgs") {
     ftype = TableExprFuncNode::arrmeansFUNC;
-  } else if (funcName == "runningmean") {
+  } else if (funcName == "runningmean"  ||  funcName == "runningavg") {
     ftype = TableExprFuncNode::runmeanFUNC;
-  } else if (funcName == "boxedmean") {
+  } else if (funcName == "boxedmean"  ||  funcName == "boxedavg") {
     ftype = TableExprFuncNode::boxmeanFUNC;
   } else if (funcName == "variance") {
     ftype = TableExprFuncNode::arrvarianceFUNC;
@@ -946,9 +946,9 @@ TableExprFuncNode::FunctionType TableParseSelect::findFunc
     ftype = TableExprFuncNode::gsumsqrFUNC;
   } else if (funcName == "gsumsqrs"  ||  funcName == "gsumsquares") {
     ftype = TableExprFuncNode::gsumsqrsFUNC;
-  } else if (funcName == "gmean") {
+  } else if (funcName == "gmean"  ||  funcName == "gavg") {
     ftype = TableExprFuncNode::gmeanFUNC;
-  } else if (funcName == "gmeans") {
+  } else if (funcName == "gmeans"  ||  funcName == "gavgs") {
     ftype = TableExprFuncNode::gmeansFUNC;
   } else if (funcName == "gvariance") {
     ftype = TableExprFuncNode::gvarianceFUNC;
@@ -1490,18 +1490,17 @@ void TableParseSelect::makeProjectExprTable()
       columnNames_p[i] = newName;
     }
     DataType dtype = makeDataType (columnExpr_p[i].dataType(),
-				   columnDtypes_p[i], columnNames_p[i]);
+                                   columnDtypes_p[i], columnNames_p[i]);
     addColumnDesc (td, dtype, newName, 0,
 		   columnExpr_p[i].isScalar() ? -1:0,    //ndim
 		   IPosition(), "", "", "",
                    columnKeywords_p[i],
-		   columnExpr_p[i].unit().getName());
+                   columnExpr_p[i].unit().getName());
     if (! columnNameMasks_p[i].empty()) {
       addColumnDesc (td, TpBool, columnNameMasks_p[i], 0,
                      columnExpr_p[i].isScalar() ? -1:0,    //ndim
                      IPosition(), "", "", "",
-                     TableRecord(),
-                     String());
+                     TableRecord(), String());
     }
   }
   // Create the table.
@@ -2264,8 +2263,8 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
       // The node data type should be convertible to the column data type.
       // The updateValue function does the actual work.
       // We simply switch on the types.
-      switch (node.dataType()) {
-      case TpBool:
+      switch (node.getNodeRep()->dataType()) {
+      case TableExprNodeRep::NTBool:
         switch (dtypeCol[i]) {
         case TpBool:
           updateValue<Bool,Bool> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
@@ -2277,7 +2276,7 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
         }
         break;
 
-      case TpString:
+      case TableExprNodeRep::NTString:
         switch (dtypeCol[i]) {
         case TpString:
           updateValue<String,String> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
@@ -2289,7 +2288,7 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
         }
         break;
 
-      case TpInt:
+      case TableExprNodeRep::NTInt:
         switch (dtypeCol[i]) {
         case TpUChar:
           updateValue<uChar,Int64> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
@@ -2325,7 +2324,8 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
         }
 	break;
 
-      case TpDouble:
+      case TableExprNodeRep::NTDouble:
+      case TableExprNodeRep::NTDate:
         switch (dtypeCol[i]) {
         case TpUChar:
           updateValue<uChar,Double> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
@@ -2361,7 +2361,7 @@ void TableParseSelect::doUpdate (Bool showTimings, const Table& origTable,
         }
       break;
 
-      case TpDComplex:
+      case TableExprNodeRep::NTComplex:
         switch (dtypeCol[i]) {
         case TpComplex:
           updateValue<Complex,DComplex> (row, rowid, isSca, node, mask.array(), key.maskFirst(), col, slicerPtr, maskCols[i]);
@@ -3334,6 +3334,8 @@ DataType TableParseSelect::makeDataType (DataType dtype, const String& dtstr,
       return TpFloat;
     } else if (dtstr == "R8") {
       return TpDouble;
+    } else if (dtstr == "EPOCH") {
+      return TpQuantity;
     }
     throw TableInvExpr ("Datatype " + dtstr + " of column " + colName +
 			" is invalid");
@@ -3387,6 +3389,7 @@ void TableParseSelect::addColumnDesc (TableDesc& td,
 					     dmType, dmGroup, options));
       break;
     case TpDouble:
+    case TpQuantity:
       td.addColumn (ScalarColumnDesc<Double> (colName, comment,
 					      dmType, dmGroup, options));
       break;
@@ -3447,6 +3450,7 @@ void TableParseSelect::addColumnDesc (TableDesc& td,
 					    shape, options, ndim));
       break;
     case TpDouble:
+    case TpQuantity:
       td.addColumn (ArrayColumnDesc<Double> (colName, comment,
 					     dmType, dmGroup,
 					     shape, options, ndim));
@@ -3472,13 +3476,23 @@ void TableParseSelect::addColumnDesc (TableDesc& td,
   }
   // Write the keywords.
   ColumnDesc& cd = td.rwColumnDesc(colName);
-  cd.rwKeywordSet() = keywordSet;
+  TableRecord keys (keywordSet);
+  // If no keys defined for this column, define Epoch measure for dates.
+  if (dtype == TpQuantity  &&  keys.empty()) {
+    TableRecord r;
+    r.define ("type", "epoch");
+    r.define ("Ref", "UTC");
+    keys.defineRecord ("MEASINFO", r);
+  }
+  cd.rwKeywordSet() = keys;
   // Write unit in column keywords (in TableMeasures compatible way).
   // Check if it is valid by constructing the Unit object.
-  if (! unitName.empty()) {
-    Unit unit(unitName);
-    cd.rwKeywordSet().define ("QuantumUnits",
-			      Vector<String>(1, unit.getName()));
+  String unit(unitName);
+  if (dtype == TpQuantity  &&  unit.empty()) {
+    unit = "d";
+  }
+  if (! unit.empty()) {
+    cd.rwKeywordSet().define ("QuantumUnits", Vector<String>(1, unit));
   }
 }
 

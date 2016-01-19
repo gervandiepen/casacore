@@ -334,7 +334,8 @@ template<> void showArray (const Array<MVTime>& arr)
 
 // Show the required columns.
 // First test if they exist and contain scalars or arrays.
-void showTable (const Table& tab, const Vector<String>& colnam, bool printMeas)
+void showTable (const Table& tab, const Vector<String>& colnam,
+                bool printMeas, const String& delim)
 {
   uInt nrcol = 0;
   PtrBlock<TableColumn*> tableColumns(colnam.nelements());
@@ -386,7 +387,7 @@ void showTable (const Table& tab, const Vector<String>& colnam, bool printMeas)
   for (i=0; i<tab.nrow(); i++) {
     for (uInt j=0; j<nrcol; j++) {
       if (j > 0) {
-        cout << "\t";
+        cout << delim;
       }
       if (! tableColumns[j]->isDefined (i)) {
         cout << " no_array";
@@ -473,8 +474,10 @@ void showExpr(const TableExprNode& expr)
     case TpString:
       showArray (expr.getColumnString (rownrs));
       break;
-    default:
-      if (expr.getNodeRep()->dataType() == TableExprNodeRep::NTDate) {
+    case TpQuantity:
+      {
+        AlwaysAssert (expr.getNodeRep()->dataType() == TableExprNodeRep::NTDate,
+                      AipsError);
         MVTime time;
         if (expr.nrow() != 1) cout << '[';
         for (uInt i=0; i<expr.nrow(); i++) {
@@ -483,11 +486,13 @@ void showExpr(const TableExprNode& expr)
           showTime (time);
         }
         if (expr.nrow() != 1) cout << ']';
-      } else {
-        cout << "Unknown expression scalar type " << expr.getColumnDataType();
+        cout << endl;
       }
+      break;
+    default:
+      cout << "Unknown expression scalar type " << expr.getColumnDataType()
+           << endl;
     }
-    cout << endl;
   } else {
     for (uInt i=0; i<expr.nrow(); i++) {
       if (expr.nrow() > 1) {
@@ -509,12 +514,15 @@ void showExpr(const TableExprNode& expr)
       case TpString:
         showArray (expr.getArrayString(i));
         break;
-      default:
-        if (expr.getNodeRep()->dataType() == TableExprNodeRep::NTDate) {
+      case TpQuantity:
+        {
+          AlwaysAssert (expr.getNodeRep()->dataType() == TableExprNodeRep::NTDate,
+                        AipsError);
           showArray (expr.getArrayDate(i));
-        } else {
-          cout << "Unknown expression array type " << expr.dataType();
         }
+        break;
+      default:
+          cout << "Unknown expression array type " << expr.dataType();
       }
       cout << endl;
     }
@@ -524,7 +532,7 @@ void showExpr(const TableExprNode& expr)
 
 // Sort and select data.
 Table doCommand (bool printCommand, bool printSelect, bool printMeas,
-                 bool printRows,
+                 bool printRows, bool printHeader, const String& delim,
                  const String& varName, const String& prefix, const String& str,
                  const vector<const Table*>& tempTables)
 {
@@ -579,19 +587,21 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
   }
   if (result.isTable()) {
     tabp = result.table();
-    if (printRows  ||  (printSelect && showResult && colNames.size() > 0)) {
+    if (printRows) {
       cout << "    " << cmd << " result of " << tabp.nrow()
            << " rows" << endl;
     }
     if (printSelect && showResult && colNames.size() > 0) {
-      // Show the selected column names.
-      cout << colNames.nelements() << " selected columns: ";
-      for (i=0; i<colNames.nelements(); i++) {
-        cout << " " << colNames(i);
+      if (printHeader) {
+        // Show the selected column names.
+        cout << colNames.nelements() << " selected columns: ";
+        for (i=0; i<colNames.nelements(); i++) {
+          cout << " " << colNames(i);
+        }
+        cout << endl;
       }
-      cout << endl;
       // Show the contents of the columns.
-      showTable (tabp, colNames, printMeas);
+      showTable (tabp, colNames, printMeas, delim);
     }
   } else {
     showExpr (result.node());
@@ -643,12 +653,14 @@ void showHelp()
   cerr << "  The default style is python; if no value is given after -s it defaults to glish" << endl;
   cerr << " -h  or --help          show this help and exits." << endl;
   cerr << " -f filename            name of file containing TaQL commands." << endl;
+  cerr << " -d delim               delimiter used between column values." << endl;
   cerr << " -ps or --printselect   show the values of selected columns." << endl;
   cerr << " -pm or --printmeasure  if possible, show values as formatted measures" << endl;
   cerr << " -pc or --printcommand  show the (expanded) TaQL command." << endl;
   cerr << " -pr or --printrows     show the number of rows selected, updated, etc." << endl;
+  cerr << " -ph or --printheader   show the header of names of the selected columns" << endl;
   cerr << "The default for -pc is on for interactive mode, otherwise off." << endl;
-  cerr << "The default for -pr, -ps, and -pm is on." << endl;
+  cerr << "The default for -pr, -ph, -ps, and -pm is on." << endl;
   cerr << endl;
 }
 
@@ -789,8 +801,8 @@ vector<const Table*> replaceVars (String& str, const TableMap& tables)
 
 // Ask and execute commands till quit or ^D is given.
 void askCommands (bool printCommand, bool printSelect, bool printMeas,
-                  bool printRows, const String& prefix,
-                  const vector<String>& commands)
+                  bool printRows, bool printHeader, const String& delim,
+                  const String& prefix, const vector<String>& commands)
 {
 #ifdef HAVE_READLINE
   string histFile;
@@ -866,7 +878,8 @@ void askCommands (bool printCommand, bool printSelect, bool printMeas,
             String command(str);
             vector<const Table*> tabs = replaceVars (str, tables);
             Table tab = doCommand (printCommand, printSelect, printMeas,
-                                   printRows, varName, prefix, str, tabs);
+                                   printRows, printHeader, delim,
+                                   varName, prefix, str, tabs);
             if (!varName.empty()  &&  !tab.isNull()) {
               // Keep the resulting table if a variable was given.
               tables[varName] = make_pair(tab, command);
@@ -924,6 +937,8 @@ int main (int argc, const char* argv[])
     int printSelect  = 1;
     int printMeas    = 1;
     int printRows    = 1;
+    int printHeader  = 1;
+    String delim('\t');
     int st;
     for (st=1; st<argc; ++st) {
       string arg(argv[st]);
@@ -939,6 +954,11 @@ int main (int argc, const char* argv[])
             st++;
           }
         }
+      } else if (arg == "-d") {
+        if (st+1 < argc) {
+          delim = argv[st+1];
+          st++;
+        }
       } else if (arg == "-pc"  ||  arg == "--printcommand") {
         printCommand = 1;
       } else if (arg == "-ps"  ||  arg == "--printselect") {
@@ -947,6 +967,8 @@ int main (int argc, const char* argv[])
         printMeas = 1;
       } else if (arg == "-pr"  ||  arg == "--printrows") {
         printRows = 1;
+      } else if (arg == "-ph"  ||  arg == "--printheader") {
+        printHeader = 1;
       } else if (arg == "-nopc"  ||  arg == "--noprintcommand") {
         printCommand = 0;
       } else if (arg == "-nops"  ||  arg == "--noprintselect") {
@@ -955,6 +977,8 @@ int main (int argc, const char* argv[])
         printMeas = 0;
       } else if (arg == "-nopr"  ||  arg == "--noprintrows") {
         printRows = 0;
+      } else if (arg == "-noph"  ||  arg == "--noprintheader") {
+        printHeader = 0;;
       } else if (arg == "-f") {
         if (st < argc-1) {
           st++;
@@ -981,7 +1005,7 @@ int main (int argc, const char* argv[])
       vector<String> commands = fileCommands (fname);
       if (! commands.empty()) {
         askCommands (printCommand!=0, printSelect!=0, printMeas!=0,
-                     printRows!=0, prefix, commands);
+                     printRows!=0, printHeader!=0, delim, prefix, commands);
       }
     } else if (st < argc) {
       // A command can be given as multiple parameters to make tab-completion
@@ -991,13 +1015,15 @@ int main (int argc, const char* argv[])
         command += ' ' + String(argv[st]);
       }
       // Execute the given command.
-      doCommand (printCommand==1, printSelect==1, printMeas==1, printRows==1,
-                 String(), prefix, command, vector<const Table*>());
+      doCommand (printCommand==1, printSelect==1, printMeas==1,
+                 printRows==1, printHeader==1,
+                 delim, String(), prefix, command, vector<const Table*>());
     } else {
     // Ask the user for commands.
       cout << "Using default TaQL style " << style << endl;
       askCommands (printCommand!=0, printSelect!=0, printMeas!=0,
-                   printRows!=0, prefix, vector<String>());
+                   printRows!=0, printHeader!=0,
+                   delim, prefix, vector<String>());
     }
   } catch (AipsError& x) {
     cerr << "\nCaught an exception: " << x.getMesg() << endl;

@@ -75,14 +75,15 @@ DATEA     {INT}{MONTH}{INT}|{INT}"-"{MONTH}"-"{INT}
 DATEH     ({INT2}"-"{INT2}"-"{INT4})|({INT4}"-"{INT2}"-"{INT2})
 DATES     {INT4}"/"{INT2}"/"{INT2}
 DATE      {DATEA}|{DATEH}|{DATES}
-DTIMEHM   {INT}[hH]({INT}?([mM]({FLINT})?)?)?
+DTIMEH    {INT}[hH]({INT}?([mM]({FLINT})?)?)?
 DTIMEC    {INT}":"({INT}?(":"({FLINT})?)?)?
-DTIME     {DTIMEHM}|{DTIMEC}
+DTIME     {DTIMEH}|{DTIMEC}
 DATETIME  {DATE}([-/ ]{DTIME})?
 
+POSHM     {INT}[hH]{INT}[mM]{FLINT}?
 POSDM     {INT}[dD]{INT}[mM]{FLINT}?
 POSD      {INT}"."{INT}?"."{FLINT}?
-TIME      {DTIMEHM}|{POSDM}|{POSD}
+TIME      {POSHM}|{POSDM}|{POSD}
 /*
      positions/times with colons cannot be allowed, because they interfere
      with the interval syntax. It is only possible when preceeded by a date.
