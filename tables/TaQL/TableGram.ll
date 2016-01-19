@@ -62,7 +62,7 @@ INT       {DIGIT}+
 INT2      {DIGIT}{DIGIT}
 INT4      {INT2}{INT2}
 HEXINT    0[xX][0-9a-fA-F]+
-EXP       [DdEe][+-]?{INT}
+EXP       [Ee][+-]?{INT}
 FLOAT     {INT}{EXP}|{INT}"."{DIGIT}*({EXP})?|{DIGIT}*"."{INT}({EXP})?
 FLINT     {FLOAT}|{INT}
 COMPLEX   {FLINT}[ij]
