@@ -599,7 +599,7 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
  /* In the Exprstate the word TIME is a normal column or function name.
     Otherwise it is the TIME keyword (to show timings).
  */
-<EXPRstate>{TIMEWORD} { 
+<EXPRstate,FROMstate,CRETABstate,GIVINGstate>{TIMEWORD} { 
             tableGramPosition() += yyleng;
             lvalp->val = new TaQLConstNode(
                 new TaQLConstNodeRep (tableGramRemoveEscapes (TableGramtext)));
