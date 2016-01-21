@@ -226,18 +226,18 @@ if (NOT ${MODULE} STREQUAL "casa")
     set (_modules ${_modules} tables)
     set (_usebison YES)
     if (NOT ${MODULE} STREQUAL "tables")
-        set (_modules ${_modules} scimath_f scimath measures meas lattices)
+        set (_modules ${_modules} scimath_f scimath measures meas)
         set (_uselapack YES)
         if (NOT ${MODULE} STREQUAL "measures")
-            set (_modules ${_modules} fits)
-            set (_usefits YES)
-            if (${MODULE} STREQUAL "ms" OR ${MODULE} STREQUAL "all")
-                set (_modules ${_modules} ms derivedmscal msfits)
-            endif (${MODULE} STREQUAL "ms" OR ${MODULE} STREQUAL "all")
-            if (${MODULE} STREQUAL "images" OR ${MODULE} STREQUAL "all")
-                set (_modules ${_modules} mirlib coordinates images)
-                set (_usewcs YES)
-            endif (${MODULE} STREQUAL "images" OR ${MODULE} STREQUAL "all")
+            set (_modules ${_modules} ms derivedmscal)
+            if (NOT ${MODULE} STREQUAL "ms")
+                set (_modules ${_modules} fits msfits)
+                set (_usefits YES)
+                if (${MODULE} STREQUAL "images" OR ${MODULE} STREQUAL "all")
+                    set (_modules ${_modules} lattices mirlib coordinates images)
+                    set (_usewcs YES)
+                endif (${MODULE} STREQUAL "images" OR ${MODULE} STREQUAL "all")
+            endif (NOT ${MODULE} STREQUAL "ms")
         endif (NOT ${MODULE} STREQUAL "measures")
     endif (NOT ${MODULE} STREQUAL "tables")
 endif (NOT ${MODULE} STREQUAL "casa")
@@ -345,18 +345,6 @@ if(USE_THREADS)
     endif(CMAKE_COMPILER_IS_GNUCXX)
 endif(USE_THREADS)
 
-# Check whether DATA_DIR contains data (only if measures is build)
-if (NOT DATA_DIR)
-   set (DATA_DIR ${CMAKE_INSTALL_PREFIX}/share/data/casacore)
-endif (NOT DATA_DIR)
-if (";${_modules};" MATCHES ";measures;")
-    get_filename_component(ABS_DATA_DIR "${DATA_DIR}" ABSOLUTE)
-    if (NOT EXISTS "${ABS_DATA_DIR}/ephemerides/")
-        message(WARNING "No ephemerides data found in the specified DATA_DIR (\"${DATA_DIR}\"), so the location must be specified at runtime. If you have preinstalled casacore data, specify the location with -DDATA_DIR.")
-    endif()
-endif()
-
-
 # Set compiler flag in no table locking.
 if (NOT ENABLE_TABLELOCKING)
     add_definitions(-DAIPS_TABLE_NOLOCKING)
@@ -455,11 +443,12 @@ endif (BUILD_PYTHON3)
 #  DATA_DIR                      ${CMAKE_INSTALL_PREFIX}/share/casacore/data
 #  MODULE                        all
 #                                Values for MODULE (incremental list):
-#                                - casa
-#                                - tables
-#                                - measures
-#                                - ms OR images
-#                                - all
+#                                - casa                 (builds casa)
+#                                - tables               (builds tables)
+#                                - measures          (builds scimath, measures, meas)
+#                                - ms                    (builds ms, derivedmscal)
+#                                - fits                    (builds fits, msfits)
+#                                - all (or images)    (builds lattices, mirlib, coordinates, images)
 # 
 # List of possibly used external packages and where
 #  CFITSIO      fits

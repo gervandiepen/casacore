@@ -2,12 +2,23 @@
 # CASA measures
 #
 
-# If given, add the data directory as compile variable.
-# If it contains a single $, it needs to be doubled for make purposes.
-if (DATA_DIR)
-    string(REGEX REPLACE [$] $$ DATA_DIRX ${DATA_DIR})
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCASADATA='\"${DATA_DIRX}\"'")
-endif (DATA_DIR)
+# If not defined, set the default DATA_DIR.
+if (NOT DATA_DIR)
+   set (DATA_DIR ${CMAKE_INSTALL_PREFIX}/share/data/casacore)
+endif (NOT DATA_DIR)
+
+## If it contains a single $, it needs to be doubled for make purposes.
+##string(REGEX REPLACE [$] $$ DATA_DIRX ${DATA_DIR})
+## set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCASADATA='\"${DATA_DIRX}\"'")
+
+get_filename_component(ABS_DATA_DIR "${DATA_DIR}" ABSOLUTE)
+if (NOT EXISTS "${ABS_DATA_DIR}/ephemerides/")
+    message(WARNING "No ephemerides data found in the specified DATA_DIR (\"${DATA_DIR}\"), so the location must be specified at runtime. If you have preinstalled casacore data, specify the location with -DDATA_DIR.")
+endif()
+
+# Cache the variable.
+set (DATA_DIR "${DATA_DIR}" CACHE PATH "Measures tables root")
+
 
 add_library (casa_measures
 Measures/Aberration.cc
