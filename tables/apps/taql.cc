@@ -486,13 +486,12 @@ void showExpr(const TableExprNode& expr)
           showTime (time);
         }
         if (expr.nrow() != 1) cout << ']';
-        cout << endl;
       }
       break;
     default:
-      cout << "Unknown expression scalar type " << expr.getColumnDataType()
-           << endl;
+      cout << "Unknown expression scalar type " << expr.getColumnDataType();
     }
+    cout << endl;
   } else {
     for (uInt i=0; i<expr.nrow(); i++) {
       if (expr.nrow() > 1) {
