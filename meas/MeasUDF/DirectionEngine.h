@@ -164,14 +164,10 @@ namespace casacore {
 
     // Calucate the rise and set time of a source for a given position
     // and epoch. For Sun and Moon it takes the edge.
-    ///void calcRiseSet (const MDirection& dir,
-    ///const MPosition& pos,
-    ///const MEpoch& epoch,
-    ///double& rise, double& set);
-    void calcRiseSet (double dec,
-                      double el, double lat,
-                      double ra, double epoch,
-                      double& rise, double& set) const;
+    void calcRiseSet (const MDirection& dir,
+                      const MPosition& pos,
+                      const MEpoch& epoch,
+                      double& rise, double& set);
 
     //# Data members.
     IPosition                       itsShape;
