@@ -380,15 +380,28 @@ namespace casacore {
             // Get angles as radians.
             Vector<Double> md (mdir.getValue().get());
             if (riseSet) {
+              ///calcRiseSet (*resIter, *posIter, *epsIter, md[0], md[1]);
+              double off = floor(epsIter->getValue().get() + 0.000001);
+              MEpoch noon(Quantity(off + 0.5, "d"), MEpoch::UTC);
+              itsFrame.set (noon);
               MDirection::Ref ref(MDirection::APP, itsFrame);
               MDirection app = MDirection::Convert(MDirection::APP,
                                                    ref)(*resIter);
+              MDirection::Ref refh(MDirection::HADEC, itsFrame);
+              MDirection hd = MDirection::Convert(MDirection::HADEC,
+                                                  refh)(*resIter);
+              // Take edge of SUN and MOON (half-width = 15 arcmin).
+              double h = 0;
+              if (resIter->getRef().getType() == MDirection::SUN  ||
+                  resIter->getRef().getType() == MDirection::MOON) {
+                h = 0.25; // Appr. edge of Sun/Moon with atmospheric refraction
+              }
               // Calculate rise/set time and store in md.
-              calcRiseSet (md[1],
-                           5*C::pi/180,    // default elev 5 deg
+              calcRiseSet (hd.getValue().get()[1],        // dec
+                           h*C::pi/180,
                            posIter->getValue().get()[2],  // latitude
                            app.getValue().get()[0],       // ra
-                           epsIter->getValue().get(),     // epoch
+                           off,                           // epoch
                            md[0], md[1]);
             }
             *outPtr++ = md[0];
@@ -405,7 +418,8 @@ namespace casacore {
                                      double ra, double epoch,
                                      double& rise, double& set) const
   {
-    MEpoch off(Quantity(epoch+0.5, "d"),
+    cout << "rde="<<ra<<' '<<dec<<' '<<epoch<<endl;
+    MEpoch off(Quantity(epoch+0.000001, "d"),
                MEpoch::Types(MEpoch::UTC | MEpoch::RAZE));   // truncate to days
     double ct = (sin(el) - sin(dec)*sin(lat)) / (cos(dec)*cos(lat));
     if (ct >= 1) {
@@ -432,6 +446,7 @@ namespace casacore {
   }
 
   /*
+See http://www.stjarnhimlen.se/comp/riset.html
 # From old measures.g:
 
 # Rise/set sidereal time(coord, elev)
@@ -488,6 +503,60 @@ set  = ra + acos(ct)
                set=[last=public.epoch('last', dq.totime(a[2])),
                    utc=x[2]]];
     }
-   */
+  */
+
+  /*
+  void DirectionEngine::calcRiseSet (const MDirection& dir,
+                                     const MPosition& pos,
+                                     const MEpoch& epoch,
+                                     double& rise, double& set)
+  {
+    // TODO:  SUN-XX where XX=C, E, CR, ER, CT, NT, AT, PT
+    //                     0, -.25, -.583, -833, -6, -12, -15, -18
+    //        Default is ER
+    //        Similar for MOON
+    //    To be tested in handleNames or add extra argument to riseset.
+    // See http://www.stjarnhimlen.se/comp/riset.html
+    // Why does HADEC and APP not give the same DEC?????? Ask Wim or Michiel.
+    double lat = pos.getValue().get()[2];  // latitude
+    double start = floor(epoch.getValue().get() + 0.000001);
+    MEpoch noon = MEpoch(Quantity(start + 0.5, "d"));
+    itsFrame.set (noon);
+    double h = 0;
+    if (dir.getRef().getType() == MDirection::SUN  ||
+        dir.getRef().getType() == MDirection::MOON) {
+      h = 0.25*C::pi/180;     // Edge of Sun with atmospheric refraction
+    }
+    MDirection::Ref ref2(MDirection::HADEC, itsFrame);
+    MDirection hd = MDirection::Convert(MDirection::HADEC, ref2) (dir);
+    double dec = hd.getValue().get()[1];
+    cout <<"noon="<< noon.getValue().get()<<' '<<h<<' '<<' '<<dec<<endl;
+    double ct = (sin(h) - sin(dec)*sin(lat)) / (cos(dec)*cos(lat));
+    if (ct >= 1) {
+      // Always below
+      set  = start;
+      rise = set + 1;
+    } else if (ct <= -1) {
+      // Always above
+      rise = start;
+      set  = rise + 1;
+    } else {
+      ct = acos(ct);
+      MDirection::Ref ref1(MDirection::APP, itsFrame);
+      MDirection app = MDirection::Convert(MDirection::APP, ref1) (dir);
+      double normra = app.getValue().get()[0];
+      ///      double normra = MVAngle(ra)(0).radian();
+      rise = normra - ct;
+      set  = normra + ct;
+      MEpoch::Ref ref(MEpoch::LAST, itsFrame, noon);
+      Quantity timeRise = MVTime(Quantity(rise, "rad")).get();
+      Quantity timeSet  = MVTime(Quantity(set,  "rad")).get();
+      MEpoch tr = MEpoch::Convert (MEpoch(timeRise, ref), MEpoch::UTC)();
+      MEpoch ts = MEpoch::Convert (MEpoch(timeSet,  ref), MEpoch::UTC)();
+      rise = tr.getValue().get();
+      set  = ts.getValue().get();
+    }
+  }
+  */
 
 } //end namespace

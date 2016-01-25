@@ -162,8 +162,12 @@ namespace casacore {
                        const TableExprId& id,
                        Array<MDirection>& directions);
 
-    // Calucate the rise and set time of a source for a given elevation,
-    // latitude, and epoch.
+    // Calucate the rise and set time of a source for a given position
+    // and epoch. For Sun and Moon it takes the edge.
+    ///void calcRiseSet (const MDirection& dir,
+    ///const MPosition& pos,
+    ///const MEpoch& epoch,
+    ///double& rise, double& set);
     void calcRiseSet (double dec,
                       double el, double lat,
                       double ra, double epoch,
