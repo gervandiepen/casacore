@@ -212,6 +212,8 @@ namespace casacore {
           } else {
             throw AipsError("invalid MOON type; use -C, -U, -L, -CR, -UR, -LR");
           }
+        } else {
+          name = names.data()[i];   // keep original case
         }
       }
       itsH[i] *= C::pi/180.;
