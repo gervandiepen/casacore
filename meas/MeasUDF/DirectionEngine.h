@@ -163,10 +163,11 @@ namespace casacore {
                        Array<MDirection>& directions);
 
     // Calucate the rise and set time of a source for a given position
-    // and epoch. For Sun and Moon it takes the edge.
+    // and epoch. Argument <src>h</src> defines the possible edge of sun/moon.
     void calcRiseSet (const MDirection& dir,
                       const MPosition& pos,
                       const MEpoch& epoch,
+                      double h,
                       double& rise, double& set);
 
     //# Data members.
@@ -176,6 +177,7 @@ namespace casacore {
     MeasFrame                       itsFrame;       //# frame used by converter
     MDirection::Convert             itsConverter;
     Vector<MDirection>              itsConstants;
+    Vector<Double>                  itsH;           //# edge of sun or moon
     MDirection::Types               itsRefType;
     TableExprNode                   itsExprNode;
     ArrayMeasColumn<MDirection>     itsMeasCol;

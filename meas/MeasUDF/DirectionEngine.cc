@@ -157,8 +157,65 @@ namespace casacore {
     }
     Array<String> names = operand->getStringAS(0).array();
     itsConstants.resize (names.shape());
+    itsH.resize (names.size());
     for (uInt i=0; i<names.size(); ++i) {
-      itsConstants.data()[i] = MDirection::makeMDirection (names.data()[i]);
+      String name(names.data()[i]);
+      name.upcase();
+      itsH[i] = 0;
+      if (name.substr(0,3) == "SUN") {
+        String ext(name.substr(3));
+        name = "SUN";
+        itsH[i] = -0.833;      // default is -UR
+        if (! ext.empty()) {
+          if (ext == "-C") {
+            itsH[i] = 0;       // centre touches horizon
+          } else if (ext == "-U") {
+            itsH[i] = -0.25;   // upper edge touches horizon
+          } else if (ext == "-L") {
+            itsH[i] = 0.25;    // lower edge touches horizon
+          } else if (ext == "-CR") {
+            itsH[i] = -0.583;  // centre touches horizon (with refraction)
+          } else if (ext == "-UR") {
+            itsH[i] = -0.833;  // upper edge touches horizon (with refraction)
+          } else if (ext == "-LR") {
+            itsH[i] = -0.333;  // lower edge touches horizon (with refraction)
+          } else if (ext == "-CT") {
+            itsH[i] = -6;      // civil twilight darkness
+          } else if (ext == "-NT") {
+            itsH[i] = -12;     // nautical twilight darkness
+          } else if (ext == "-AT") {
+            itsH[i] = -15;     // amateur astronomy twilight darkness
+          } else if (ext == "-ST") {
+            itsH[i] = -18;     // scientific astronomy twilight darkness
+          } else {
+            throw AipsError("invalid SUN type; use -C, -U, -L, -CR, -UR, -LR,"
+                            " -CT, -NT, -AT, -ST");
+          }
+        }
+      } else if (name.substr(0,4) == "MOON") {
+        String ext(name.substr(4));
+        name = "MOON";
+        itsH[i] = -0.833;     // default is -UR
+        if (! ext.empty()) {
+          if (ext == "-C") {
+            itsH[i] = 0;      // centre
+           } else if (ext == "-U") {
+            itsH[i] = -0.25;  // upper edge touches horizon
+          } else if (ext == "-L") {
+            itsH[i] = 0.25;   // lower edge touches horizon
+          } else if (ext == "-CR") {
+            itsH[i] = -0.583;  // centre touches horizon (with refraction)
+          } else if (ext == "-UR") {
+            itsH[i] = -0.833;  // upper edge touches horizon (with refraction)
+          } else if (ext == "-LR") {
+            itsH[i] = -0.333;  // lower edge touches horizon (with refraction)
+          } else {
+            throw AipsError("invalid MOON type; use -C, -U, -L, -CR, -UR, -LR");
+          }
+        }
+      }
+      itsH[i] *= C::pi/180.;
+      itsConstants.data()[i] = MDirection::makeMDirection (name);
     }
   }
 
@@ -361,8 +418,9 @@ namespace casacore {
       }
       out.resize (shape);
       double* outPtr = out.data();
+      uInt hIndex = 0;
       for (Array<MDirection>::const_contiter resIter = res.cbegin();
-           resIter != res.cend(); ++resIter) {
+           resIter != res.cend(); ++resIter, ++hIndex) {
         itsConverter.setModel (*resIter);
         for (Array<MEpoch>::const_contiter epsIter = eps.cbegin();
            epsIter != eps.cend(); ++epsIter) {
@@ -377,7 +435,8 @@ namespace casacore {
               itsFrame.resetPosition (*posIter);
             }
             if (riseSet) {
-              calcRiseSet (*resIter, *posIter, *epsIter, outPtr[0], outPtr[1]);
+              calcRiseSet (*resIter, *posIter, *epsIter, itsH[hIndex],
+                           outPtr[0], outPtr[1]);
             } else {
               MDirection mdir = itsConverter();
               // Get angles as radians.
@@ -396,13 +455,9 @@ namespace casacore {
   void DirectionEngine::calcRiseSet (const MDirection& dir,
                                      const MPosition& pos,
                                      const MEpoch& epoch,
+                                     double h,
                                      double& rise, double& set)
   {
-    // TODO:  SUN-XX where XX=C, E, CR, ER, CT, NT, AT, PT
-    //                     0, -.25, -.583, -833, -6, -12, -15, -18
-    //        Default is ER
-    //        Similar for MOON
-    //    To be tested in handleNames or add extra argument to riseset.
     // See http://www.stjarnhimlen.se/comp/riset.html
     // Why does HADEC and APP not give the same DEC?????? Ask Wim or Michiel.
     double lat = pos.getValue().get()[2];            // latitude
@@ -416,11 +471,6 @@ namespace casacore {
     // which makes the calculation a bit more accurate.
     MEpoch noon = MEpoch(Quantity(start + 0.5, "d"), MEpoch::UTC);
     itsFrame.set (noon);
-    double h = 0;
-    if (dir.getRef().getType() == MDirection::SUN  ||
-        dir.getRef().getType() == MDirection::MOON) {
-      h = 0.25*C::pi/180;     // Edge of Sun with atmospheric refraction
-    }
     MDirection::Ref ref2(MDirection::HADEC, itsFrame);
     MDirection hd = MDirection::Convert(MDirection::HADEC, ref2) (dir);
     double dec = hd.getValue().get()[1];
@@ -435,19 +485,26 @@ namespace casacore {
       set  = rise + 1;
     } else {
       ct = acos(ct);
+      // Get RA normalized between 0 and 2pi.
       MDirection::Ref ref1(MDirection::APP, itsFrame);
       MDirection app = MDirection::Convert(MDirection::APP, ref1) (dir);
-      double normra = app.getValue().get()[0];
-      normra = MVAngle(normra)(0).radian();
+      double normra = MVAngle(app.getValue().get()[0])(0).radian();
       rise = normra - ct;
       set  = normra + ct;
+      // Convert to a date.
+      // Note that sometimes Measures has to choose between 2 days
+      // due to the 4 minutes difference between earth and sidereal day.
+      // For the period between (about) 21-Mar and 21-Sep it chooses wrongly.
+      // So adjust rise and set if needed.
       MEpoch::Ref ref(MEpoch::LAST, itsFrame, off);
       Quantity timeRise = MVTime(Quantity(rise, "rad")).get();
       Quantity timeSet  = MVTime(Quantity(set,  "rad")).get();
       MEpoch tr = MEpoch::Convert (MEpoch(timeRise, ref), MEpoch::UTC)();
       MEpoch ts = MEpoch::Convert (MEpoch(timeSet,  ref), MEpoch::UTC)();
       rise = tr.getValue().get();
+      if (rise < start) rise += 1;
       set  = ts.getValue().get();
+      if (set < start) set += 1;
     }
   }
 
