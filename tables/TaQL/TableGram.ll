@@ -82,7 +82,7 @@ DATETIME  {DATE}([-/ ]{DTIME})?
 
 POSHM     {INT}[hH]{INT}[mM]{FLINT}?
 POSDM     {INT}[dD]{INT}[mM]{FLINT}?
-POSD      {INT}"."{INT}?"."{FLINT}?
+POSD      {INT}"."{INT}"."{FLINT}
 TIME      {POSHM}|{POSDM}|{POSD}
 /*
      positions/times with colons cannot be allowed, because they interfere
