@@ -437,7 +437,8 @@ namespace casacore {
               itsFrame.resetPosition (*posIter);
             }
             if (riseSet) {
-              calcRiseSet (*resIter, *posIter, *epsIter, itsH[hIndex],
+              calcRiseSet (*resIter, *posIter, *epsIter,
+                           (hIndex<itsH.size() ? itsH[hIndex] : 0),
                            outPtr[0], outPtr[1]);
             } else {
               MDirection mdir = itsConverter();

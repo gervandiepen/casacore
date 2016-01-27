@@ -177,7 +177,7 @@ namespace casacore {
     MeasFrame                       itsFrame;       //# frame used by converter
     MDirection::Convert             itsConverter;
     Vector<MDirection>              itsConstants;
-    Vector<Double>                  itsH;           //# edge of sun or moon
+    Vector<Double>                  itsH;           //# diff for sun or moon
     MDirection::Types               itsRefType;
     TableExprNode                   itsExprNode;
     ArrayMeasColumn<MDirection>     itsMeasCol;
