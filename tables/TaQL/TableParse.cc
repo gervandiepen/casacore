@@ -2065,6 +2065,25 @@ void TableParseSelect::handleOffset (const TableExprNode& expr)
   offset_p = evalIntScaExpr (expr);
 }
 
+void TableParseSelect::makeTableNoFrom (const vector<TableParseSelect*>& stack)
+{
+  if (limit_p < 0  ||  offset_p < 0  ||  endrow_p < 0) {
+    throw TableInvExpr("LIMIT and OFFSET values cannot be negative if no "
+                       "tables are given in the FROM clause");
+  }
+  // Use 1 row if limit_p nor endrow_p is given.
+  Int64 nrow = 1;
+  if (limit_p > 0) {
+    nrow = limit_p + offset_p;
+  } else if (endrow_p > 0) {
+    nrow = endrow_p;
+  }
+  // Add a temp table with no columns and some rows.
+  Table tab(Table::Memory);
+  tab.addRow(nrow);
+  addTable (-1, String(), tab, String(), std::vector<const Table*>(), stack);
+}
+
 void TableParseSelect::handleAddRow (const TableExprNode& expr)
 {
   table_p.addRow (evalIntScaExpr (expr));

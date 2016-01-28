@@ -513,13 +513,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     if (node.itsTables.isValid()) {
       handleTables (node.itsTables);
     } else {
-      // A select without a FROM means that a single row is created.
-      // Thus use a temp table with no columns and one or more rows.
-      Table tab(Table::Memory);
-      Int64 nrow = max(1, topStack()->getLimit());
-      tab.addRow(nrow);
-      topStack()->addTable (-1, String(), tab, String(),
-                            std::vector<const Table*>(), itsStack);
+      // A select without a FROM means that a temp table must be created.
+      topStack()->makeTableNoFrom (itsStack);
     }
     curSel->setDMInfo (handleMultiRecFld (node.itsDMInfo));
     // Handle WHERE before SELECT because WHERE cannot use columns in a

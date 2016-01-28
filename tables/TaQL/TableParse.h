@@ -411,9 +411,8 @@ public:
   TableExprNode getNode() const
     { return node_p; }
 
-  // Get the value of LIMIT.
-  Int64 getLimit() const
-    { return limit_p; }
+  // Create a temporary table in no tables are given in FROM.
+  void makeTableNoFrom (const vector<TableParseSelect*>& stack);
 
   // Execute the select command (select/sort/projection/groupby/having/giving).
   // The setInGiving flag tells if a set in the GIVING part is allowed.
