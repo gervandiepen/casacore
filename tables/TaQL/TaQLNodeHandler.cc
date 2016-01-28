@@ -504,24 +504,29 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   TaQLNodeResult TaQLNodeHandler::visitSelectNode (const TaQLSelectNodeRep& node)
   {
+    // Add an entry to the stack.
+    Bool outer = itsStack.empty();
+    TableParseSelect* curSel = pushStack (TableParseSelect::PSELECT);
+    // First handle LIMIT/OFFSET, because limit is needed when creating
+    // a temp table for a select without a FROM.
+    visitNode (node.itsLimitOff);
+    if (node.itsTables.isValid()) {
+      handleTables (node.itsTables);
+    } else {
+      // A select without a FROM means that a single row is created.
+      // Thus use a temp table with no columns and one or more rows.
+      Table tab(Table::Memory);
+      Int64 nrow = max(1, topStack()->getLimit());
+      tab.addRow(nrow);
+      topStack()->addTable (-1, String(), tab, String(),
+                            std::vector<const Table*>(), itsStack);
+    }
+    curSel->setDMInfo (handleMultiRecFld (node.itsDMInfo));
     // Handle WHERE before SELECT because WHERE cannot use columns in a
     // table resulting from SELECT, while the other clauses can.
     // The reason is that selection has to be done before projection.
     // Furthermore, handle GIVING first, because projection needs to know
     // the resulting table name.
-    Bool outer = itsStack.empty();
-    TableParseSelect* curSel = pushStack (TableParseSelect::PSELECT);
-    if (node.itsTables.isValid()) {
-      handleTables (node.itsTables);
-    } else {
-      // A select without a FROM means that a single row is created.
-      // Thus use a temp table with no columns and a single row.
-      Table tab(Table::Memory);
-      tab.addRow();
-      topStack()->addTable (-1, String(), tab, String(),
-                            std::vector<const Table*>(), itsStack);
-    }
-    curSel->setDMInfo (handleMultiRecFld (node.itsDMInfo));
     visitNode     (node.itsGiving);
     visitNode     (node.itsJoin);
     handleWhere   (node.itsWhere);
@@ -529,7 +534,6 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     visitNode     (node.itsColumns);
     handleHaving  (node.itsHaving);
     visitNode     (node.itsSort);
-    visitNode     (node.itsLimitOff);
     TaQLNodeHRValue* hrval = new TaQLNodeHRValue();
     TaQLNodeResult res(hrval);
     if (! node.getNoExecute()) {

@@ -411,6 +411,10 @@ public:
   TableExprNode getNode() const
     { return node_p; }
 
+  // Get the value of LIMIT.
+  Int64 getLimit() const
+    { return limit_p; }
+
   // Execute the select command (select/sort/projection/groupby/having/giving).
   // The setInGiving flag tells if a set in the GIVING part is allowed.
   // The mustSelect flag tells if a SELECT command must do something.

@@ -544,21 +544,19 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
   if (spos != String::npos) {
     String::size_type epos = str.find (' ', spos);
     if (epos == String::npos) {
-      // single word (e.g. 1+2), so cannot contain a command name
-      addCalc = True;
-    } else {
-      String s = str.substr(spos, epos-spos);
-      s.downcase();
-      addCalc = !(s=="select" || s=="update" || s=="insert" ||
-                  s=="calc" || s=="delete" || s=="count"  || 
-                  s=="create" || s=="createtable" ||
-                  s=="alter" || s=="altertable" ||
-                  s=="using"  || s=="usingstyle"  || s=="time");
-      showResult = (s=="select");
-      if (s=="count") {
-        doCount    = True;
-        showResult = True;
-      }
+      epos = str.size();
+    }
+    String s = str.substr(spos, epos-spos);
+    s.downcase();
+    addCalc = !(s=="select" || s=="update" || s=="insert" ||
+                s=="calc" || s=="delete" || s=="count"  || 
+                s=="create" || s=="createtable" ||
+                s=="alter" || s=="altertable" ||
+                s=="using"  || s=="usingstyle"  || s=="time");
+    showResult = (s=="select");
+    if (s=="count") {
+      doCount    = True;
+      showResult = True;
     }
   }
   String strc(str);
