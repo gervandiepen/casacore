@@ -165,7 +165,7 @@ NOT       [Nn][Oo][Tt]
 ALL       [Aa][Ll][Ll]
 ALLFUNC   {ALL}{WHITE}"("
 NAME      \\?[A-Za-z_]([A-Za-z_0-9]|(\\.))*
-NAMEFLD   {NAME}?"."?{NAME}?("::")?{NAME}("."{NAME})*
+NAMEFLD   ({NAME}".")?{NAME}?("::")?{NAME}("."{NAME})*
 TEMPTAB   [$]{INT}
 NAMETAB   ([A-Za-z0-9_./+\-~$@:]|(\\.))+
 UDFLIBSYN {NAME}{WHITE}"="{WHITE}{NAME}

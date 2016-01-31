@@ -101,7 +101,15 @@ namespace casacore {
       }
       return False;
     }
+    itsSidFrac = False;
     String str = operand->getString(0);
+    str.upcase();
+    if (str.size() >= 2  &&  str[0] == 'F'  &&
+        (str[1] == '-' || str[1] == '_')) {
+      str = str.substr(2);
+    } else if (str.size() >= 4  &&  str[2] == 'S'  &&  str[3] == 'T') {
+      itsSidFrac = True;
+    }
     MEpoch::Types refType;
     Bool fnd = MEpoch::getType (refType, str);
     if (fnd) {
@@ -240,10 +248,11 @@ namespace casacore {
     itsFrame.set (MPosition());
   }
 
-  void EpochEngine::setConverter (MEpoch::Types toType)
+  void EpochEngine::setConverter (MEpoch::Types toType, Bool sidFrac)
   {
     MEpoch::Ref ref(toType, itsFrame);
     itsConverter = MEpoch::Convert (toType, ref);
+    itsSidFrac   = sidFrac;
   }
 
   Array<MEpoch> EpochEngine::getEpochs (const TableExprId& id)
@@ -297,7 +306,12 @@ namespace casacore {
           }
           MEpoch ep = itsConverter();
           // Convert to seconds.
-          *outPtr++ = ep.getValue().get() * 24*3600;
+          // Possibly strip day from sidereal times.
+          if (itsSidFrac) {
+            *outPtr++ = fmod(ep.getValue().get(), 1.) * 24*3600;
+          } else {
+            *outPtr++ = ep.getValue().get() * 24*3600;
+          }
         }
       }
     }
