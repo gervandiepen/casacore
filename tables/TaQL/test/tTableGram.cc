@@ -95,7 +95,7 @@ void checkUnits()
   testUnit ("calc 2 'km/s' * 20s", 40., "km/s.s");
   testUnit ("calc 2 'km/h' + 1 'm/s'", 5.6, "km/h");
   testUnit ("calc 2m*3m", 6., "m.m");
-  testUnit ("calc sumsqr([3.m,10dm])", 10., "(m)2");
+  testUnit ("calc sumsqr([3.m,10dm])", 10., "m.m");
   testUnit ("calc sqrt(9 'm2')", 3., "m");
   testUnit ("calc 20Aug06 - 13Aug06", 7., "d");
   testUnit ("calc 20Aug06 +86400s + 12*60min - 13Aug06", 8.5, "d");

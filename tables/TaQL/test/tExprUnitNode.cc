@@ -144,8 +144,8 @@ void doIt()
   checkScaDouble ("acos(cos(30))", 0, acos(cos(e30)), C::pi/6, "rad");
   checkScaDouble ("atan(tan(30))", 0, atan(tan(e30)), C::pi/6, "rad");
   checkScaDouble ("atan2(1,1)", 0, atan2(TableExprNode(1),1), C::pi/4, "rad");
-  checkScaDouble ("square(e2)", 0, square(e2), 4, "(cm)2");
-  checkScaDouble ("cube(e2)", 0, cube(e2), 8, "(cm)3");
+  checkScaDouble ("square(e2)", 0, square(e2), 4, "cm.cm");
+  checkScaDouble ("cube(e2)", 0, cube(e2), 8, "cm.cm.cm");
   // sqrt returns basic SI units.
   checkScaDouble ("sqrt(square(e2))", 0, sqrt(square(e2)), 0.02, "m");
   checkScaDouble ("sqrt(e2*e2)", 0, sqrt(e2*e2), 0.02, "m");
@@ -153,7 +153,7 @@ void doIt()
   checkScaDouble ("log(e2)", 0, log(e2), log(2.), "");
   checkScaDouble ("log10(e2)", 0, log10(e2), log10(2.), "");
   checkScaDouble ("exp(e2)", 0, exp(e2), exp(2.), "");
-  checkScaDouble ("norm(e2)", 0, norm(e2), 4., "(cm)2");
+  checkScaDouble ("norm(e2)", 0, norm(e2), 4., "cm.cm");
   checkScaDouble ("abs(e2)", 0, abs(e2), 2., "cm");
   checkScaDouble ("real(e2)", 0, real(e2), 2., "cm");
   checkScaDouble ("imag(e2)", 0, imag(e2), 0., "cm");
@@ -166,11 +166,11 @@ void doIt()
   checkScaInt ("integer(e2)", 0, integer(e2), 2);
   checkScaDouble ("sum(e2)", 0, sum(e2), 2., "cm");
   checkScaDouble ("product(e2)", 0, product(e2), 2., "");
-  checkScaDouble ("sumSquare(e2)", 0, sumSquare(e2), 4., "(cm)2");
+  checkScaDouble ("sumSquare(e2)", 0, sumSquare(e2), 4., "cm.cm");
   checkScaDouble ("min(e2)", 0, min(e2), 2., "cm");
   checkScaDouble ("max(e2)", 0, max(e2), 2., "cm");
   checkScaDouble ("mean(e2)", 0, mean(e2), 2., "cm");
-  checkScaDouble ("variance(e2)", 0, variance(e2), 0., "(cm)2");
+  checkScaDouble ("variance(e2)", 0, variance(e2), 0., "cm.cm");
   checkScaDouble ("stddev(e2)", 0, stddev(e2), 0., "cm");
   checkScaDouble ("avdev(e2)", 0, avdev(e2), 0., "cm");
   checkScaDouble ("rms(e2)", 0, rms(e2), 2., "cm");

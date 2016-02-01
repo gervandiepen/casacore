@@ -124,43 +124,60 @@ Double TableExprFuncNode::fillUnits (TableExprNodeRep* node,
     case ceilFUNC:
     case fmodFUNC:
     case arrsumFUNC:
-    case arrminFUNC:
-    case arrmaxFUNC:
-    case arrmeanFUNC:
-    case arrstddevFUNC:
-    case arravdevFUNC:
-    case arrrmsFUNC:
-    case arrmedianFUNC:
-    case arrfractileFUNC:
     case arrsumsFUNC:
+    case arrminFUNC:
     case arrminsFUNC:
-    case arrmaxsFUNC:
-    case arrmeansFUNC:
-    case arrstddevsFUNC:
-    case arravdevsFUNC:
-    case arrrmssFUNC:
-    case arrmediansFUNC:
-    case arrfractilesFUNC:
     case runminFUNC:
-    case runmaxFUNC:
-    case runmeanFUNC:
-    case runstddevFUNC:
-    case runavdevFUNC:
-    case runrmsFUNC:
-    case runmedianFUNC:
     case boxminFUNC:
+    case arrmaxFUNC:
+    case arrmaxsFUNC:
+    case runmaxFUNC:
     case boxmaxFUNC:
+    case arrmeanFUNC:
+    case arrmeansFUNC:
+    case runmeanFUNC:
     case boxmeanFUNC:
+    case arrstddevFUNC:
+    case arrstddevsFUNC:
+    case runstddevFUNC:
     case boxstddevFUNC:
+    case arravdevFUNC:
+    case arravdevsFUNC:
+    case runavdevFUNC:
     case boxavdevFUNC:
     case boxrmsFUNC:
+    case arrrmsFUNC:
+    case arrrmssFUNC:
+    case runrmsFUNC:
+    case arrmedianFUNC:
+    case arrmediansFUNC:
+    case runmedianFUNC:
     case boxmedianFUNC:
-    case gsumFUNC:
+    case arrfractileFUNC:
+    case arrfractilesFUNC:
+    case arrayFUNC:
+    case transposeFUNC:
+    case resizeFUNC:
+    case diagonalFUNC:
+    case marrayFUNC:
+    case arrdataFUNC:
+    case negatemaskFUNC:
+    case replmaskedFUNC:
+    case replunmaskedFUNC:
+    case arrflatFUNC:
     case gminFUNC:
     case gmaxFUNC:
+    case gsumFUNC:
     case gmeanFUNC:
     case gstddevFUNC:
     case grmsFUNC:
+    case gminsFUNC:
+    case gmaxsFUNC:
+    case gsumsFUNC:
+    case gmeansFUNC:
+    case gstddevsFUNC:
+    case grmssFUNC:
+    case gaggrFUNC:
     case gmedianFUNC:
     case gfractileFUNC:
       // These functions return the same unit as their child.
@@ -171,21 +188,23 @@ Double TableExprFuncNode::fillUnits (TableExprNodeRep* node,
     case arrsumsqrFUNC:
     case arrsumsqrsFUNC:
     case gsumsqrFUNC:
+    case gsumsqrsFUNC:
     case arrvarianceFUNC:
     case arrvariancesFUNC:
     case runvarianceFUNC:
     case boxvarianceFUNC: 
     case gvarianceFUNC:
+    case gvariancesFUNC:
      // These functions return the square of their child.
       if (! childUnit.empty()) {
         Quantity q(1., childUnit);
-        node->setUnit (pow(q,2).getFullUnit());
+        node->setUnit ((q*q).getFullUnit());
       }
       break;
     case cubeFUNC:
       if (! childUnit.empty()) {
         Quantity q(1., childUnit);
-        node->setUnit (pow(q,3).getFullUnit());
+        node->setUnit ((q*q*q).getFullUnit());
       }
       break;
     case sqrtFUNC:
