@@ -1721,17 +1721,17 @@ colonrangeindex: colonrange {
            }
          | arithexpr COLON {
 	       $$ = new TaQLNode (new TaQLIndexNodeRep
-                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), 0));
+                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(Slicer::MimicSource))), 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | arithexpr COLON COLON {
 	       $$ = new TaQLNode (new TaQLIndexNodeRep
-                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), 0));
+                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(Slicer::MimicSource))), 0));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
          | arithexpr COLON COLON arithexpr {
 	       $$ = new TaQLNode (new TaQLIndexNodeRep
-                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(-1))), *$4));
+                    (*$1, TaQLConstNode(new TaQLConstNodeRep(Int64(Slicer::MimicSource))), *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
            }
 

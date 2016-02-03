@@ -79,6 +79,11 @@ public:
     // The default implementation returns 0.
     virtual TableExprNodeRep* makeConstantScalar();
 
+    // Validate the given index against the array's shape.
+    // Treat a negative as an index from the end (a la python) and replace it.
+    IPosition validateIndex (const IPosition& index,
+                             const ArrayBase& arr) const;
+
     // Get the shape of the array in the given row.
     // This default implementation evaluates the value and returns its shape.
     virtual const IPosition& getShape (const TableExprId& id);

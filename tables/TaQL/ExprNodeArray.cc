@@ -121,6 +121,22 @@ TableExprNodeRep* TableExprNodeArray::makeConstantScalar()
   return 0;
 }
 
+IPosition TableExprNodeArray::validateIndex (const IPosition& index,
+                                             const ArrayBase& arr) const
+{
+  if (index.size() != arr.ndim()) {
+    throw TableInvExpr("index size does not match the array dimensionality");
+  }
+  IPosition inx(index);
+  for (uInt i=0; i<inx.size(); ++i) {
+    if (inx[i] < 0) {
+      inx[i] += arr.shape()[i];
+    }
+  }
+  arr.validateIndex (inx);
+  return inx;
+}
+
 const IPosition& TableExprNodeArray::getShape (const TableExprId& id)
 {
     varShape_p.resize (0);
@@ -294,43 +310,37 @@ Bool TableExprNodeArray::getElemBool (const TableExprId& id,
 				      const Slicer& slicer)
 {
     MArray<Bool> arr = getArrayBool (id);
-    arr.array().validateIndex (slicer.start());
-    return arr.array()(slicer.start());
+    return arr.array()(validateIndex(slicer.start(), arr.array()));
 }
 Int64 TableExprNodeArray::getElemInt (const TableExprId& id,
                                       const Slicer& slicer)
 {
     MArray<Int64> arr = getArrayInt (id);
-    arr.array().validateIndex (slicer.start());
-    return arr.array()(slicer.start());
+    return arr.array()(validateIndex(slicer.start(), arr.array()));
 }
 Double TableExprNodeArray::getElemDouble (const TableExprId& id,
 					  const Slicer& slicer)
 {
     MArray<Double> arr = getArrayDouble (id);
-    arr.array().validateIndex (slicer.start());
-    return arr.array()(slicer.start());
+    return arr.array()(validateIndex(slicer.start(), arr.array()));
 }
 DComplex TableExprNodeArray::getElemDComplex (const TableExprId& id,
 					      const Slicer& slicer)
 {
     MArray<DComplex> arr = getArrayDComplex (id);
-    arr.array().validateIndex (slicer.start());
-    return arr.array()(slicer.start());
+    return arr.array()(validateIndex(slicer.start(), arr.array()));
 }
 String TableExprNodeArray::getElemString (const TableExprId& id,
 					  const Slicer& slicer)
 {
     MArray<String> arr = getArrayString (id);
-    arr.array().validateIndex (slicer.start());
-    return arr.array()(slicer.start());
+    return arr.array()(validateIndex(slicer.start(), arr.array()));
 }
 MVTime TableExprNodeArray::getElemDate (const TableExprId& id,
 					const Slicer& slicer)
 {
     MArray<MVTime> arr = getArrayDate (id);
-    arr.array().validateIndex (slicer.start());
-    return arr.array()(slicer.start());
+    return arr.array()(validateIndex(slicer.start(), arr.array()));
 }
 
 MArray<Bool> TableExprNodeArray::getSliceBool (const TableExprId& id,
@@ -1161,11 +1171,6 @@ void TableExprNodeIndex::checkIndexValues (const TableExprNodeRep* arrayNode)
     }
     // Check start and increment values.
     for (i=0; i<n; i++) {
-	if (!varIndex_p[3*i]) {
-	    if (start_p(i) < 0) {
-		throw (TableInvExpr ("index value before array origin"));
-	    }
-	}
 	if (!varIndex_p[3*i + 2]) {
 	    if (incr_p(i) < 0) {
 		throw (TableInvExpr ("index increment value is negative"));
@@ -1197,7 +1202,12 @@ void TableExprNodeIndex::fillSlicer (const TableExprId& id)
     uInt j = 0;
     while (j < n) {
 	if (varIndex_p[j]) {
-	    start_p(i) = operands_p[j]->getInt(id) - origin_p;
+            Int64 val = operands_p[j]->getInt (id);
+            if (val < 0) {
+                start_p(i) = val;
+            }else{
+                start_p(i) = operands_p[j]->getInt(id) - origin_p;
+            }
 	}
 	j++;
 	if (varIndex_p[j]) {
@@ -1206,7 +1216,7 @@ void TableExprNodeIndex::fillSlicer (const TableExprId& id)
 	    }else{
 		Int64 val = operands_p[j]->getInt (id);
 		if (val < 0) {
-		    end_p = Slicer::MimicSource;
+                    end_p(i) = val;
 		}else{
 		    end_p(i) = val - endMinus_p;
 		}
@@ -1310,10 +1320,12 @@ void TableExprNodeIndex::convertConstIndex()
 	if (rep != 0) {
 	    if (rep->isConstant()) {
 		Int64 val = rep->getInt(0);
-		if (val < 0) {
-		    end_p = Slicer::MimicSource;
-		}else{
-		    end_p(i) = val - endMinus_p;
+		if (val != Slicer::MimicSource) {
+                    if (val < 0) {
+                        end_p(i) = val;
+                    }else{
+                        end_p(i) = val - endMinus_p;
+                    }
 		}
 	    }else{
 		varIndex_p[j] = True;

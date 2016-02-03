@@ -1064,6 +1064,16 @@ void doIt()
   checkScaString ("cdow", exprid, cdow(datetime("1Jan09/12:")), "Thu");
   checkScaString ("cmonth", exprid, cmonth(datetime("1Jan09/12:")), "Jan");
 
+  // Check indexing and slicing; also negative.
+  Slicer sl1(IPosition(1,1), IPosition(1,2), Slicer::endIsLast);
+  Slicer sl2(IPosition(1,0), IPosition(1,3), IPosition(1,2), Slicer::endIsLast);
+  Slicer sl3(IPosition(1,-2), IPosition(1,-1), Slicer::endIsLast);
+  checkScaString ("[2]", exprid, earrs1(IPosition(1,2)), arrs1[2]);
+  checkScaString ("[-3]", exprid, earrs1(IPosition(1,-3)), arrs1[1]);
+  checkArrString ("[1:2]", exprid, earrs1(sl1), arrs1(sl1));
+  checkArrString ("[0:3:2]", exprid, earrs1(sl2), arrs1(sl2));
+  checkArrString ("[-2:-1]", exprid, earrs1(sl3), arrs1(sl3));
+
   // Check various kind of failures.
   checkFailure ("& si-sd", esi1&esd1);
   checkFailure ("| ad-si", earrd1|esi1);
