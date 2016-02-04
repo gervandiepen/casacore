@@ -257,7 +257,8 @@ Table TableParseSelect::makeTable (Int tabnr, const String& name,
                                    const Table& ftab,
                                    const String& shorthand,
                                    const vector<const Table*> tempTables,
-                                   const vector<TableParseSelect*>& stack)
+                                   const vector<TableParseSelect*>& stack,
+                                   Bool alwaysOpen)
 {
   Table table;
   //# If the table name is numeric, we have a temporary table number
@@ -296,7 +297,7 @@ Table TableParseSelect::makeTable (Int tabnr, const String& name,
 	  }
 	}
       }
-      if (!foundSH) {
+      if (!foundSH  &&  alwaysOpen) {
 	table = Table::openTable(name);
       }
     }

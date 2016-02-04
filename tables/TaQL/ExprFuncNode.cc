@@ -977,8 +977,10 @@ String TableExprFuncNode::getString (const TableExprId& id)
     case substrFUNC:
       {
 	String str = operands_p[0]->getString (id);
-        size_t st = std::max (Int64(0), operands_p[1]->getInt (id));
-        size_t sz = String::npos;
+        Int64 st = operands_p[1]->getInt (id);
+        if (st < 0) st += str.size();
+        if (st < 0) st = 0;
+        Int64 sz = String::npos;
         if (operands_p.size() > 2) {
           sz = std::max (Int64(0), operands_p[2]->getInt (id));
         }

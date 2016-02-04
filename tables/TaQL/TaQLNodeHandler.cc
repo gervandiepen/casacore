@@ -913,11 +913,15 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       TaQLNodeResult result = visitNode (nodes[i]);
       const TaQLNodeHRValue& res = getHR(result);
       const String& name = res.getString();
-      if (name.empty()) {
-        tables.push_back (topStack()->makeTable
-                          (res.getInt(), res.getString(),
-                           res.getTable(), res.getAlias(),
-                           itsTempTables, itsStack));
+      Table tab(topStack()->makeTable
+                (res.getInt(), name,
+                 res.getTable(), res.getAlias(),
+                 itsTempTables, itsStack, False));
+      if (!tab.isNull()) {
+        tables.push_back (tab);
+      } else if (name.empty()) {
+        throw AipsError ("No matching tables found for $" +
+                         String::toString(res.getInt()));
       } else {
         Vector<String> nms = Directory::shellExpand(Vector<String>(1, name));
         if (nms.empty()) {

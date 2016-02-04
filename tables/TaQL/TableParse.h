@@ -542,11 +542,15 @@ public:
 		 const vector<TableParseSelect*>& stack);
 
   // Make a Table object for given name, seqnr or so.
+  // If <src>alwaysOpen=False</src> the table will only be looked up,
+  // but not opened if not found. This is meant for concatenated tables
+  // in TaQLNodeHandler.
   Table makeTable (Int tabnr, const String& name,
                    const Table& ftab,
                    const String& shorthand,
                    const vector<const Table*> tempTables,
-                   const vector<TableParseSelect*>& stack);
+                   const vector<TableParseSelect*>& stack,
+                   Bool alwaysOpen=True);
 
   // Replace the first table (used by CALC command).
   void replaceTable (const Table& table);

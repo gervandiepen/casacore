@@ -1988,12 +1988,15 @@ MArray<String> TableExprFuncNodeArray::getArrayString (const TableExprId& id)
 	    break;
         case TableExprFuncNode::substrFUNC:
             {
-              size_t st = std::max (Int64(0), operands()[1]->getInt (id));
-              size_t sz = String::npos;
+              Int64 stv = operands()[1]->getInt (id);
+              Int64 sz  = String::npos;
               if (operands().size() > 2) {
                 sz = std::max (Int64(0), operands()[2]->getInt (id));
               }
               for (i=0; i<n; i++) {
+                Int64 st = stv;
+                if (st < 0) st += str[i].size();
+                if (st < 0) st = 0;
                 str[i] = str[i].substr (st, sz);
               }
             }
