@@ -204,7 +204,7 @@ namespace casacore {
         (heightNode  &&
          ! (heightNode->isConstant()  &&
             heightNode->valueType() == TableExprNodeRep::VTScalar))) {
-      throw AipsError ("Scalar values given as position a MEAS function "
+      throw AipsError ("Scalar values given as position in a MEAS function "
                        "must be constant values");
     }
     makeDefaults (e1->unit());
@@ -446,25 +446,11 @@ namespace casacore {
                                                 Int toValueType)
   {
     DebugAssert (id.byRow(), AipsError);
-    Array<MPosition> res;
-    if (! itsMeasCol.isNull()) {
-      res = itsMeasCol.convert (id.rownr(), toRefType);
-    } else {
-      res.resize (itsConstants.shape());
-      for (uInt i=0; i<res.size(); ++i) {
-        res.data()[i] = MPosition::Convert (itsConstants.data()[i],
-                                            toRefType)();
-      }
-    }
+    Array<MPosition> res (getPositions(id));
     Array<Double> out;
     if (res.size() > 0) {
       if (toValueType == 1) {
         out.resize (res.shape());
-        Array<MPosition>::const_contiter resIter = res.cbegin();
-        for (uInt i=0; i<res.size(); ++i, ++resIter) {
-          // Get as height.
-          out.data()[i] = resIter->getValue().getLength().getValue();
-        }
       } else {
         IPosition shape(1,3);
         if (toValueType == 2) {
@@ -474,9 +460,15 @@ namespace casacore {
           shape.append (res.shape());
         }
         out.resize (shape);
-        VectorIterator<Double> outIter(out);
-        for (Array<MPosition>::const_contiter resIter = res.cbegin();
-             !outIter.pastEnd(); outIter.next(), ++resIter) {
+      }
+      VectorIterator<Double> outIter(out);
+      Array<MPosition>::const_contiter resIter = res.cbegin();
+      for (uInt i=0; i<res.size(); ++i, ++resIter) {
+        MPosition pos = MPosition::Convert (*resIter, toRefType)();
+        if (toValueType == 1) {
+          // Get as height.
+          out.data()[i] = pos.getValue().getLength().getValue();
+        } else {
           if (toValueType == 3) {
             // Get as xyz.
             outIter.vector() = resIter->getValue().getValue();
@@ -484,6 +476,7 @@ namespace casacore {
             // Get as lon,lat.
             outIter.vector() = resIter->getValue().getAngle().getValue();
           }
+          outIter.next();
         }
       }
     }

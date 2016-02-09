@@ -187,10 +187,7 @@ namespace casacore {
                          const IPosition& collapseAxes,
                          const MArrayFunctorBase<T,RES>& funcObj)
   {
-    if (a.isNull()) {
-      res = MArray<RES>();
-      return;
-    }
+    AlwaysAssert (a.hasMask(), AipsError);
     // This can also be done as boxedArrayMath with a removeDegenerate thereafter.
     //
     // It should be possible to parallelize this loop.
@@ -253,10 +250,7 @@ namespace casacore {
                        const IPosition& boxShape,
                        const MArrayFunctorBase<T,RES>& funcObj)
   {
-    if (array.isNull()) {
-      res = MArray<RES>();
-      return;
-    }
+    AlwaysAssert (array.hasMask(), AipsError);
     const IPosition& shape = array.shape();
     uInt ndim = shape.size();
     IPosition fullBoxShape, resShape;
@@ -314,10 +308,7 @@ namespace casacore {
                          const MArrayFunctorBase<T,RES>& funcObj,
                          Bool fillEdge=True)
   {
-    if (array.isNull()) {
-      res = MArray<RES>();
-      return;
-    }
+    AlwaysAssert (array.hasMask(), AipsError);
     const IPosition& shape = array.shape();
     uInt ndim = shape.size();
     IPosition boxEnd, resShape;

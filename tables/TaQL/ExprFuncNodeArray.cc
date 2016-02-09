@@ -1829,12 +1829,12 @@ MArray<DComplex> TableExprFuncNodeArray::getArrayDComplex
     case TableExprFuncNode::runmeanFUNC:
       {
 	MArray<DComplex> arr (operands()[0]->getArrayDComplex(id));
-	return slidingArrayMath (arr, getArrayShape(id), MMeanFunc<DComplex>());
+	return slidingMeans (arr, getArrayShape(id));
       }
     case TableExprFuncNode::boxmeanFUNC:
       {
 	MArray<DComplex> arr (operands()[0]->getArrayDComplex(id));
-	return boxedArrayMath (arr, getArrayShape(id), MMeanFunc<DComplex>());
+	return boxedMeans (arr, getArrayShape(id));
       }
     case TableExprFuncNode::arrayFUNC:
       {
