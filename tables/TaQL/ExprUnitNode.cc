@@ -58,13 +58,18 @@ Double TableExprNodeUnit::set (TableExprNodeRep& parent,
     parent.setUnit (child.unit());
   } else {
     if (! child.unit().empty()) {
-      // Check if conversion is possible.
-      Quantity q(1., child.unit());
-      if (! q.isConform (unit)) {
+      // Conversion is only possible between units of the same type
+      // and between time/angle.
+      UnitVal type1 = unit.getValue();
+      UnitVal type2 = child.unit().getValue();
+      if (! (type1 == type2  
+             || (type1 == UnitVal::ANGLE  &&  type2 == UnitVal::TIME)
+             || (type2 == UnitVal::ANGLE  &&  type1 == UnitVal::TIME))) {
 	throw TableInvExpr ("Units " + unit.getName() + " and " +
 			    child.unit().getName() + " do not conform");
       }
       // Get conversion factor.
+      Quantity q(1., child.unit());
       factor = q.getValue (unit);
     }
     parent.setUnit (unit);

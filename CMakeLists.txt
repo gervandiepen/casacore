@@ -345,6 +345,17 @@ if(USE_THREADS)
     endif(CMAKE_COMPILER_IS_GNUCXX)
 endif(USE_THREADS)
 
+# Check whether DATA_DIR contains data (only if measures is build)
+if (NOT DATA_DIR)
+   set (DATA_DIR ${CMAKE_INSTALL_PREFIX}/share/casacore/data)
+endif (NOT DATA_DIR)
+if (";${_modules};" MATCHES ";measures;")
+    get_filename_component(ABS_DATA_DIR "${DATA_DIR}" ABSOLUTE)
+    if (NOT EXISTS "${ABS_DATA_DIR}/ephemerides/")
+        message(WARNING "No ephemerides data found in the specified DATA_DIR (\"${DATA_DIR}\"), so the location must be specified at runtime. If you have preinstalled casacore data, specify the location with -DDATA_DIR.")
+    endif()
+endif()
+
 # Set compiler flag in no table locking.
 if (NOT ENABLE_TABLELOCKING)
     add_definitions(-DAIPS_TABLE_NOLOCKING)
