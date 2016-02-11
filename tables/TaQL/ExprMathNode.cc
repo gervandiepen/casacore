@@ -242,7 +242,12 @@ void TableExprNodeDivide::handleUnits()
     } else {
         Quantity q1 (1, lnode_p->unit());
 	Quantity q2 (1, rnode_p->unit());
-	setUnit ((q1/q2).getFullUnit());
+        // If same unit kinds, result is no unit.
+        if (q1.isConform (q2)) {
+            makeEqualUnits (lnode_p, rnode_p);
+        } else {
+            setUnit ((q1/q2).getFullUnit());
+        }
     }
 }
 
