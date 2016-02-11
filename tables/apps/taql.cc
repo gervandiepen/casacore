@@ -37,6 +37,7 @@
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/casa/Quanta/MVPosition.h>
 #include <casacore/casa/Quanta/MVAngle.h>
+#include <casacore/casa/Quanta/UnitMap.h>
 #include <casacore/casa/BasicSL/Complex.h>
 #include <casacore/casa/BasicMath/Math.h>
 #include <casacore/casa/Utilities/Assert.h>
@@ -529,6 +530,167 @@ void showExpr(const TableExprNode& expr)
 }
 
 
+void showUnitKind (const UnitVal& kind, const map<String, UnitName>& units)
+{
+  for (map<String,UnitName>::const_iterator iter = units.begin();
+       iter != units.end(); ++iter) {
+    if (Unit(iter->first).getValue() == kind) {
+      cout << "    " << iter->second << endl;
+    }
+  }
+}
+
+void showUnits (const String& type)
+{
+  if (type.empty()) {
+    UnitMap::list (cout);
+  } else if (type == "prefix") {
+    UnitMap::listPref (cout);
+  } else {
+    UnitVal kind;
+    if (type == "length") {
+      kind = UnitVal::LENGTH;
+    } else if (type == "mass") {
+      kind = UnitVal::MASS;
+    } else if (type == "time") {
+      kind = UnitVal::TIME;
+    } else if (type == "current") {
+      kind = UnitVal::CURRENT;
+    } else if (type == "temperature") {
+      kind = UnitVal::TEMPERATURE;
+    } else if (type == "intensity") {
+      kind = UnitVal::INTENSITY;
+    } else if (type == "molar") {
+      kind = UnitVal::MOLAR;
+    } else if (type == "angle") {
+      kind = UnitVal::ANGLE;
+    } else if (type == "solidangle") {
+      kind = UnitVal::SOLIDANGLE;
+    } else {
+      try {
+        Unit unit(type);
+        kind = unit.getValue();
+      } catch (const AipsError&) {
+      throw AipsError (type +
+                       " is an unknown kind or unit for command "
+                       "'show units <kind>'");
+      }
+    }
+    showUnitKind (kind, UnitMap::giveDef());
+    showUnitKind (kind, UnitMap::giveSI());
+    showUnitKind (kind, UnitMap::giveCust());
+    showUnitKind (kind, UnitMap::giveUser());
+  }
+}
+
+void showMeasTypes (const String& type)
+{
+  // Because libtables cannot be dependent on libmeasures, the
+  // no Measures functions can be used to show the types.
+  Bool ok = False;
+  if (type.empty()  ||  type == "epoch") {
+    cout << "Epoch types:" << endl;
+    cout << "    LAST           Local Apparent Sidereal Time" << endl;
+    cout << "    LMST           Local Mean Sidereal Time" << endl;
+    cout << "    GMST1, GMST    Greenwich Mean ST1" << endl;
+    cout << "    GAST           Greenwich Apparent ST" << endl;
+    cout << "    UT1, UT" << endl;
+    cout << "    UT2" << endl;
+    cout << "    UTC" << endl;
+    cout << "    TAI, IAT" << endl;
+    cout << "    TDT, TT, ET" << endl;
+    cout << "    TCG" << endl;
+    cout << "    TDB" << endl;
+    cout << "    TCB" << endl;
+    ok = True;
+  }
+  if (type.empty()  ||  type == "position") {
+    cout << "Position types:" << endl;
+    cout << "    ITRF" << endl;
+    cout << "    WGS84" << endl;
+    ok = True;
+  }
+  if (type.empty()  ||  type == "direction") {
+    cout << "Direction types:" << endl;
+    cout << "    J2000       mean equator and equinox at J2000.0 (FK5)" << endl;
+    cout << "    JNAT        geocentric natural frame" << endl;
+    cout << "    JMEAN       mean equator and equinox at frame epoch" << endl;
+    cout << "    JTRUE       true equator and equinox at frame epoch" << endl;
+    cout << "    APP         apparent geocentric position" << endl;
+    cout << "    B1950       mean epoch and ecliptic at B1950.0" << endl;
+    cout << "    B1950_VLA   mean epoch(1979.9)) and ecliptic at B1950.0" << endl;
+    cout << "    BMEAN       mean equator and equinox at frame epoch" << endl;
+    cout << "    BTRUE       true equator and equinox at frame epoch" << endl;
+    cout << "    HADEC       topocentric HA and declination" << endl;
+    cout << "    AZEL        topocentric Azimuth and Elevation (N through E)" << endl;
+    cout << "    AZELSW      topocentric Azimuth and Elevation (S through W)" << endl;
+    cout << "    AZELNE      topocentric Azimuth and Elevation (N through E)" << endl;
+    cout << "    AZELGEO     geodetic Azimuth and Elevation (N through E)" << endl;
+    cout << "    AZELNEGEO   geodetic Azimuth and Elevation (N through E)" << endl;
+    cout << "    AZELSWGEO   geodetic Azimuth and Elevation (S through W)" << endl;
+    cout << "    ECLIPTIC    ecliptic for J2000 equator and equinox" << endl;
+    cout << "    MECLIPTIC   ecliptic for mean equator of date" << endl;
+    cout << "    TECLIPTIC   ecliptic for true equator of date" << endl;
+    cout << "    GALACTIC    galactic coordinates" << endl;
+    cout << "    SUPERGAL    supergalactic coordinates" << endl;
+    cout << "    ITRF        coordinates wrt ITRF Earth frame" << endl;
+    cout << "    TOPO        apparent topocentric position" << endl;
+    cout << "    ICRS        International Celestial reference system" << endl;
+    cout << "  Planets:" << endl;
+    cout << "    MERCURY" << endl;
+    cout << "    VENUS" << endl;
+    cout << "    MARS" << endl;
+    cout << "    JUPITER" << endl;
+    cout << "    SATURN" << endl;
+    cout << "    URANUS" << endl;
+    cout << "    NEPTUNE" << endl;
+    cout << "    PLUTO" << endl;
+    cout << "    SUN" << endl;
+    cout << "    MOON" << endl;
+    ok = True;
+  }
+  if (!ok) {
+    throw AipsError (type +
+                     " is an unknown type for command "
+                     "'show meastypes <type>'");
+  }
+}
+
+void showInfo (const String& cmd)
+{
+  // Split commands and skip possible empty first and last part.
+  Vector<String> parts = stringToVector (cmd, Regex("[ \t][ \t]*"));
+  int first = 0;
+  int last = parts.size()-1;
+  if (parts.size() > 0) {
+    if (parts[0].empty()) first++;
+    if (parts[last].empty()) last--;
+  }
+  if (first > last  ||  last-first > 1) {
+    cout << "Possible show commands:" << endl;
+    cout << "  show units [kind]       shows available units and/or prefixes" << endl;
+    cout << "       possible kinds: prefix, length, time, angle, temperature," << endl;
+    cout << "                       current, intensity, molar, mass, solidangle" << endl;
+    cout << "       If a unit is given as kind, all corresponding units are shown" << endl;
+    cout << "       Note that TaQL can convert between ANGLE and TIME" << endl;
+    cout << "  show meastypes [type]   shows available measure types" << endl;
+    cout << "       possible types: epoch, position, direction" << endl;
+  } else {
+    parts[first].downcase();
+    String type;
+    if (last > first) type = parts[last];
+    type.downcase();
+    if (parts[first] == "unit"  ||  parts[first] == "units") {
+      showUnits (type);
+    } else if (parts[first] == "meastype"  ||  parts[first] == "meastypes") {
+      showMeasTypes (type);
+    } else {
+      throw AipsError (cmd + " is an unknown SHOW command");
+    }
+  }
+}
+
+
 // Sort and select data.
 Table doCommand (bool printCommand, bool printSelect, bool printMeas,
                  bool printRows, bool printHeader, const String& delim,
@@ -548,6 +710,10 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
     }
     String s = str.substr(spos, epos-spos);
     s.downcase();
+    if (s == "show") {
+      showInfo (str.substr(epos));
+      return Table();
+    }
     addCalc = !(s=="select" || s=="update" || s=="insert" ||
                 s=="calc" || s=="delete" || s=="count"  || 
                 s=="create" || s=="createtable" ||
@@ -624,9 +790,7 @@ void showHelp()
   cerr << endl;
   cerr << "Any TaQL command can be used. If no command name is given, CALC is assumed." << endl;
   cerr << "For example:" << endl;
-  cerr << "   mean([select EXPOSURE from my.ms])" << endl;
-  cerr << "   mjdtodate([select distinct TIME from my.ms])    #print as dates" << endl;
-  cerr << "   date() + 60     #which date is 60 days after today" << endl;
+  cerr << "   date() + 107     #which date is 107 days after today" << endl;
   cerr << "   select from my.ms where ANTENNA1=1 giving sel.ms" << endl;
   cerr << "The result of a CALC command will be printed." << endl;
   cerr << "The number of resulting rows and the values of possible selected" << endl;
@@ -644,6 +808,10 @@ void showHelp()
   cerr << "   var =" << endl;
   cerr << "clears 'var' (removes it from the saved selections)." << endl;
   cerr << "Use command ? to show all saved selections." << endl;
+  cerr << endl;
+  cerr << "The 'show' command shows some information." << endl;
+  cerr << "   show units           show the possible units and prefixes" << endl;
+  cerr << "   show meastypes       show the possible measure types" << endl;
   cerr << endl;
   cerr << "taql can be started with a few options:" << endl;
   cerr << " -s or --style defines the TaQL style." << endl;

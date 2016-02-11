@@ -2,14 +2,10 @@
 # CASA measures
 #
 
-# If not defined, set the default DATA_DIR.
+# Check whether DATA_DIR contains data (only if measures is build)
 if (NOT DATA_DIR)
-   set (DATA_DIR ${CMAKE_INSTALL_PREFIX}/share/data/casacore)
+   set (DATA_DIR ${CMAKE_INSTALL_PREFIX}/share/casacore/data)
 endif (NOT DATA_DIR)
-
-## If it contains a single $, it needs to be doubled for make purposes.
-##string(REGEX REPLACE [$] $$ DATA_DIRX ${DATA_DIR})
-## set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DCASADATA='\"${DATA_DIRX}\"'")
 
 get_filename_component(ABS_DATA_DIR "${DATA_DIR}" ABSOLUTE)
 if (NOT EXISTS "${ABS_DATA_DIR}/ephemerides/")

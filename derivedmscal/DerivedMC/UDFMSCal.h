@@ -80,6 +80,7 @@ namespace casacore {
 //  <li> UVDIST is UV-distance selection using CASA syntax.
 //  <li> SPW is spectral window selection using CASA syntax.
 //  <li> FIELD is field selection using CASA syntax.
+//  <li> FEED is feed selection using CASA syntax.
 //  <li> ARRAY is array selection using CASA syntax.
 //  <li> SCAN is scan selection using CASA syntax.
 //  <li> STATE is state selection using CASA syntax.
@@ -119,7 +120,8 @@ namespace casacore {
                   UVWWVL, UVWWVLS, NEWUVWWVL, NEWUVWWVLS,
                   STOKES, SELECTION, GETVALUE};
     // Define the possible selection types.
-    enum SelType {BASELINE, TIME, UVDIST, SPW, FIELD, ARRAY, SCAN, STATE, OBS};
+    enum SelType {BASELINE, TIME, UVDIST, SPW, FIELD,
+                  FEED, ARRAY, SCAN, STATE, OBS};
 
     // Create object the given ColType and SelType.
     UDFMSCal (ColType, Int arg);
@@ -158,6 +160,7 @@ namespace casacore {
     static UDFBase* makeUVDist   (const String&);
     static UDFBase* makeSpw      (const String&);
     static UDFBase* makeField    (const String&);
+    static UDFBase* makeFeed     (const String&);
     static UDFBase* makeArray    (const String&);
     static UDFBase* makeScan     (const String&);
     static UDFBase* makeState    (const String&);

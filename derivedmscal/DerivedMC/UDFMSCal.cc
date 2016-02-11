@@ -31,6 +31,7 @@
 #include <casacore/ms/MSSel/MSUvDistGram.h>
 #include <casacore/ms/MSSel/MSSpwGram.h>
 #include <casacore/ms/MSSel/MSFieldGram.h>
+#include <casacore/ms/MSSel/MSFeedGram.h>
 #include <casacore/ms/MSSel/MSArrayGram.h>
 #include <casacore/ms/MSSel/MSStateGram.h>
 #include <casacore/ms/MSSel/MSStateParse.h>
@@ -122,6 +123,8 @@ namespace casacore {
     { return new UDFMSCal (SELECTION, SPW); }
   UDFBase* UDFMSCal::makeField (const String&)
     { return new UDFMSCal (SELECTION, FIELD); }
+  UDFBase* UDFMSCal::makeFeed (const String&)
+    { return new UDFMSCal (SELECTION, FEED); }
   UDFBase* UDFMSCal::makeArray (const String&)
     { return new UDFMSCal (SELECTION, ARRAY); }
   UDFBase* UDFMSCal::makeScan (const String&)
@@ -484,6 +487,31 @@ namespace casacore {
         itsDataNode = msFieldGramParseCommand (fieldtab, colAsTEN, selStr,
                                                fldid);
         msFieldGramParseDeleteNode();
+      }
+      break;
+    case FEED:
+      {
+        Table feedtab(table.keywordSet().asTable("FEED"));
+        TableExprNode f1 (table.col("FEED1"));
+        TableExprNode f2 (f1);
+        if (table.tableDesc().isColumn("FEED2")) {
+          f2 = TableExprNode (table.col("FEED2"));
+        }
+        Vector<Int> selectedFeed1;
+        Vector<Int> selectedFeed2;
+        Matrix<Int> selectedFeedPairs;
+        MSSelectionErrorHandler* curHandler = MSFeedParse::thisMSFErrorHandler;
+        UDFMSCalErrorHandler errorHandler;
+        MSFeedParse::thisMSFErrorHandler = &errorHandler;
+        try {
+          itsDataNode = msFeedGramParseCommand (feedtab, f1, f2, selStr, 
+                                                selectedFeed1, selectedFeed2,
+                                                selectedFeedPairs);
+        } catch (const std::exception&) {
+          MSFeedParse::thisMSFErrorHandler = curHandler;
+          throw;
+        }          
+        MSFeedParse::thisMSFErrorHandler = curHandler;
       }
       break;
     case ARRAY:
