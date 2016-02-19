@@ -1,3 +1,46 @@
+
+Position conversion functions:
+  MEAS.POS (type, position)                      convert to given type
+       POSITION is a synonym for POS
+  MEAS.ITRFXYZ (position)                        convert to ITRF XYZ coord
+  MEAS.ITRFLL (position)                         convert to ITRF LonLat
+       ITRFLONLAT is a synonym for ITRFLL
+  MEAS.ITRFH (position)                          convert to ITRF height
+       ITRFHEIGHT is a synonym for ITRFH
+  MEAS.WGS (position)                            convert to WGS84 XYZ coord
+       WGSXYZ is a synonym for WGS
+  MEAS.WGSLL (position)                          convert to WGS84 LonLat
+       WGSLONLAT is a synonym for WGSLL
+  MEAS.WGSH (position)                           convert to WGS84 height
+       WGSHEIGHT is a synonym for WGSH
+
+Epoch conversion functions:
+  MEAS.EPOCH (type, epoch [,position])           convert to given type
+  MEAS.LAST (epoch, position)                    convert to local sidereal time
+       LST is a synonym for LAST
+
+Direction conversion functions:
+  MEAS.DIR (type, direction [,epoch, position])  convert to given type
+       DIRECTION is a synonym for DIR
+  MEAS.HADEC (direction, epoch, position)        convert to Hourangle/Decl
+  MEAS.AZEL (direction, epoch, position)         convert to Azimuth/Elevation
+  MEAS.APP (direction, epoch, position)          convert to apparent
+       APPARENT is a synonym for APP
+  MEAS.J2000 (direction [,epoch, position])      convert to J2000
+  MEAS.B1950 (direction [,epoch, position])      convert to B1950
+  MEAS.ECL (direction [,epoch, position])
+       ECLIPTIC is a synonym for ECL
+  MEAS.GAL (direction [,epoch, position])
+       GALACTIC is a synonym for GAL
+  MEAS.SGAL (direction [,epoch, position])
+       SUPERGAL is a synonym for SGAL
+       SUPERGALACTIC is a synonym for SGAL
+  MEAS.ITRFD (direction [,epoch, position])      convert to ITRF
+       ITRFDIR is a synonym for ITRFD
+       ITRFDIRECTION is a synonym for ITRFD
+  MEAS.RISET (direction, epoch, position)        get rise/set time
+       RISESET is a synonym for RISET
+
 Unit: m
 [2.99486, 0.346737, 3.98881]
 Unit: d

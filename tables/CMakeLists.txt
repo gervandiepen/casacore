@@ -163,6 +163,7 @@ TaQL/TaQLNodeRep.cc
 TaQL/TaQLNodeResult.cc
 TaQL/TaQLNodeVisitor.cc
 TaQL/TaQLResult.cc
+TaQL/TaQLShow.cc
 TaQL/TaQLStyle.cc
 TaQL/TableExprData.cc
 TaQL/TableExprId.cc
@@ -396,6 +397,7 @@ TaQL/TaQLNodeRep.h
 TaQL/TaQLNodeResult.h
 TaQL/TaQLNodeVisitor.h
 TaQL/TaQLResult.h
+TaQL/TaQLShow.h
 TaQL/TaQLStyle.h
 TaQL/TableExprData.h
 TaQL/TableExprId.h

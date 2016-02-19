@@ -103,6 +103,7 @@ INTERSECT [Ii][Nn][Tt][Ee][Rr][Ss][Ee][Cc][Tt]
 EXCEPT    ([Ee][Xx][Cc][Ee][Pp][Tt])|([Mm][Ii][Nn][Uu][Ss])
 STYLE     [Uu][Ss][Ii][Nn][Gg]{WHITE}[Ss][Tt][Yy][Ll][Ee]{WHITE1}
 TIMEWORD  [Tt][Ii][Mm][Ee]
+SHOW      [Ss][Hh][Oo][Ww]
 SELECT    [Ss][Ee][Ll][Ee][Cc][Tt]
 UPDATE    [Uu][Pp][Dd][Aa][Tt][Ee]
 INSERT    [Ii][Nn][Ss][Ee][Rr][Tt]
@@ -598,6 +599,7 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 
  /* In the Exprstate the word TIME is a normal column or function name.
     Otherwise it is the TIME keyword (to show timings).
+    The same for SHOW.
  */
 <EXPRstate,FROMstate,CRETABstate,GIVINGstate>{TIMEWORD} { 
             tableGramPosition() += yyleng;
@@ -606,9 +608,20 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
             TaQLNode::theirNodesCreated.push_back (lvalp->val);
 	    return NAME;
 	  }
-{TIMEWORD}    {
+{TIMEWORD} {
             tableGramPosition() += yyleng;
 	    return TIMING;
+	  }
+<EXPRstate,FROMstate,CRETABstate,GIVINGstate>{SHOW} { 
+            tableGramPosition() += yyleng;
+            lvalp->val = new TaQLConstNode(
+                new TaQLConstNodeRep (tableGramRemoveEscapes (TableGramtext)));
+            TaQLNode::theirNodesCreated.push_back (lvalp->val);
+	    return NAME;
+	  }
+{SHOW}    {
+            tableGramPosition() += yyleng;
+	    return SHOW;
 	  }
             
  /* In the FROM clause a shorthand (for a table) can be given.

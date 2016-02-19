@@ -139,6 +139,7 @@ public:
   virtual TaQLNodeResult visitRenDropNode  (const TaQLRenDropNodeRep& node);
   virtual TaQLNodeResult visitAddRowNode   (const TaQLAddRowNodeRep& node);
   virtual TaQLNodeResult visitConcTabNode  (const TaQLConcTabNodeRep& node);
+  virtual TaQLNodeResult visitShowNode     (const TaQLShowNodeRep& node);
   // </group>
 
   // Get the actual result object from the result.

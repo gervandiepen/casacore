@@ -1890,5 +1890,31 @@ TaQLConcTabNodeRep* TaQLConcTabNodeRep::restore (AipsIO& aio)
   return new TaQLConcTabNodeRep (tableName, tables, subtables);
 }
 
+TaQLShowNodeRep::TaQLShowNodeRep (const TaQLMultiNode& names)
+  : TaQLNodeRep (TaQLNode_Show),
+    itsNames (names)
+{}
+TaQLShowNodeRep::~TaQLShowNodeRep()
+{}
+TaQLNodeResult TaQLShowNodeRep::visit (TaQLNodeVisitor& visitor) const
+{
+  return visitor.visitShowNode (*this);
+}
+void TaQLShowNodeRep::show (std::ostream& os) const
+{
+  if (itsNames.isValid()) {
+    itsNames.show (os);
+  }
+}
+void TaQLShowNodeRep::save (AipsIO& aio) const
+{
+  itsNames.saveNode (aio);
+}
+TaQLShowNodeRep* TaQLShowNodeRep::restore (AipsIO& aio)
+{
+  TaQLMultiNode names = TaQLNode::restoreMultiNode (aio);
+  return new TaQLShowNodeRep (names);
+}
+
 
 } //# NAMESPACE CASACORE - END

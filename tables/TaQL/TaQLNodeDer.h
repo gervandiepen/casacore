@@ -1309,6 +1309,34 @@ public:
 };
 
 
+// <summary>
+// Raw TaQL parse tree node defining a show command.
+// </summary>
+// <use visibility=local>
+// <reviewed reviewer="" date="" tests="tTaQLNode">
+// </reviewed>
+// <prerequisite>
+//# Classes you should understand before using this one.
+//   <li> <linkto class=TaQLNodeRep>TaQLNodeRep</linkto>
+// </prerequisite>
+// <synopsis> 
+// This class is a TaQLNodeRep holding the parts of the show command.
+// </synopsis> 
+
+class TaQLShowNodeRep: public TaQLNodeRep
+{
+public:
+  TaQLShowNodeRep (const TaQLMultiNode& names);
+  virtual ~TaQLShowNodeRep();
+  virtual TaQLNodeResult visit (TaQLNodeVisitor&) const;
+  virtual void show (std::ostream& os) const;
+  virtual void save (AipsIO& aio) const;
+  static TaQLShowNodeRep* restore (AipsIO& aio);
+
+  TaQLMultiNode itsNames;
+};
+
+
 } //# NAMESPACE CASACORE - END
 
 #endif

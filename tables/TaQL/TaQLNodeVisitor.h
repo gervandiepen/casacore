@@ -112,6 +112,7 @@ public:
   virtual TaQLNodeResult visitRenDropNode  (const TaQLRenDropNodeRep& node) = 0;
   virtual TaQLNodeResult visitAddRowNode   (const TaQLAddRowNodeRep& node) = 0;
   virtual TaQLNodeResult visitConcTabNode  (const TaQLConcTabNodeRep& node) = 0;
+  virtual TaQLNodeResult visitShowNode     (const TaQLShowNodeRep& node) = 0;
   // </group>
 
 protected:

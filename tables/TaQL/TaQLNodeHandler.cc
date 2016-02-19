@@ -27,6 +27,7 @@
 
 #include <casacore/tables/TaQL/TaQLNodeHandler.h>
 #include <casacore/tables/TaQL/TaQLNode.h>
+#include <casacore/tables/TaQL/TaQLShow.h>
 #include <casacore/tables/Tables/TableError.h>
 #include <casacore/casa/OS/Directory.h>
 #include <casacore/casa/Utilities/Regex.h>
@@ -955,6 +956,26 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     }
     TaQLNodeHRValue* hr = new TaQLNodeHRValue();
     hr->setTable (conctab);
+    return hr;
+  }
+
+  TaQLNodeResult TaQLNodeHandler::visitShowNode
+  (const TaQLShowNodeRep& node)
+  {
+    Vector<String> parts;
+    if (node.itsNames.isValid()) {
+      const std::vector<TaQLNode>& names = node.itsNames.getMultiRep()->itsNodes;
+      parts.resize (names.size());
+      for (uInt i=0; i<names.size(); ++i) {
+        TaQLNodeResult result = visitNode (names[i]);
+        const TaQLNodeHRValue& res = getHR(result);
+        parts[i] = res.getExpr().getString(0);
+      }
+    }
+    String info = TaQLShow::getInfo (parts);
+    TaQLNodeHRValue* hr = new TaQLNodeHRValue();
+    hr->setExpr (TableExprNode(info));
+    hr->setString ("show");
     return hr;
   }
 

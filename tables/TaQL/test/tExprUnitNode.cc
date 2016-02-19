@@ -102,7 +102,7 @@ void checkScaDouble (const String& str, const TableExprId& exprid,
 void doIt()
 {
   TableExprNode e30(30);
-  e30.useUnit("deg");
+  e30 = e30.useUnit("deg");
   TableExprNode e1(2);
   checkScaInt ("int 2", 0, e1, 2);
   TableExprNode e2 = e1.useUnit (Unit("cm"));
@@ -117,7 +117,7 @@ void doIt()
   checkScaDouble ("e3-2*e2", 0, e3-2*e2, -0.02, "m");
   checkScaDouble ("e2*e3", 0, e2*e3, 0.04, "cm.m");
   checkScaDouble ("e3*e2", 0, e3*e2, 0.04, "m.cm");
-  checkScaDouble ("e3/e2", 0, e3/e2, 0.01, "m/(cm)");
+  checkScaDouble ("e3/e2", 0, e3/e2, 1., "");
   checkScaDouble ("e3%e2", 0, e3%e2, 0.02, "m");
   // Comparison
   checkScaBool ("e3*e2==e2*e3", 0, e3*e2==e2*e3, True);
@@ -185,8 +185,15 @@ void doIt()
   checkScaDouble ("iif(T,e3,e2+1)", 0, iif(True,e3,e2+1), 0.02, "m"); 
   checkScaDouble ("iif(F,e3,e2+1)", 0, iif(False,e3,e2+1), 0.03, "m"); 
 
+  // Check conversion from angle to time and back.
+  checkScaDouble ("30deg h", 0, e30.useUnit("h"), 2., "h");
+  TableExprNode e12(12);
+  e12 = e12.useUnit("min");
+  checkScaDouble ("12min arcmin", 0, e12.useUnit("arcmin"), 180., "arcmin");
+
+  // Check erronous expressions.
   TableExprNode s2(3);
-  s2.useUnit ("rad");
+  s2 = s2.useUnit ("rad");
   checkFailure ("e2+s2", e2+s2);
   checkFailure ("e2-s2", e2-s2);
   checkFailure ("sin(e2)", sin(e2));

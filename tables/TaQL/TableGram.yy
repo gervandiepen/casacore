@@ -41,6 +41,7 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 
 %token STYLE
 %token TIMING
+%token SHOW
 %token SELECT
 %token UPDATE
 %token UPDSET
@@ -115,6 +116,7 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <node> tabalias
 %type <node> tfnamen
 %type <node> tfname
+%type <node> showcomm
 %type <nodeselect> selcomm
 %type <node> updcomm
 %type <node> inscomm
@@ -151,6 +153,8 @@ The grammar has 1 shift/reduce conflict which is resolved in a correct way.
 %type <nodelist> columns
 %type <nodelist> nmcolumns
 %type <nodelist> colspecs
+%type <nodelist> showlist
+%type <nodelist> showflds
 %type <node> updrow
 %type <nodelist> updlist
 %type <node> updexpr
@@ -282,6 +286,32 @@ command:   selcomm
              { TaQLNode::theirNode = *$1; }
          | nestedcomm
              { TaQLNode::theirNode = *$1; }
+         | showcomm
+             { TaQLNode::theirNode = *$1; }
+         ;
+
+showcomm:   SHOW showlist {
+               $$ = new TaQLNode(new TaQLShowNodeRep (*$2));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         ;
+
+showlist:  {      /* no list */
+               $$ = new TaQLMultiNode();
+	       TaQLNode::theirNodesCreated.push_back ($$);
+           }
+         | showflds
+             { $$ = $1; }
+
+showflds:  showflds namefld {
+               $$ = $1;
+               $$->add (*$2);
+           }
+         | namefld {
+	       $$ = new TaQLMultiNode(False);
+	       TaQLNode::theirNodesCreated.push_back ($$);
+               $$->add (*$1);
+           }
          ;
 
 /* The commands (besides SELECT) that can be used in a nested FROM */
@@ -875,6 +905,28 @@ tabnmtyp:  tabname {
                     new TaQLGivingNodeRep ("", *$2));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
+/*
+         | tabname LIKE tabname {
+	       $$ = new TaQLNode(
+                    new TaQLGivingNodeRep ($1->getString(), TaQLMultiNode()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | tabname LIKE tabname AS tabnmtyps {
+	       $$ = new TaQLNode(
+                    new TaQLGivingNodeRep ($1->getString(), *$5));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | tabname FROM tabname {
+	       $$ = new TaQLNode(
+                    new TaQLGivingNodeRep ($1->getString(), TaQLMultiNode()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | tabname FROM tabname AS tabnmtyps {
+	       $$ = new TaQLNode(
+                    new TaQLGivingNodeRep ($1->getString(), *$5));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+*/
          ;
 
 tabnmtyps: NAME {  /* PLAIN_BIG, etc. for backward compatibility */
@@ -1033,6 +1085,28 @@ colspec:   NAME NAME {
 		                           *$4));
 	       TaQLNode::theirNodesCreated.push_back ($$);
 	   }
+/*
+         | NAME LIKE namefld {
+	       $$ = new TaQLNode(
+		    new TaQLColSpecNodeRep($1->getString(), $3->getString(),
+		                           TaQLMultiNode()));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | NAME LIKE namefld srecfield {	
+               TaQLMultiNode re(False);
+	       re.add (*$4);
+	       $$ = new TaQLNode(
+                    new TaQLColSpecNodeRep($1->getString(), $3->getString(),
+		                           re));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+         | NAME LIKE namefld LBRACKET recexpr RBRACKET {
+	       $$ = new TaQLNode(
+                    new TaQLColSpecNodeRep($1->getString(), $3->getString(),
+		                           *$5));
+	       TaQLNode::theirNodesCreated.push_back ($$);
+	   }
+*/
          ;
 
 tables:    tabalias {

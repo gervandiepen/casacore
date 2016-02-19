@@ -37,7 +37,6 @@
 #include <casacore/casa/Arrays/ArrayIO.h>
 #include <casacore/casa/Quanta/MVPosition.h>
 #include <casacore/casa/Quanta/MVAngle.h>
-#include <casacore/casa/Quanta/UnitMap.h>
 #include <casacore/casa/BasicSL/Complex.h>
 #include <casacore/casa/BasicMath/Math.h>
 #include <casacore/casa/Utilities/Assert.h>
@@ -529,164 +528,31 @@ void showExpr(const TableExprNode& expr)
   }
 }
 
-
-void showUnitKind (const UnitVal& kind, const map<String, UnitName>& units)
+void showParseError (const TableParseError& x)
 {
-  for (map<String,UnitName>::const_iterator iter = units.begin();
-       iter != units.end(); ++iter) {
-    if (Unit(iter->first).getValue() == kind) {
-      cout << "    " << iter->second << endl;
+  // Try to highlight parse error on a tty. A color init
+  //# string consists of one or more of the following numeric codes:
+  //# Attribute codes:
+  //# 00=none 01=bold 04=underscore 05=blink 07=reverse 08=concealed
+  //# Text color codes:
+  //# 30=black 31=red 32=green 33=yellow 34=blue 35=magenta 36=cyan 37=white
+  //# Background color codes:
+  //# 40=black 41=red 42=green 43=yellow 44=blue 45=magenta 46=cyan 47=white
+  // cerr has fd 2 (per C++ standard)
+  const String& msg(x.getMesg());
+  if (isatty(2)  &&  x.pos() >= 0) {
+    // Cater for leading part of the message.
+    int errLen = x.token().size();
+    int errPos = x.pos() - errLen + 23;
+    // For now use yellow background (43) to highlight the error.
+    cerr << msg.substr(0, errPos) << "\033[1;43m"
+         << msg.substr(errPos, errLen);
+    cerr << "\033[0m" << msg.substr(errPos+errLen) << endl;
+    if (errLen == 0) {
+      cerr << "Probably a missing parenthesis or bracket" << endl;
     }
-  }
-}
-
-void showUnits (const String& type)
-{
-  if (type.empty()) {
-    UnitMap::list (cout);
-  } else if (type == "prefix") {
-    UnitMap::listPref (cout);
   } else {
-    UnitVal kind;
-    if (type == "length") {
-      kind = UnitVal::LENGTH;
-    } else if (type == "mass") {
-      kind = UnitVal::MASS;
-    } else if (type == "time") {
-      kind = UnitVal::TIME;
-    } else if (type == "current") {
-      kind = UnitVal::CURRENT;
-    } else if (type == "temperature") {
-      kind = UnitVal::TEMPERATURE;
-    } else if (type == "intensity") {
-      kind = UnitVal::INTENSITY;
-    } else if (type == "molar") {
-      kind = UnitVal::MOLAR;
-    } else if (type == "angle") {
-      kind = UnitVal::ANGLE;
-    } else if (type == "solidangle") {
-      kind = UnitVal::SOLIDANGLE;
-    } else {
-      try {
-        Unit unit(type);
-        kind = unit.getValue();
-      } catch (const AipsError&) {
-      throw AipsError (type +
-                       " is an unknown kind or unit for command "
-                       "'show units <kind>'");
-      }
-    }
-    showUnitKind (kind, UnitMap::giveDef());
-    showUnitKind (kind, UnitMap::giveSI());
-    showUnitKind (kind, UnitMap::giveCust());
-    showUnitKind (kind, UnitMap::giveUser());
-  }
-}
-
-void showMeasTypes (const String& type)
-{
-  // Because libtables cannot be dependent on libmeasures, the
-  // no Measures functions can be used to show the types.
-  Bool ok = False;
-  if (type.empty()  ||  type == "epoch") {
-    cout << "Epoch types:" << endl;
-    cout << "    LAST           Local Apparent Sidereal Time" << endl;
-    cout << "    LMST           Local Mean Sidereal Time" << endl;
-    cout << "    GMST1, GMST    Greenwich Mean ST1" << endl;
-    cout << "    GAST           Greenwich Apparent ST" << endl;
-    cout << "    UT1, UT" << endl;
-    cout << "    UT2" << endl;
-    cout << "    UTC" << endl;
-    cout << "    TAI, IAT" << endl;
-    cout << "    TDT, TT, ET" << endl;
-    cout << "    TCG" << endl;
-    cout << "    TDB" << endl;
-    cout << "    TCB" << endl;
-    ok = True;
-  }
-  if (type.empty()  ||  type == "position") {
-    cout << "Position types:" << endl;
-    cout << "    ITRF" << endl;
-    cout << "    WGS84" << endl;
-    ok = True;
-  }
-  if (type.empty()  ||  type == "direction") {
-    cout << "Direction types:" << endl;
-    cout << "    J2000       mean equator and equinox at J2000.0 (FK5)" << endl;
-    cout << "    JNAT        geocentric natural frame" << endl;
-    cout << "    JMEAN       mean equator and equinox at frame epoch" << endl;
-    cout << "    JTRUE       true equator and equinox at frame epoch" << endl;
-    cout << "    APP         apparent geocentric position" << endl;
-    cout << "    B1950       mean epoch and ecliptic at B1950.0" << endl;
-    cout << "    B1950_VLA   mean epoch(1979.9)) and ecliptic at B1950.0" << endl;
-    cout << "    BMEAN       mean equator and equinox at frame epoch" << endl;
-    cout << "    BTRUE       true equator and equinox at frame epoch" << endl;
-    cout << "    HADEC       topocentric HA and declination" << endl;
-    cout << "    AZEL        topocentric Azimuth and Elevation (N through E)" << endl;
-    cout << "    AZELSW      topocentric Azimuth and Elevation (S through W)" << endl;
-    cout << "    AZELNE      topocentric Azimuth and Elevation (N through E)" << endl;
-    cout << "    AZELGEO     geodetic Azimuth and Elevation (N through E)" << endl;
-    cout << "    AZELNEGEO   geodetic Azimuth and Elevation (N through E)" << endl;
-    cout << "    AZELSWGEO   geodetic Azimuth and Elevation (S through W)" << endl;
-    cout << "    ECLIPTIC    ecliptic for J2000 equator and equinox" << endl;
-    cout << "    MECLIPTIC   ecliptic for mean equator of date" << endl;
-    cout << "    TECLIPTIC   ecliptic for true equator of date" << endl;
-    cout << "    GALACTIC    galactic coordinates" << endl;
-    cout << "    SUPERGAL    supergalactic coordinates" << endl;
-    cout << "    ITRF        coordinates wrt ITRF Earth frame" << endl;
-    cout << "    TOPO        apparent topocentric position" << endl;
-    cout << "    ICRS        International Celestial reference system" << endl;
-    cout << "  Planets:" << endl;
-    cout << "    MERCURY" << endl;
-    cout << "    VENUS" << endl;
-    cout << "    MARS" << endl;
-    cout << "    JUPITER" << endl;
-    cout << "    SATURN" << endl;
-    cout << "    URANUS" << endl;
-    cout << "    NEPTUNE" << endl;
-    cout << "    PLUTO" << endl;
-    cout << "    SUN" << endl;
-    cout << "    MOON" << endl;
-    ok = True;
-  }
-  if (!ok) {
-    throw AipsError (type +
-                     " is an unknown type for command "
-                     "'show meastypes <type>'");
-  }
-}
-
-void showInfo (const String& cmd)
-{
-  // Split commands and skip possible empty first and last part.
-  Vector<String> parts = stringToVector (cmd, Regex("[ \t][ \t]*"));
-  int first = 0;
-  int last = parts.size()-1;
-  if (parts.size() > 0) {
-    if (parts[0].empty()) first++;
-    if (parts[last].empty()) last--;
-  }
-  if (first > last  ||  last-first > 1) {
-    cout << "Possible show commands:" << endl;
-    cout << "  show units [kind]       shows available units and/or prefixes" << endl;
-    cout << "       possible kinds: prefix, length, time, angle, temperature," << endl;
-    cout << "                       current, intensity, molar, mass, solidangle" << endl;
-    cout << "       If a unit is given as kind, all corresponding units are shown" << endl;
-    cout << "       Note that TaQL can convert between ANGLE and TIME" << endl;
-    cout << "  show meastypes [type]   shows available measure types" << endl;
-    cout << "       possible types: epoch, position, direction" << endl;
-  } else {
-    parts[first].downcase();
-    String type;
-    if (last > first) type = parts[last];
-    type.downcase();
-    if (parts[first] == "unit"  ||  parts[first] == "units") {
-      showUnits (type);
-    } else if (parts[first] == "meastype"  ||  parts[first] == "meastypes") {
-      showMeasTypes (type);
-    } else {
-      throw AipsError (cmd + " is an unknown SHOW command");
-    }
+    cerr << msg <<endl;
   }
 }
 
@@ -710,13 +576,9 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
     }
     String s = str.substr(spos, epos-spos);
     s.downcase();
-    if (s == "show") {
-      showInfo (str.substr(epos));
-      return Table();
-    }
     addCalc = !(s=="select" || s=="update" || s=="insert" ||
                 s=="calc" || s=="delete" || s=="count"  || 
-                s=="create" || s=="createtable" ||
+                s=="show" || s=="create" || s=="createtable" ||
                 s=="alter" || s=="altertable" ||
                 s=="using"  || s=="usingstyle"  || s=="time");
     showResult = (s=="select");
@@ -986,26 +848,26 @@ void askCommands (bool printCommand, bool printSelect, bool printMeas,
   TableMap tables;
   uInt inx=0;
   while (True) {
-    String str;
-    if (commands.empty()) {
-      if (! readLineSkip (str, "TaQL> ")) {
-        cerr << endl;
-        break;
+    try {
+      String str;
+      if (commands.empty()) {
+        if (! readLineSkip (str, "TaQL> ")) {
+          cerr << endl;
+          break;
+        }
+      } else {
+        if (inx >= commands.size()) {
+          break;
+        }
+        str = commands[inx++];
       }
-    } else {
-      if (inx >= commands.size()) {
+      if (str == "h"  ||  str == "help") {
+        showHelp();
+      } else if (str == "?") {
+        showTableMap (tables);
+      } else if (str == "exit"  ||  str == "quit"  ||  str == "q") {
         break;
-      }
-      str = commands[inx++];
-    }
-    if (str == "h"  ||  str == "help") {
-      showHelp();
-    } else if (str == "?") {
-      showTableMap (tables);
-    } else if (str == "exit"  ||  str == "quit"  ||  str == "q") {
-      break;
-    } else {
-      try {
+      } else {
         String varName;
         String::size_type assLen = varassRE.match (str.c_str(), str.size());
         if (assLen != String::npos) {
@@ -1051,9 +913,11 @@ void askCommands (bool printCommand, bool printSelect, bool printMeas,
             }
           }
         }
-      } catch (AipsError& x) {
-        cerr << x.getMesg() << endl;
       }
+    } catch (const TableParseError& x) {
+      showParseError (x);
+    } catch (const AipsError& x) {
+      cerr << x.getMesg() << endl;
     }
   }
 #ifdef HAVE_READLINE
@@ -1190,7 +1054,9 @@ int main (int argc, const char* argv[])
                    printRows!=0, printHeader!=0,
                    delim, prefix, vector<String>());
     }
-  } catch (AipsError& x) {
+  } catch (const TableParseError& x) {
+    showParseError (x);
+  } catch (const AipsError& x) {
     cerr << "\nCaught an exception: " << x.getMesg() << endl;
     return 1;
   } 

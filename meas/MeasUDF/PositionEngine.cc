@@ -471,10 +471,10 @@ namespace casacore {
         } else {
           if (toValueType == 3) {
             // Get as xyz.
-            outIter.vector() = resIter->getValue().getValue();
+            outIter.vector() = pos.getValue().getValue();
           } else {
             // Get as lon,lat.
-            outIter.vector() = resIter->getValue().getAngle().getValue();
+            outIter.vector() = pos.getValue().getAngle().getValue();
           }
           outIter.next();
         }
