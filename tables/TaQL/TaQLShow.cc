@@ -81,17 +81,26 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
   void TaQLShow::showTable (ostream& os, const Vector<String>& parts)
   {
-    if (parts.empty()  ||  parts[0].empty()) {
-      throw AipsError ("A table name must be given after 'show table'");
+    if (parts.size() < 2  ||  parts[1].empty()) {
+      os << "Usage:   show table tablename [opt1 opt2 ...]" << endl;
+      os << "    Options   default"<<endl;
+      os << "         dm      nodm   show data managers?" << endl;
+      os << "        col       col   show column descriptions?" << endl;
+      os << "       sort    nosort   show columns alphabetically?" << endl;
+      os << "        key     nokey   show table and column keywords?"<< endl;
+      os << "     tabkey  notabkey   show table keywords?" << endl;
+      os << "     colkey  nocolkey   show column keywords?" << endl;
+      os << "      recur   norecur   show subtables recursively?" << endl;
+      return;
     }
-    Table table(parts[0]);
+    Table table(parts[1]);
     Bool showdm = False;
     Bool showcol = True;
     Bool showsub = False;
     Bool sortcol = False;
     Bool tabkey = False;
     Bool colkey = False;
-    for (uInt i=1; i<parts.size(); ++i) {
+    for (uInt i=2; i<parts.size(); ++i) {
       String opt(parts[i]);
       opt.downcase();
       Bool fop = True;
@@ -107,13 +116,16 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
         sortcol = fop;
       } else if (opt == "key") {
         tabkey = fop;
+        colkey = fop;
+      } else if (opt == "tabkey") {
+        tabkey = fop;
       } else if (opt == "colkey") {
         colkey = fop;
-      } else if (opt == "sub") {
+      } else if (opt == "recur") {
         showsub = fop;
       } else {
         throw AipsError (parts[i] + " is an unknown show table option; use: "
-                         "dm col sort key colkey sub");
+                         "dm col sort key colkey recur");
       }
     }
     table.showStructure (os, showdm, showcol, showsub, sortcol);

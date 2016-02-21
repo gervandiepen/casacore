@@ -303,11 +303,11 @@ showlist:  {      /* no list */
          | showflds
              { $$ = $1; }
 
-showflds:  showflds namefld {
+showflds:  showflds tabname {
                $$ = $1;
                $$->add (*$2);
            }
-         | namefld {
+         | tabname {
 	       $$ = new TaQLMultiNode(False);
 	       TaQLNode::theirNodesCreated.push_back ($$);
                $$->add (*$1);

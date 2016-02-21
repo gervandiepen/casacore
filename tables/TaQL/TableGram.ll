@@ -621,6 +621,7 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 	  }
 {SHOW}    {
             tableGramPosition() += yyleng;
+            BEGIN(FROMstate);
 	    return SHOW;
 	  }
             
