@@ -972,7 +972,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
         parts[i] = res.getExpr().getString(0);
       }
     }
-    String info = TaQLShow::getInfo (parts);
+    String info = TaQLShow::getInfo (parts, node.style());
     TaQLNodeHRValue* hr = new TaQLNodeHRValue();
     hr->setExpr (TableExprNode(info));
     hr->setString ("show");

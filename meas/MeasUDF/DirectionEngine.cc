@@ -508,6 +508,7 @@ namespace casacore {
       if (rise < start) rise += 1;
       set  = ts.getValue().get();
       if (set < start) set += 1;
+      if (set < rise)  set += 1;
     }
   }
 

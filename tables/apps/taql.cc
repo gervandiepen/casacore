@@ -544,6 +544,9 @@ void showParseError (const TableParseError& x)
     // Cater for leading part of the message.
     int errLen = x.token().size();
     int errPos = x.pos() - errLen + 23;
+    if (msg[errPos + errLen -1] == '\n') {
+      errLen--;
+    }
     // For now use yellow background (43) to highlight the error.
     cerr << msg.substr(0, errPos) << "\033[1;43m"
          << msg.substr(errPos, errLen);
@@ -578,7 +581,7 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
     s.downcase();
     addCalc = !(s=="select" || s=="update" || s=="insert" ||
                 s=="calc" || s=="delete" || s=="count"  || 
-                s=="show" || s=="create" || s=="createtable" ||
+                s=="show" || s=="help" || s=="create" || s=="createtable" ||
                 s=="alter" || s=="altertable" ||
                 s=="using"  || s=="usingstyle"  || s=="time");
     showResult = (s=="select");

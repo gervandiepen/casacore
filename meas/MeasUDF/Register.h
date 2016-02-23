@@ -48,11 +48,11 @@ namespace casacore {
   // <synopsis>
   // General meas function to show the available functions.
   // </synopsis>
-  class ShowMeasUDF: public UDFBase
+  class HelpMeasUDF: public UDFBase
   {
   public:
     // Function to create an object.
-    static UDFBase* makeSHOW (const String&);
+    static UDFBase* makeHELP (const String&);
 
     // Setup the object.
     virtual void setup (const Table&, const TaQLStyle&);
@@ -61,9 +61,9 @@ namespace casacore {
     virtual String getString (const TableExprId& id);
 
     // Show the possible functions.
-    static void showFuncsPosition  (std::ostream&);
-    static void showFuncsEpoch     (std::ostream&);
-    static void showFuncsDirection (std::ostream&);
+    static void showFuncsPosition  (std::ostream&, Bool showTypes);
+    static void showFuncsEpoch     (std::ostream&, Bool showTypes);
+    static void showFuncsDirection (std::ostream&, Bool showTypes);
   };
 }
 

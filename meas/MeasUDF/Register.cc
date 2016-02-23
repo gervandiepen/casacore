@@ -29,18 +29,23 @@
 #include <casacore/meas/MeasUDF/PositionUDF.h>
 #include <casacore/meas/MeasUDF/EpochUDF.h>
 #include <casacore/meas/MeasUDF/DirectionUDF.h>
+#include <casacore/measures/Measures/MeasTable.h>
+#include <casacore/tables/TaQL/TaQLShow.h>
+#include <casacore/casa/Utilities/GenSort.h>
 #include <casacore/casa/Utilities/Assert.h>
 #include <casacore/casa/Exceptions/Error.h>
 #include <ostream>
 #include <sstream>
+#include <iomanip>
 
 using namespace casacore;
+using namespace std;
 
 void register_meas()
 {
   // Register the TaQL Meas UDFs.
   // All of them should be shown in the showFuncs functions below.
-  UDFBase::registerUDF ("meas.SHOW",          ShowMeasUDF::makeSHOW);
+  UDFBase::registerUDF ("meas.HELP",          HelpMeasUDF::makeHELP);
   UDFBase::registerUDF ("meas.POS",           PositionUDF::makePOS);
   UDFBase::registerUDF ("meas.POSITION",      PositionUDF::makePOS);
   UDFBase::registerUDF ("meas.ITRFXYZ",       PositionUDF::makeITRFXYZ);
@@ -82,62 +87,94 @@ void register_meas()
 
 namespace casacore {
 
-  void ShowMeasUDF::showFuncsEpoch (std::ostream& os)
+  void HelpMeasUDF::showFuncsEpoch (ostream& os, Bool showTypes)
   {
-    os << std::endl << "Epoch conversion functions:" << std::endl;
-    os << "  MEAS.EPOCH (type, epoch [,position])           convert to given type" << std::endl;
-    os << "  MEAS.LAST (epoch, position)                    convert to local sidereal time" << std::endl;
-    os << "       LST is a synonym for LAST" << std::endl;
+    os << "Epoch conversion functions:" << endl;
+    os << "  MEAS.EPOCH (type, epoch [,position])           convert to given type" << endl;
+    os << "  MEAS.LAST (epoch, position)                    convert to local sidereal time" << endl;
+    os << "       LST is a synonym for LAST" << endl;
+    if (showTypes) {
+      os << endl;
+      TaQLShow::showMeasTypes (os, "epoch");
+    }
   }
 
-  void ShowMeasUDF::showFuncsPosition (std::ostream& os)
+  void HelpMeasUDF::showFuncsPosition (ostream& os, Bool showTypes)
   {
-    os << std::endl << "Position conversion functions:" << std::endl;
-    os << "  MEAS.POS (type, position)                      convert to given type" << std::endl;
-    os << "       POSITION is a synonym for POS" << std::endl;
-    os << "  MEAS.ITRFXYZ (position)                        convert to ITRF XYZ coord" << std::endl;
-    os << "  MEAS.ITRFLL (position)                         convert to ITRF LonLat" << std::endl;
-    os << "       ITRFLONLAT is a synonym for ITRFLL" << std::endl;
-    os << "  MEAS.ITRFH (position)                          convert to ITRF height" << std::endl;
-    os << "       ITRFHEIGHT is a synonym for ITRFH" << std::endl;
-    os << "  MEAS.WGS (position)                            convert to WGS84 XYZ coord" << std::endl;
-    os << "       WGSXYZ is a synonym for WGS" << std::endl;
-    os << "  MEAS.WGSLL (position)                          convert to WGS84 LonLat" << std::endl;
-    os << "       WGSLONLAT is a synonym for WGSLL" << std::endl;
-    os << "  MEAS.WGSH (position)                           convert to WGS84 height" << std::endl;
-    os << "       WGSHEIGHT is a synonym for WGSH" << std::endl;
+    os << "Position conversion functions:" << endl;
+    os << "  MEAS.POS (type, position)                      convert to given type" << endl;
+    os << "       POSITION is a synonym for POS" << endl;
+    os << "  MEAS.ITRFXYZ (position)                        convert to ITRF XYZ coord" << endl;
+    os << "  MEAS.ITRFLL (position)                         convert to ITRF LonLat" << endl;
+    os << "       ITRFLONLAT is a synonym for ITRFLL" << endl;
+    os << "  MEAS.ITRFH (position)                          convert to ITRF height" << endl;
+    os << "       ITRFHEIGHT is a synonym for ITRFH" << endl;
+    os << "  MEAS.WGS (position)                            convert to WGS84 XYZ coord" << endl;
+    os << "       WGSXYZ is a synonym for WGS" << endl;
+    os << "  MEAS.WGSLL (position)                          convert to WGS84 LonLat" << endl;
+    os << "       WGSLONLAT is a synonym for WGSLL" << endl;
+    os << "  MEAS.WGSH (position)                           convert to WGS84 height" << endl;
+    os << "       WGSHEIGHT is a synonym for WGSH" << endl;
+    if (showTypes) {
+      os << endl << "Known observatory positions (names are case-insenstive):" << endl;
+      Vector<String> obs = MeasTable::Observatories().copy();
+      genSort (obs);
+      uInt maxLen = 0;
+      for (uInt i=0; i<obs.size(); ++i) {
+        if (obs[i].size() > maxLen) maxLen = obs[i].size();
+      }
+      uInt npl = 80 / (maxLen+1);
+      uInt n = 0;
+      for (uInt i=0; i<obs.size(); ++i) {
+        os << setw(maxLen+1) << obs[i];
+        if (++n == npl) {
+          os << endl;
+          n = 0;
+        }
+      }
+      if (n > 0) os << endl;
+      os << endl;
+      TaQLShow::showMeasTypes (os, "position");
+    }
   }
 
-  void ShowMeasUDF::showFuncsDirection (std::ostream& os)
+  void HelpMeasUDF::showFuncsDirection (ostream& os, Bool showTypes)
   {
-    os << std::endl << "Direction conversion functions:" << std::endl;
-    os << "  MEAS.DIR (type, direction [,epoch, position])  convert to given type" << std::endl;
-    os << "       DIRECTION is a synonym for DIR" << std::endl;
-    os << "  MEAS.HADEC (direction, epoch, position)        convert to Hourangle/Decl" << std::endl;
-    os << "  MEAS.AZEL (direction, epoch, position)         convert to Azimuth/Elevation" << std::endl;
-    os << "  MEAS.APP (direction, epoch, position)          convert to apparent" << std::endl;
-    os << "       APPARENT is a synonym for APP" << std::endl;
-    os << "  MEAS.J2000 (direction [,epoch, position])      convert to J2000" << std::endl;
-    os << "  MEAS.B1950 (direction [,epoch, position])      convert to B1950" << std::endl;
-    os << "  MEAS.ECL (direction [,epoch, position])" << std::endl;
-    os << "       ECLIPTIC is a synonym for ECL" << std::endl;
-    os << "  MEAS.GAL (direction [,epoch, position])" << std::endl;
-    os << "       GALACTIC is a synonym for GAL" << std::endl;
-    os << "  MEAS.SGAL (direction [,epoch, position])" << std::endl;
-    os << "       SUPERGAL is a synonym for SGAL" << std::endl;
-    os << "       SUPERGALACTIC is a synonym for SGAL" << std::endl;
-    os << "  MEAS.ITRFD (direction [,epoch, position])      convert to ITRF" << std::endl;
-    os << "       ITRFDIR is a synonym for ITRFD" << std::endl;
-    os << "       ITRFDIRECTION is a synonym for ITRFD" << std::endl;
-    os << "  MEAS.RISET (direction, epoch, position)        get rise/set time" << std::endl;
-    os << "       RISESET is a synonym for RISET" << std::endl;
+    os << "Direction conversion functions:" << endl;
+    os << "  MEAS.DIR (type, direction [,epoch, position])  convert to given type" << endl;
+    os << "       DIRECTION is a synonym for DIR" << endl;
+    os << "  MEAS.HADEC (direction, epoch, position)        convert to Hourangle/Decl" << endl;
+    os << "  MEAS.AZEL (direction, epoch, position)         convert to Azimuth/Elevation" << endl;
+    os << "  MEAS.APP (direction, epoch, position)          convert to apparent" << endl;
+    os << "       APPARENT is a synonym for APP" << endl;
+    os << "  MEAS.J2000 (direction [,epoch, position])      convert to J2000" << endl;
+    os << "  MEAS.B1950 (direction [,epoch, position])      convert to B1950" << endl;
+    os << "  MEAS.ECL (direction [,epoch, position])" << endl;
+    os << "       ECLIPTIC is a synonym for ECL" << endl;
+    os << "  MEAS.GAL (direction [,epoch, position])" << endl;
+    os << "       GALACTIC is a synonym for GAL" << endl;
+    os << "  MEAS.SGAL (direction [,epoch, position])" << endl;
+    os << "       SUPERGAL is a synonym for SGAL" << endl;
+    os << "       SUPERGALACTIC is a synonym for SGAL" << endl;
+    os << "  MEAS.ITRFD (direction [,epoch, position])      convert to ITRF" << endl;
+    os << "       ITRFDIR is a synonym for ITRFD" << endl;
+    os << "       ITRFDIRECTION is a synonym for ITRFD" << endl;
+    os << "  MEAS.RISET (direction, epoch, position)        get rise/set time" << endl;
+    os << "       RISESET is a synonym for RISET" << endl;
+    if (showTypes) {
+      os << endl << "Known source directions (names are case-insenstive):" << endl;
+      os << "  SUN   MOON  MERCURY  VENUS  MARS  JUPITER  SATURN  URANUS  NEPTUNE  PLUTO" << endl;
+      os << "  CasA  CygA  HerA     HydA   PerA  TauA     VirA" << endl;
+      os << endl;
+      TaQLShow::showMeasTypes (os, "direction");
+    }
   }
 
 
-  UDFBase* ShowMeasUDF::makeSHOW (const String&)
-    { return new ShowMeasUDF(); }
+  UDFBase* HelpMeasUDF::makeHELP (const String&)
+    { return new HelpMeasUDF(); }
 
-  void ShowMeasUDF::setup (const Table&, const TaQLStyle&)
+  void HelpMeasUDF::setup (const Table&, const TaQLStyle&)
   {
     AlwaysAssert (operands().size() <= 1, AipsError);
     if (operands().size() == 1) {
@@ -151,33 +188,37 @@ namespace casacore {
     setConstant (True);
   }
 
-  String ShowMeasUDF::getString (const TableExprId& id)
+  String HelpMeasUDF::getString (const TableExprId& id)
   {
-    std::ostringstream os;
+    ostringstream os;
     String type;
     if (operands().size() == 1) {
       type = operands()[0]->getString(id);
       type.downcase();
     }
-    if (type.empty()  ||  type == "position"  ||  type == "pos") {
-      showFuncsPosition (os);
-    }
-    if (type.empty()  ||  type == "epoch") {
-      showFuncsEpoch (os);
-    }
-    if (type.empty()  ||  type == "direction"  ||  type == "dir") {
-      showFuncsDirection (os);
+    if (type.empty()) {
+      showFuncsPosition (os, False);
+      os << endl;
+      showFuncsEpoch (os, False);
+      os << endl;
+      showFuncsDirection (os, False);
+    } else if (type == "position"  ||  type == "pos") {
+      showFuncsPosition (os, True);
+    } else if (type == "epoch") {
+      showFuncsEpoch (os, True);
+    } else if (type == "direction"  ||  type == "dir") {
+      showFuncsDirection (os, True);
     }
     if (os.str().empty()) {
       os << type
-         << " is an unknown meastype; use pos(ition), epoch or dir(ection)"
-         << std::endl;
+         << " is an unknown meas subtype; use pos(ition), epoch or dir(ection)"
+         << endl;
     } else {
-      os << std::endl << "See also section 'Special Measures functions'"
+      os << endl << "See also section 'Special Measures functions'"
         " at http://casacore.github.io/casacore-notes/199.html"
-         << std::endl << std::endl;
+         << endl;
     }
     return os.str();
   }
 
-}
+}  // end namespace

@@ -32,7 +32,7 @@ using namespace casacore;
 
 int main()
 {
-  ShowMeasUDF::showFuncsPosition (std::cout);
-  ShowMeasUDF::showFuncsEpoch (std::cout);
-  ShowMeasUDF::showFuncsDirection (std::cout);
+  HelpMeasUDF::showFuncsPosition (std::cout, False);
+  HelpMeasUDF::showFuncsEpoch (std::cout, False);
+  HelpMeasUDF::showFuncsDirection (std::cout, False);
 }

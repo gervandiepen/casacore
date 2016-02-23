@@ -72,11 +72,25 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
 class TaQLShow
 {
 public:
-  static String getInfo (const Vector<String>& parts);
+  static String getInfo (const Vector<String>& parts,
+                         const TaQLStyle& style);
   static void showTable (std::ostream& os,
                          const Vector<String>& parts);
+  static void showSyntax (std::ostream& os, const String& cmd);
+  static void showSyntaxSelect (std::ostream& os);
+  static void showSyntaxCalc (std::ostream& os);
+  static void showSyntaxUpdate (std::ostream& os);
+  static void showSyntaxInsert (std::ostream& os);
+  static void showSyntaxDelete (std::ostream& os);
+  static void showSyntaxCreate (std::ostream& os);
+  static void showSyntaxAlter (std::ostream& os);
+  static void showSyntaxCount (std::ostream& os);
   static void showOpers (std::ostream& os);
-  static void showFuncs (std::ostream& os, const String& type);
+  static void showFuncs (std::ostream& os, const String& type,
+                         const Vector<String>& parts,
+                         const TaQLStyle& style);
+  static void showAllFuncs (std::ostream& os);
+  static void showMathFuncs (std::ostream& os);
   static void showUnitKind (std::ostream& os, const UnitVal& kind,
                             const std::map<String, UnitName>& units);
   static void showUnits (std::ostream& os, const String& type);

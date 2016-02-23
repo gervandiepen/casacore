@@ -29,6 +29,8 @@
 //# Includes
 #include <casacore/tables/TaQL/TaQLShow.h>
 #include <casacore/tables/Tables/Table.h>
+#include <casacore/tables/TaQL/ExprNode.h>
+#include <casacore/tables/TaQL/ExprNodeSet.h>
 #include <casacore/casa/Quanta/UnitMap.h>
 #include <casacore/casa/Exceptions/Error.h>
 #include <ostream>
@@ -38,20 +40,22 @@ using namespace std;
 
 namespace casacore { //# NAMESPACE CASACORE - BEGIN
 
-  String TaQLShow::getInfo (const Vector<String>& parts)
+  String TaQLShow::getInfo (const Vector<String>& parts,
+                            const TaQLStyle& style)
   {
     std::ostringstream os;
     if (parts.empty()) {
-      os << "Possible show commands:" << endl;
-      os << "  show table name         shows table information (a la showtable)" << endl;
-      os << "  show operators          shows available operators" << endl;
-      os << "  show functions [type]   shows available functions" << endl;
-      os << "       possible types: datetime, array, reduce, math, comparison," << endl;
-      os << "                       string, regex, pretty-print, misc, aggregate," << endl;
-      os << "                       cone-search, mscal, meas" << endl;
-      os << "  show meastypes [type]   shows available measure types" << endl;
+      os << "Possible show/help commands:" << endl;
+      os << "  show table tablename             shows table information (a la showtable)" << endl;
+      os << "  show syntax [command]            shows the syntax of TaQL commands" << endl;
+      os << "  show operators                   shows available operators" << endl;
+      os << "  show functions [type] [subtype]  shows available functions" << endl;
+      os << "       possible types: math, comparison, conversion, datetime, string" << endl;
+      os << "                       array, reduce, astro, misc, aggregate" << endl;
+      os << "                name of UDF libraries (e.g., show functions mscal)" << endl;
+      os << "  show meastypes [type]            shows available measure types" << endl;
       os << "       possible types: epoch, position, direction" << endl;
-      os << "  show units [kind]       shows available units and/or prefixes" << endl;
+      os << "  show units [kind]                shows available units and/or prefixes" << endl;
       os << "       possible kinds: prefix, length, time, angle, temperature," << endl;
       os << "                       current, intensity, molar, mass, solidangle" << endl;
       os << "       If a unit is given as kind, all corresponding units are shown" << endl;
@@ -62,16 +66,19 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       String type;
       if (parts.size() > 1) type = parts[1];
       type.downcase();
-      if (cmd == "unit"  ||  cmd == "units") {
-        showUnits (os, type);
-      } else if (cmd == "meastype"  ||  cmd == "meastypes") {
-        showMeasTypes (os, type);
+      if (cmd == "table") {
+        showTable (os, parts);
+      } else if (cmd == "syntax") {
+        showSyntax (os, type);
       } else if (cmd == "operator"  ||  cmd == "operators") {
         showOpers (os);
-      } else if (cmd == "function"  ||  cmd == "functions") {
-        showFuncs (os, type);
-      } else if (cmd == "table") {
-        showTable (os, parts);
+      } else if (cmd == "func"  ||  cmd == "function"  ||
+                 cmd == "functions") {
+        showFuncs (os, type, parts, style);
+      } else if (cmd == "meastype"  ||  cmd == "meastypes") {
+        showMeasTypes (os, type);
+      } else if (cmd == "unit"  ||  cmd == "units") {
+        showUnits (os, type);
       } else {
         throw AipsError (cmd + " is an unknown SHOW command");
       }
@@ -132,9 +139,108 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     table.showKeywords (os, showsub, tabkey, colkey);
   }
 
+  void TaQLShow::showSyntax (ostream& os, const String& cmd)
+  {
+    if (cmd.empty()) {
+      os << "SELECT [[DISTINCT] expression_list]" << endl;
+      os << "  [INTO table [AS options]]" << endl;
+      os << "  [FROM table_list]" << endl;
+      os << "  [WHERE expression]" << endl;
+      os << "  [GROUPBY expression_list]" << endl;
+      os << "  [HAVING expression]" << endl;
+      os << "  [ORDERBY [DISTINCT] sort_list]" << endl;
+      os << "  [LIMIT expression] [OFFSET expression]" << endl;
+      os << "  [GIVING table [AS options] | set]" << endl;
+      os << "  [DMINFO datamanagers]" << endl;
+      os << "CALC expression [FROM table_list]" << endl;
+      os << "UPDATE table_list SET update_list [FROM table_list]" << endl;
+      os << "  [WHERE ...] [ORDERBY ...] [LIMIT ...] [OFFSET ...]" << endl;
+      os << "INSERT INTO table_list SET column=expr, column=expr, ..." << endl;
+      os << "INSERT INTO table_list [(column_list)] VALUES (expr_list)" << endl;
+      os << "INSERT INTO table_list [(column_list)] SELECT_command" << endl;
+      os << "DELETE FROM table_list" << endl;
+      os << "  [WHERE ...] [ORDERBY ...] [LIMIT ...] [OFFSET ...]" << endl;
+      os << "CREATE TABLE table [AS options]" << endl;
+      os << "  [column_specs]" << endl;
+      os << "  [LIMIT ...]" << endl;
+      os << "  [DMINFO datamanagers]" << endl;
+      os << "ALTER TABLE table" << endl;
+      os << "  [ADD COLUMN [column_specs] [DMINFO datamanagers]" << endl;
+      os << "  [RENAME COLUMN old TO new, old TO new, ...]" << endl;
+      os << "  [DROP COLUMN col, col, ...]" << endl;
+      os << "  [SET KEYWORD key=value, key=value]" << endl;
+      os << "  [COPY KEYWORD key=other, key=other, ...]" << endl;
+      os << "  [RENAME KEYWORD old TO new, old TO new, ...]" << endl;
+      os << "  [DROP KEYWORD key, key, ...]" << endl;
+      os << "  [ADD ROW nrow]" << endl;
+      os << "COUNT [column_list] FROM table_list [WHERE ...]" << endl;
+      os << endl;
+      os << "Use 'show syntax <command>' for more information about the command" << endl;
+    } else if (cmd == "select") {
+      showSyntaxSelect (os);
+    } else if (cmd == "calc") {
+      showSyntaxCalc (os);
+    } else if (cmd == "update") {
+      showSyntaxUpdate (os);
+    } else if (cmd == "insert") {
+      showSyntaxInsert (os);
+    } else if (cmd == "delete") {
+      showSyntaxDelete (os);
+    } else if (cmd == "create") {
+      showSyntaxCreate (os);
+    } else if (cmd == "alter") {
+      showSyntaxAlter (os);
+    } else if (cmd == "count") {
+      showSyntaxCount (os);
+    } else {
+      os << cmd + " is an unknown command for 'show syntax <command>'" << endl;
+      os << "   use select, calc, update, insert, delete, create, alter or count" << endl;
+    }
+  }
+
+  void TaQLShow::showSyntaxSelect (ostream& os)
+  {
+    os << "'show syntax select' not implemented yet" << endl;
+  }
+
+  void TaQLShow::showSyntaxCalc (ostream& os)
+  {
+    os << "'show syntax calc' not implemented yet" << endl;
+  }
+
+  void TaQLShow::showSyntaxUpdate (ostream& os)
+  {
+    os << "'show syntax update' not implemented yet" << endl;
+  }
+
+  void TaQLShow::showSyntaxInsert (ostream& os)
+  {
+    os << "'show syntax insert' not implemented yet" << endl;
+  }
+
+  void TaQLShow::showSyntaxDelete (ostream& os)
+  {
+    os << "'show syntax delete' not implemented yet" << endl;
+  }
+
+  void TaQLShow::showSyntaxCreate (ostream& os)
+  {
+    os << "'show syntax create' not implemented yet" << endl;
+  }
+
+  void TaQLShow::showSyntaxAlter (ostream& os)
+  {
+    os << "'show syntax alter' not implemented yet" << endl;
+  }
+
+  void TaQLShow::showSyntaxCount (ostream& os)
+  {
+    os << "'show syntax count' not implemented yet" << endl;
+  }
+
   void TaQLShow::showOpers (ostream& os)
   {
-    os << "Available TaQL operators in order of precedence" << endl;
+    os << "Available TaQL operators in order of precedence:" << endl;
     os << "    **" << endl;
     os << "    !  ~  +  -       (unary operators)" << endl;
     os << "    *  /  // %" << endl;
@@ -145,18 +251,107 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     os << "    == != >  >= <  <=  ~= !~= IN INCONE BETWEEN EXISTS LIKE  ~  !~" << endl;
     os << "    &&" << endl;
     os << "    ||" << endl;
-    os << "Some operators have a synonym" << endl;
+    os << "Some operators have a synonym:" << endl;
     os << "    ==     =" << endl;
     os << "    !=     <>" << endl;
     os << "    &&     AND" << endl;
     os << "    ||     OR" << endl;
     os << "    !      NOT" << endl;
     os << "    ^      XOR" << endl;
+    os << endl;
+    os << "    **          power, right-associative, thus 2**1**2 = 2" << endl;
+    os << "    ~           if unary, bit-wise complement" << endl;
+    os << "    /           real division, thus 1/2 = 0.5" << endl;
+    os << "    //          integer division, thus 1//2 = 0" << endl;
+    os << "    %           modulo" << endl;
+    os << "    +           also string concat; also for datetimes" << endl;
+    os << "    -           also for datetimes" << endl;
+    os << "    &           bit-wise and" << endl;
+    os << "    ^           bit-wise xor" << endl;
+    os << "    |           bit-wise or" << endl;
+    os << "    ~= !~=      (not) about equal (relative to 1e-5)" << endl;
+    os << "    ~ !~ LIKE   pattern match" << endl;
   }
 
-  void TaQLShow::showFuncs (ostream& os, const String& type)
+  void TaQLShow::showFuncs (ostream& os, const String& type,
+                            const Vector<String>& parts,
+                            const TaQLStyle& style)
   {
-    os << "'show functions' is not implemented yet" << endl;
+    if (type.empty()  ||  type == "all") {
+      showAllFuncs (os);
+    } else if (type == "math") {
+      showMathFuncs (os);
+    } else {
+      try {
+        TableExprNodeSet operands;
+        String ftype;
+        if (parts.size() > 2) ftype = parts[2];
+        operands.add (TableExprNodeSetElem(ftype));
+        TableExprNode node = TableExprNode::newUDFNode (type+".help",
+                                                        operands,
+                                                        Table(), style);
+        os << node.getString(0);
+      } catch (const std::exception&) {
+        os << type + " is an unknown type in 'show functions <type>'" << endl
+           << "  (maybe an unknown UDF library)" << endl;
+      }
+    }
+  }
+
+  void TaQLShow::showAllFuncs (ostream& os)
+  {
+    os << "math functions:" << endl;
+    os << "  pi          e           c           rand" << endl;
+    os << "  sin         sinh        asin        cos         cosh        acos" << endl;
+    os << "  tan         tanh        atan        atan2" << endl;
+    os << "  exp         log         log10" << endl;
+    os << "  pow         sqrt        sqr         cube" << endl;
+    os << "  norm        abs         arg         fmod" << endl;
+    os << "  sign        round       floor       ceil" << endl;
+    os << "comparison functions:" << endl;
+    os << "  near        nearabs     isnan       isinf       isfinite" << endl;
+    os << "  isdef       isnull      iscol       iskey" << endl;
+    os << "  min         max         iif" << endl;
+    os << "conversion functions:" << endl;
+    os << "  bool        int         real        imag        complex     conj" << endl;
+    os << "  string      hms         dms         hdms" << endl;
+    os << "datetime functions:" << endl;
+    os << "  datetime    mjdtodate   mjd         date        time" << endl;
+    os << "  year        month       day         weekday     week" << endl;
+    os << "  cmonth      cweekday    cdatetime   cdate       ctime" << endl;
+    os << "string functions:" << endl;
+    os << "  strlength   upcase      downcase    capitalize" << endl;
+    os << "  trim        ltrim       rtrim       substr      replace" << endl;
+    os << "  regex       pattern     sqlpattern" << endl;
+    os << "array functions:" << endl;
+    os << "  array       ndim        nelem       shape" << endl;
+    os << "  transpose   resize      diagonal" << endl;
+    os << "  nullarray   marray      arraydata   mask" << endl;
+    os << "  flatten     negatemask  replacemasked           replaceunmasked" << endl;
+    os << "reduce functions:" << endl;
+    os << "  sum         product     sumsqr      min         max" << endl;
+    os << "  mean        variance    stddev      avdev       rms" << endl;
+    os << "  median      fractile    any         all         ntrue       nfalse" << endl;
+    os << "    plural, running and boxed forms of above reduce functions" << endl;
+
+    os << "astro functions:" << endl;
+    os << "  angdist     angdistx    cones       anycone     findcone" << endl;
+    os << "    see also 'show functions meas' and 'show functions mscal'" << endl;
+    os << "misc functions:" << endl;
+    os << "  rownr       rowid" << endl;
+    os << "aggregate functions:" << endl;
+    os << "  gmin        gmax        gsum        gproduct    gsumsqr" << endl;
+    os << "  gmean       gvariance   gstddev     grms" << endl;
+    os << "  gany        gall        gntrue      gnfalse" << endl;
+    os << "    plural forms of above aggregate functions (e.g., gmins)" << endl;
+    os << "  gmedian     gfractile   ghist       gstack" << endl;
+    os << "  countall    gcount      gfirst      glast " << endl;
+  }
+
+  void TaQLShow::showMathFuncs (ostream& os)
+  {
+    os << "TaQL Mathematical functions:" << endl;
+    os << "  numeric cos (numeric)" << endl;
   }
 
   void TaQLShow::showUnitKind (ostream& os, const UnitVal& kind,
@@ -266,17 +461,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       os << "    ITRF        coordinates wrt ITRF Earth frame" << endl;
       os << "    TOPO        apparent topocentric position" << endl;
       os << "    ICRS        International Celestial reference system" << endl;
-      os << "  Planets:" << endl;
-      os << "    MERCURY" << endl;
-      os << "    VENUS" << endl;
-      os << "    MARS" << endl;
-      os << "    JUPITER" << endl;
-      os << "    SATURN" << endl;
-      os << "    URANUS" << endl;
-      os << "    NEPTUNE" << endl;
-      os << "    PLUTO" << endl;
-      os << "    SUN" << endl;
-      os << "    MOON" << endl;
+      os << endl;
+      os << "See also 'show functions meas pos/dir" << endl;
       ok = True;
     }
     if (!ok) {

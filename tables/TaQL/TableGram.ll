@@ -45,6 +45,8 @@
 %s GIVINGstate
 %s FROMstate
 %s CRETABstate
+/* exclusive state */
+%x SHOWstate
 
 /* The order in the following list is important, since, for example,
    the word "giving" must be recognized as GIVING and not as NAME.
@@ -103,7 +105,7 @@ INTERSECT [Ii][Nn][Tt][Ee][Rr][Ss][Ee][Cc][Tt]
 EXCEPT    ([Ee][Xx][Cc][Ee][Pp][Tt])|([Mm][Ii][Nn][Uu][Ss])
 STYLE     [Uu][Ss][Ii][Nn][Gg]{WHITE}[Ss][Tt][Yy][Ll][Ee]{WHITE1}
 TIMEWORD  [Tt][Ii][Mm][Ee]
-SHOW      [Ss][Hh][Oo][Ww]
+SHOW      ([Ss][Hh][Oo][Ww])|([Hh][Ee][Ll][Pp])
 SELECT    [Ss][Ee][Ll][Ee][Cc][Tt]
 UPDATE    [Uu][Pp][Dd][Aa][Tt][Ee]
 INSERT    [Ii][Nn][Ss][Ee][Rr][Tt]
@@ -211,6 +213,16 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
     are found. ( and [ indicate the beginning of a set(subquery).
     ) and ] indicate the end of subquery.
  */
+
+ /* In SHOW command any word (such as SELECT) is allowed */
+<SHOWstate>{NAME} {
+            tableGramPosition() += yyleng;
+            lvalp->val = new TaQLConstNode(
+                new TaQLConstNodeRep (tableGramRemoveEscapes (TableGramtext)));
+            TaQLNode::theirNodesCreated.push_back (lvalp->val);
+	    return NAME;
+	  }
+
 {UNION}  {
             tableGramPosition() += yyleng;
             throw (TableInvExpr ("UNION is not supported yet"));
@@ -621,7 +633,7 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 	  }
 {SHOW}    {
             tableGramPosition() += yyleng;
-            BEGIN(FROMstate);
+            BEGIN(SHOWstate);
 	    return SHOW;
 	  }
             
@@ -671,7 +683,7 @@ PATTREX   {OPERREX}{WHITE}({PATTEX}|{DISTEX})
 	  }
 
  /* A table file name can be given in the UPDATE, FROM, GIVING, CRETAB clause */
-<FROMstate,CRETABstate,GIVINGstate>{NAMETAB} {
+<FROMstate,CRETABstate,GIVINGstate,SHOWstate>{NAMETAB} {
             tableGramPosition() += yyleng;
             lvalp->val = new TaQLConstNode(
                 new TaQLConstNodeRep (tableGramRemoveEscapes (TableGramtext)));
