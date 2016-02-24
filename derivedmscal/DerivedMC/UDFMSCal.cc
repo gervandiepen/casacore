@@ -27,6 +27,7 @@
 
 #include <casacore/derivedmscal/DerivedMC/UDFMSCal.h>
 #include <casacore/ms/MSSel/MSAntennaGram.h>
+#include <casacore/ms/MSSel/MSCorrGram.h>
 #include <casacore/ms/MSSel/MSTimeGram.h>
 #include <casacore/ms/MSSel/MSUvDistGram.h>
 #include <casacore/ms/MSSel/MSSpwGram.h>
@@ -115,6 +116,8 @@ namespace casacore {
     { return new UDFMSCal (STOKES, -1); }
   UDFBase* UDFMSCal::makeBaseline (const String&)
   { return new UDFMSCal (SELECTION, BASELINE); }
+  UDFBase* UDFMSCal::makeCorr (const String&)
+    { return new UDFMSCal (SELECTION, CORR); }
   UDFBase* UDFMSCal::makeTime (const String&)
     { return new UDFMSCal (SELECTION, TIME); }
   UDFBase* UDFMSCal::makeUVDist (const String&)
@@ -438,6 +441,15 @@ namespace casacore {
           throw;
         }          
         MSAntennaParse::thisMSAErrorHandler = curHandler;
+      }
+      break;
+    case CORR:
+      {
+        MeasurementSet ms(table);
+        if (msCorrGramParseCommand(&ms, selStr) == 0) {
+          itsDataNode = *(msCorrGramParseNode());
+        }
+        msCorrGramParseDeleteNode();
       }
       break;
     case TIME:

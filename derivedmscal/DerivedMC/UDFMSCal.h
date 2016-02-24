@@ -76,6 +76,7 @@ namespace casacore {
 //  <li> UVW_J2000 is the UVW coordinates in J2000 (in meters)
 //  <li> STOKES makes it possible to convert Stokes of data, flag, or weight.
 //  <li> BASELINE is baseline selection using CASA syntax.
+//  <li> CORR is correlation selection using CASA syntax.
 //  <li> TIME is baseline selection using CASA syntax.
 //  <li> UVDIST is UV-distance selection using CASA syntax.
 //  <li> SPW is spectral window selection using CASA syntax.
@@ -120,7 +121,7 @@ namespace casacore {
                   UVWWVL, UVWWVLS, NEWUVWWVL, NEWUVWWVLS,
                   STOKES, SELECTION, GETVALUE};
     // Define the possible selection types.
-    enum SelType {BASELINE, TIME, UVDIST, SPW, FIELD,
+    enum SelType {BASELINE, CORR, TIME, UVDIST, SPW, FIELD,
                   FEED, ARRAY, SCAN, STATE, OBS};
 
     // Create object the given ColType and SelType.
@@ -156,6 +157,7 @@ namespace casacore {
     static UDFBase* makeUvwWvls  (const String&);
     static UDFBase* makeStokes   (const String&);
     static UDFBase* makeBaseline (const String&);
+    static UDFBase* makeCorr     (const String&);
     static UDFBase* makeTime     (const String&);
     static UDFBase* makeUVDist   (const String&);
     static UDFBase* makeSpw      (const String&);
