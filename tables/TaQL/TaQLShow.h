@@ -85,12 +85,23 @@ public:
   static void showSyntaxCreate (std::ostream& os);
   static void showSyntaxAlter (std::ostream& os);
   static void showSyntaxCount (std::ostream& os);
+  static void showSyntaxInterval (std::ostream& os);
   static void showOpers (std::ostream& os);
+  static void showConstants (std::ostream& os);
   static void showFuncs (std::ostream& os, const String& type,
                          const Vector<String>& parts,
                          const TaQLStyle& style);
   static void showAllFuncs (std::ostream& os);
   static void showMathFuncs (std::ostream& os);
+  static void showConvFuncs (std::ostream& os);
+  static void showLogicalFuncs (std::ostream& os);
+  static void showDateTimeFuncs (std::ostream& os);
+  static void showStringFuncs (std::ostream& os);
+  static void showArrayFuncs (std::ostream& os);
+  static void showReduceFuncs (std::ostream& os);
+  static void showAstroFuncs (std::ostream& os);
+  static void showMiscFuncs (std::ostream& os);
+  static void showAggrFuncs (std::ostream& os);
   static void showUnitKind (std::ostream& os, const UnitVal& kind,
                             const std::map<String, UnitName>& units);
   static void showUnits (std::ostream& os, const String& type);

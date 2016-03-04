@@ -573,10 +573,10 @@ TableExprNode TableParseSelect::handleSlice (const TableExprNode& array,
 					     const TaQLStyle& style)
 {
   // Create a masked array if a single bool element is given.
-  if (indices.isSingle()  &&  indices.nelements() == 1  &&
-      indices.dataType() == TableExprNodeRep::NTBool) {
-    if (! indices.hasArrays()) {
-      throw TableInvExpr ("Second argument of a masked array must be an array");
+  if (indices.dataType() == TableExprNodeRep::NTBool) {
+    if (! (indices.isSingle()  &&  indices.nelements() == 1  &&
+           indices.hasArrays())) {
+      throw TableInvExpr ("Second argument of a masked array must be an array; maybe extra brackets are needed like [1,2][[T,F]]");
     }
     return marray (array, TableExprNode(indices[0].start()));
   }

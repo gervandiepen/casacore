@@ -227,7 +227,7 @@ namespace casacore {
       break;
     case GETVALUE:
       setupGetValue (table, operands());
-      setNDim (0);
+      setNDim (itsDataNode.getNodeRep()->ndim());
       setDataType (itsDataNode.getNodeRep()->dataType());
       setUnit (itsDataNode.getNodeRep()->unit().getName());
       break;
