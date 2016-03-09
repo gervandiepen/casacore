@@ -95,7 +95,7 @@ namespace casacore {
     os << "       LST is a synonym for LAST" << endl;
     if (showTypes) {
       os << endl;
-      TaQLShow::showMeasTypes (os, "epoch");
+      os << TaQLShow::showMeasTypes ("epoch");
     }
   }
 
@@ -134,7 +134,7 @@ namespace casacore {
       }
       if (n > 0) os << endl;
       os << endl;
-      TaQLShow::showMeasTypes (os, "position");
+      os << TaQLShow::showMeasTypes ("position");
     }
   }
 
@@ -163,10 +163,11 @@ namespace casacore {
     os << "       RISESET is a synonym for RISET" << endl;
     if (showTypes) {
       os << endl << "Known source directions (names are case-insenstive):" << endl;
+      os << "  All sources in the Measures Sources table" << endl;
       os << "  SUN   MOON  MERCURY  VENUS  MARS  JUPITER  SATURN  URANUS  NEPTUNE  PLUTO" << endl;
       os << "  CasA  CygA  HerA     HydA   PerA  TauA     VirA" << endl;
       os << endl;
-      TaQLShow::showMeasTypes (os, "direction");
+      os << TaQLShow::showMeasTypes ("direction");
     }
   }
 

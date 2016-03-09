@@ -74,38 +74,15 @@ class TaQLShow
 public:
   static String getInfo (const Vector<String>& parts,
                          const TaQLStyle& style);
-  static void showTable (std::ostream& os,
-                         const Vector<String>& parts);
-  static void showSyntax (std::ostream& os, const String& cmd);
-  static void showSyntaxSelect (std::ostream& os);
-  static void showSyntaxCalc (std::ostream& os);
-  static void showSyntaxUpdate (std::ostream& os);
-  static void showSyntaxInsert (std::ostream& os);
-  static void showSyntaxDelete (std::ostream& os);
-  static void showSyntaxCreate (std::ostream& os);
-  static void showSyntaxAlter (std::ostream& os);
-  static void showSyntaxCount (std::ostream& os);
-  static void showSyntaxInterval (std::ostream& os);
-  static void showOpers (std::ostream& os);
-  static void showConstants (std::ostream& os);
-  static void showFuncs (std::ostream& os, const String& type,
+  static String showTable (const Vector<String>& parts);
+  static String showSyntax (const String& cmd);
+  static String showFuncs (const String& type,
                          const Vector<String>& parts,
                          const TaQLStyle& style);
-  static void showAllFuncs (std::ostream& os);
-  static void showMathFuncs (std::ostream& os);
-  static void showConvFuncs (std::ostream& os);
-  static void showLogicalFuncs (std::ostream& os);
-  static void showDateTimeFuncs (std::ostream& os);
-  static void showStringFuncs (std::ostream& os);
-  static void showArrayFuncs (std::ostream& os);
-  static void showReduceFuncs (std::ostream& os);
-  static void showAstroFuncs (std::ostream& os);
-  static void showMiscFuncs (std::ostream& os);
-  static void showAggrFuncs (std::ostream& os);
   static void showUnitKind (std::ostream& os, const UnitVal& kind,
                             const std::map<String, UnitName>& units);
-  static void showUnits (std::ostream& os, const String& type);
-  static void showMeasTypes (std::ostream& os, const String& type);
+  static String showUnits (const String& type);
+  static String showMeasTypes (const String& type);
 };
 
 
