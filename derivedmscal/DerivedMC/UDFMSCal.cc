@@ -98,6 +98,8 @@ namespace casacore {
     { return new UDFMSCal (LAST, 0); }
   UDFBase* UDFMSCal::makeLAST2 (const String&)
     { return new UDFMSCal (LAST, 1); }
+  UDFBase* UDFMSCal::makeAZEL (const String&)
+    { return new UDFMSCal (AZEL, -1); }
   UDFBase* UDFMSCal::makeAZEL1 (const String&)
     { return new UDFMSCal (AZEL, 0); }
   UDFBase* UDFMSCal::makeAZEL2 (const String&)

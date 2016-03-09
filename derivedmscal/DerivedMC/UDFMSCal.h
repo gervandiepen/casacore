@@ -148,6 +148,7 @@ namespace casacore {
     static UDFBase* makeLAST     (const String&);
     static UDFBase* makeLAST1    (const String&);
     static UDFBase* makeLAST2    (const String&);
+    static UDFBase* makeAZEL     (const String&);
     static UDFBase* makeAZEL1    (const String&);
     static UDFBase* makeAZEL2    (const String&);
     static UDFBase* makeUVW      (const String&);

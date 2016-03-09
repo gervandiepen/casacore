@@ -55,6 +55,7 @@ void register_derivedmscal()
   UDFBase::registerUDF ("derivedmscal.LAST",      UDFMSCal::makeLAST);
   UDFBase::registerUDF ("derivedmscal.LAST1",     UDFMSCal::makeLAST1);
   UDFBase::registerUDF ("derivedmscal.LAST2",     UDFMSCal::makeLAST2);
+  UDFBase::registerUDF ("derivedmscal.AZEL",      UDFMSCal::makeAZEL);
   UDFBase::registerUDF ("derivedmscal.AZEL1",     UDFMSCal::makeAZEL1);
   UDFBase::registerUDF ("derivedmscal.AZEL2",     UDFMSCal::makeAZEL2);
   UDFBase::registerUDF ("derivedmscal.UVWWVL",    UDFMSCal::makeUvwWvl);
@@ -105,6 +106,12 @@ namespace casacore {
       " hourangle/declination of ANTENNA1" << endl;
     os << "  double MSCAL.HADEC2()         "
       " hourangle/declination of ANTENNA2" << endl;
+    os << "  doublearray MSCAL.AZEL()     "
+      " azimuth/elevation of array center" << endl;
+    os << "  doublearray MSCAL.AZEL1()     "
+      " azimuth/elevation of ANTENNA1" << endl;
+    os << "  doublearray MSCAL.AZEL2()     "
+      " azimuth/elevation of ANTENNA2" << endl;
     os << "  double MSCAL.LAST()           "
       " local sidereal time of array center" << endl;
     os << "  double MSCAL.LAST1()          "
@@ -115,10 +122,6 @@ namespace casacore {
       " parallactic angle of ANTENNA1" << endl;
     os << "  double MSCAL.PA2()            "
       " parallactic angle of ANTENNA2" << endl;
-    os << "  doublearray MSCAL.AZEL1()     "
-      " azimuth/elevation of ANTENNA1" << endl;
-    os << "  doublearray MSCAL.AZEL2()     "
-      " azimuth/elevation of ANTENNA2" << endl;
     os << "  doublearray MSCAL.NEWUVW()    "
       " calc UVW coordinates in J2000 in meters" << endl;
     os << "  doublearray MSCAL.NEWUVWWVL() "
