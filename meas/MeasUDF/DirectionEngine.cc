@@ -462,7 +462,6 @@ namespace casacore {
                                      double& rise, double& set)
   {
     // See http://www.stjarnhimlen.se/comp/riset.html
-    // Why does HADEC and APP not give the same DEC?????? Ask Wim or Michiel.
     double lat = pos.getValue().get()[2];            // latitude
     double start = floor(epoch.getValue().get() + 0.000001);
     // Start of day is the offset for rise and set.
@@ -470,46 +469,73 @@ namespace casacore {
                         MEpoch::Types(MEpoch::UTC | MEpoch::RAZE));
     // Use noon in the MeasFrame.
     // Note that for Sun and Moon an iteration can be done using the
-    // obtained rise and set time as the new tine in the MeasFrame,
-    // which makes the calculation a bit more accurate.
-    MEpoch noon = MEpoch(Quantity(start + 0.5, "d"), MEpoch::UTC);
-    itsFrame.set (noon);
+    // obtained rise and set time as the new time in the MeasFrame,
+    // which makes the calculation more accurate.
+    int ab = fillRiseSet (start+0.5, dir, lat, h, off, &rise, &set);
+    if (ab > 0) {
+      // Always below.
+      set = start;
+      rise = set + 1;
+    } else if (ab < 0) {
+      // Always above.
+      rise = start;
+      set  = rise + 1;
+    } else {
+      // Note that sometimes Measures has to choose between 2 days
+      // due to the 4 minutes difference between earth and sidereal day.
+      // For the period between (about) 21-Mar and 21-Sep it chooses wrongly.
+      // So adjust rise and set if needed (sidereal day is 236 sec shorter).
+      if (rise < start) rise += 1 - 236./86400;
+      if (set < start) set += 1 - 236./86400;
+      // If set<rise, a planet rises in the evening; so adjust set.
+      if (set < rise)  set += 1;
+      // Iterate a few times for a better rise and set time.
+      for (int i=0; i<2; ++i) {
+        fillRiseSet (rise, dir, lat, h, off, &rise, 0);
+        if (rise < start) rise += 1 - 236./86400;
+        fillRiseSet (set,  dir, lat, h, off, 0, &set);
+        if (set < start) set += 1 - 236./86400;
+        if (set < rise)  set += 1;
+      }
+    }
+  }
+
+  int DirectionEngine::fillRiseSet (double epoch,
+                                    const MDirection& dir,
+                                    double lat,
+                                    double h,
+                                    const MEpoch& off,
+                                    double* rise, double* set)
+  {
+    itsFrame.set (MEpoch(Quantity(epoch, "d"), MEpoch::UTC));
     MDirection::Ref ref2(MDirection::HADEC, itsFrame);
     MDirection hd = MDirection::Convert(MDirection::HADEC, ref2) (dir);
     double dec = hd.getValue().get()[1];
     double ct = (sin(h) - sin(dec)*sin(lat)) / (cos(dec)*cos(lat));
     if (ct >= 1) {
-      // Always below
-      set  = start;
-      rise = set + 1;
+      return 1;
     } else if (ct <= -1) {
-      // Always above
-      rise = start;
-      set  = rise + 1;
-    } else {
-      ct = acos(ct);
-      // Get RA normalized between 0 and 2pi.
-      MDirection::Ref ref1(MDirection::APP, itsFrame);
-      MDirection app = MDirection::Convert(MDirection::APP, ref1) (dir);
-      double normra = MVAngle(app.getValue().get()[0])(0).radian();
-      rise = normra - ct;
-      set  = normra + ct;
-      // Convert to a date.
-      // Note that sometimes Measures has to choose between 2 days
-      // due to the 4 minutes difference between earth and sidereal day.
-      // For the period between (about) 21-Mar and 21-Sep it chooses wrongly.
-      // So adjust rise and set if needed.
-      MEpoch::Ref ref(MEpoch::LAST, itsFrame, off);
-      Quantity timeRise = MVTime(Quantity(rise, "rad")).get();
-      Quantity timeSet  = MVTime(Quantity(set,  "rad")).get();
-      MEpoch tr = MEpoch::Convert (MEpoch(timeRise, ref), MEpoch::UTC)();
-      MEpoch ts = MEpoch::Convert (MEpoch(timeSet,  ref), MEpoch::UTC)();
-      rise = tr.getValue().get();
-      if (rise < start) rise += 1;
-      set  = ts.getValue().get();
-      if (set < start) set += 1;
-      if (set < rise)  set += 1;
+      return -1;
     }
+    ct = acos(ct);
+    // Get RA normalized between 0 and 2pi.
+    MDirection::Ref ref1(MDirection::APP, itsFrame);
+    MDirection app = MDirection::Convert(MDirection::APP, ref1) (dir);
+    double normra = MVAngle(app.getValue().get()[0])(0).radian();
+    MEpoch::Ref ref(MEpoch::LAST, itsFrame, off);
+    if (rise) {
+      double t = normra - ct;
+      Quantity tq = MVTime(Quantity(t, "rad")).get();
+      MEpoch tr = MEpoch::Convert (MEpoch(tq, ref), MEpoch::UTC)();
+      *rise = tr.getValue().get();
+    }
+    if (set) {
+      double t = normra + ct;
+      Quantity tq = MVTime(Quantity(t, "rad")).get();
+      MEpoch tr = MEpoch::Convert (MEpoch(tq, ref), MEpoch::UTC)();
+      *set = tr.getValue().get();
+    }
+    return 0;
   }
 
   /*

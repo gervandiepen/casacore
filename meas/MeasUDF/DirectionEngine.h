@@ -162,13 +162,19 @@ namespace casacore {
                        const TableExprId& id,
                        Array<MDirection>& directions);
 
-    // Calucate the rise and set time of a source for a given position
-    // and epoch. Argument <src>h</src> defines the possible edge of sun/moon.
+    // Calucate the rise and set time of a source for a given position and
+    // epoch. Argument <src>h</src> defines the possible edge of sun/moon.
     void calcRiseSet (const MDirection& dir,
                       const MPosition& pos,
                       const MEpoch& epoch,
                       double h,
                       double& rise, double& set);
+    int fillRiseSet (double epoch,
+                     const MDirection& dir,
+                     double lat,
+                     double h,
+                     const MEpoch& off,
+                     double* rise, double* set);
 
     //# Data members.
     IPosition                       itsShape;
