@@ -745,6 +745,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     cmd.downcase();
     String type;
     if (parts.size() > 1) type = parts[1];
+    String origType(type);
     type.downcase();
     if (cmd == "table") {
       return showTable (parts);
@@ -767,7 +768,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     } else if (cmd == "meastype"  ||  cmd == "meastypes") {
       return showMeasTypes (type);
     } else if (cmd == "unit"  ||  cmd == "units") {
-      return showUnits (type);
+      return showUnits (origType);
     }
     throw AipsError (cmd + " is an unknown SHOW command");
   }

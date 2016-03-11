@@ -35,6 +35,7 @@
 #include <casacore/measures/Measures/MEpoch.h>
 #include <casacore/measures/Measures/MCEpoch.h>
 #include <casacore/measures/Measures/MeasConvert.h>
+#include <casacore/measures/TableMeasures/ScalarMeasColumn.h>
 #include <casacore/measures/TableMeasures/ArrayMeasColumn.h>
 
 namespace casacore {
@@ -151,7 +152,8 @@ namespace casacore {
     Vector<MEpoch>              itsConstants;
     MEpoch::Types               itsRefType;
     TableExprNode               itsExprNode;
-    ArrayMeasColumn<MEpoch>     itsMeasCol;
+    ScalarMeasColumn<MEpoch>    itsMeasScaCol;
+    ArrayMeasColumn<MEpoch>     itsMeasArrCol;
     PositionEngine*             itsPositionEngine;
   };
 
