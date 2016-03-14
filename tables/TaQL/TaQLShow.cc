@@ -58,7 +58,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   const char* infoHelp[] = {
     "Possible show/help commands:",
     "  show table tablename              table information (a la showtableinfo)",
-    "  show syntax [command]             syntax of TaQL commands",
+    "  show command(s) [command]         syntax of TaQL commands",
     "  show expr(essions)                how to form an expression",
     "  show oper(ators)                  available operators",
     "  show sets                         how to specify sets and intervals",
@@ -73,7 +73,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     "       possible kinds: prefix, length, time, angle, temperature,",
     "                       current, intensity, molar, mass, solidangle",
     "       If a unit is given as kind, all corresponding units are shown.",
-    "       Note that TaQL can convert between ANGLE and TIME."
+    "       Note that TaQL can convert between ANGLE and TIME.",
+    "",
+    "See http://casacore.github.io/casacore-notes/199.html for a full",
+    "description of TaQL."
   };
 
   const char* tableHelp[] = {
@@ -88,44 +91,53 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     "      recur   norecur   show subtables recursively?"
   };
 
-  const char* syntaxHelp[] = {
-    "SELECT [[DISTINCT] expression_list] [INTO table [AS options]]",
-    "  [FROM table_list] [WHERE expression]",
-    "  [GROUPBY expression_list] [HAVING expression]",
-    "  [ORDERBY [DISTINCT] sort_list] [LIMIT expression] [OFFSET expression]",
-    "  [GIVING table [AS options] | set] [DMINFO datamanagers]",
+  const char* commandHelp[] = {
+    "Select a subset from a table, possibly calculating new values.",
+    "  SELECT [[DISTINCT] expression_list] [INTO table [AS options]]",
+    "    [FROM table_list] [WHERE expression]",
+    "    [GROUPBY expression_list] [HAVING expression]",
+    "    [ORDERBY [DISTINCT] sort_list] [LIMIT expression] [OFFSET expression]",
+    "    [GIVING table [AS options] | set] [DMINFO datamanagers]",
     "",
-    "CALC expression [FROM table_list]",
+    "Calculate an expression, possibly using table columns.",
+    "  CALC expression [FROM table_list]",
     "",
-    "UPDATE table_list SET update_list [FROM table_list]",
-    "  [WHERE ...] [ORDERBY ...] [LIMIT ...] [OFFSET ...]",
+    "Update part of the contents of a table.",
+    "  UPDATE table_list SET update_list [FROM table_list]",
+    "    [WHERE ...] [ORDERBY ...] [LIMIT ...] [OFFSET ...]",
     "",
-    "INSERT INTO table_list SET column=expr, column=expr, ...",
-    "INSERT INTO table_list [(column_list)] VALUES (expr_list)",
-    "INSERT INTO table_list [(column_list)] SELECT_command",
+    "Add rows with new values to a table.",
+    "  INSERT INTO table_list SET column=expr, column=expr, ...",
+    "  INSERT INTO table_list [(column_list)] VALUES (expr_list)",
+    "  INSERT INTO table_list [(column_list)] SELECT_command",
     "",
-    "DELETE FROM table_list",
-    "  [WHERE ...] [ORDERBY ...] [LIMIT ...] [OFFSET ...]",
+    "Remove rows from a table.",
+    "  DELETE FROM table_list",
+    "    [WHERE ...] [ORDERBY ...] [LIMIT ...] [OFFSET ...]",
     "",
-    "CREATE TABLE table [AS options]",
-    "  [column_specs]",
-    "  [LIMIT ...]",
-    "  [DMINFO datamanagers]",
+    "Create a new table, possibly adding rows.",
+    "  CREATE TABLE table [AS options]",
+    "    [column_specs]",
+    "    [LIMIT ...]",
+    "    [DMINFO datamanagers]",
     "",
-    "ALTER TABLE table",
-    "  [ADD COLUMN [column_specs] [DMINFO datamanagers]",
-    "  [RENAME COLUMN old TO new, old TO new, ...]",
-    "  [DROP COLUMN col, col, ...]",
-    "  [SET KEYWORD key=value, key=value, ...]",
-    "  [COPY KEYWORD key=other, key=other, ...]",
-    "  [RENAME KEYWORD old TO new, old TO new, ...]",
-    "  [DROP KEYWORD key, key, ...]",
-    "  [ADD ROW nrow]",
+    "Alter a table (add/rename/remove columns/keywords; add rows).",
+    "  ALTER TABLE table",
+    "    [ADD COLUMN [column_specs] [DMINFO datamanagers]",
+    "    [RENAME COLUMN old TO new, old TO new, ...]",
+    "    [DROP COLUMN col, col, ...]",
+    "    [SET KEYWORD key=value, key=value, ...]",
+    "    [COPY KEYWORD key=other, key=other, ...]",
+    "    [RENAME KEYWORD old TO new, old TO new, ...]",
+    "    [DROP KEYWORD key, key, ...]",
+    "    [ADD ROW nrow]",
     "",
-    "COUNT [column_list] FROM table_list [WHERE ...]",
+    "Count number of rows per group (subset of SELECT/GROUPBY).",
+    "  COUNT [column_list] FROM table_list [WHERE ...]",
     "",
-    "Use 'show syntax <command>' for more information about a command",
-    "    'show expr(essions)'    for more information about forming expressions",
+    "Use 'show command <command>' for more information about a command.",
+    "    'show expr(essions)'     for more information about forming expressions.",
+    "See http://casacore.github.io/casacore-notes/199.html for full info.",
   };
 
   const char* selectHelp[] = {
@@ -243,39 +255,81 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   };
 
   const char* calcHelp[] = {
-    "'show syntax calc' not implemented yet"
+    "CALC expression [FROM table_list]",
+    "",
+    "This command evaluates the given expression, possible using columns from",
+    "the given tables. It is basically the same as",
+    "  SELECT expression [FROM table_list]",
+    "but does not create an output table as SELECT always does."
   };
 
   const char* updateHelp[] = {
-    "'show syntax update' not implemented yet"
+    "UPDATE table_list",
+    "  SET update_list",
+    "  [FROM table_list]",
+    "  [WHERE expression]",
+    "  [ORDERBY [DISTINCT] [ASC|DESC] sort_list]",
+    "  [LIMIT expression] [OFFSET expression]",
+    ""
   };
 
   const char* insertHelp[] = {
-    "'show syntax insert' not implemented yet"
+    "INSERT INTO table_list SET column=expr, column=expr, ...",
+    "INSERT INTO table_list [(column_list)] VALUES (expr_list)",
+    "INSERT INTO table_list [(column_list)] SELECT_command",
+    "'show command insert' not implemented yet"
   };
 
   const char* deleteHelp[] = {
-    "'show syntax delete' not implemented yet"
+    "DELETE FROM table_list",
+    "  [WHERE ...] [ORDERBY ...] [LIMIT ...] [OFFSET ...]",
+    "'show command' delete' not implemented yet"
   };
 
   const char* createHelp[] = {
-    "'show syntax create' not implemented yet"
+    "CREATE TABLE table [AS options]",
+    "  [column_specs]",
+    "  [LIMIT ...]",
+    "  [DMINFO datamanagers]",
+    "'show command create' not implemented yet"
   };
 
   const char* alterHelp[] = {
-    "'show syntax alter' not implemented yet"
+    "ALTER TABLE table",
+    "  [ADD COLUMN [column_specs] [DMINFO datamanagers]",
+    "  [RENAME COLUMN old TO new, old TO new, ...]",
+    "  [DROP COLUMN col, col, ...]",
+    "  [SET KEYWORD key=value, key=value, ...]",
+    "  [COPY KEYWORD key=other, key=other, ...]",
+    "  [RENAME KEYWORD old TO new, old TO new, ...]",
+    "  [DROP KEYWORD key, key, ...]",
+    "  [ADD ROW nrow]",
+    "'show command alter' not implemented yet"
   };
 
   const char* countHelp[] = {
-    "'show syntax count' not implemented yet"
+    "COUNT [column_list] FROM table_list [WHERE expression]",
+    "",
+    "After having done the WHERE selection, it counts the number of rows",
+    "in the first table for each group formed by the columns in the list.",
+    "It creates a table with the columns in the column list and the column",
+    "_COUNT_ containing the number of rows in each group.",
+    "",
+    "  COUNT col1,col2 FROM my.ms WHERE expression",
+    "is the same as",
+    "  SELECT col1,col2,gcount() as _COUNT_ FROM my.ms",
+    "  WHERE expression GROUPBY col1,col2",
+    "",
+    "SELECT/GROUPBY is much more powerful, but the COUNT command can still be used."
   };
 
   const char* exprHelp[] = {
-    "A TaQL expression is given as in any other programming language",
-    "with scalars, arrays, sets and/or intervals using:",
+    "A TaQL expression can use scalar and/or arrays (like numpy).",
+    "The following elements can be used:",
     "  operators         see 'show oper(ators)'",
     "  functions         see 'show func(tions)'",
     "  constants         see 'show const(ants)'",
+    "                    (scalar and arrays of various data types)",
     "  sets/intervals    see 'show sets'",
     "  units             see 'show units'",
     "  columns           see 'show table <tablename>'",
@@ -749,8 +803,8 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     type.downcase();
     if (cmd == "table") {
       return showTable (parts);
-    } else if (cmd == "syntax") {
-      return showSyntax (type);
+    } else if (cmd == "command"  ||  cmd == "commands") {
+      return showCommand (type);
     } else if (cmd == "expr"  ||  cmd == "expression") {
       return getHelp (exprHelp);
     } else if (cmd == "oper"  ||  cmd == "operator"  ||
@@ -819,10 +873,10 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     return os.str();
   }
 
-  String TaQLShow::showSyntax (const String& cmd)
+  String TaQLShow::showCommand (const String& cmd)
   {
     if (cmd.empty()) {
-      return getHelp (syntaxHelp);
+      return getHelp (commandHelp);
     } else if (cmd == "select") {
       return getHelp (selectHelp);
     } else if (cmd == "calc") {
@@ -841,9 +895,9 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
       return getHelp (countHelp);
     }
     throw AipsError (cmd +
-                     " is an unknown command for 'show syntax <command>'\n" 
+                     " is an unknown command for 'show command <command>'\n" 
                      "   use select, calc, update, insert, delete, create,"
-                     "alter or count\n");
+                     " alter or count\n");
   }
 
   String TaQLShow::showFuncs (const String& type,

@@ -570,6 +570,7 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
   // Only show results for SELECT, COUNT and CALC.
   String::size_type spos = str.find_first_not_of (' ');
   Bool addCalc = False;
+  Bool showHelp = False;
   Bool doCount = False;
   Bool showResult = False;
   if (spos != String::npos) {
@@ -579,11 +580,13 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
     }
     String s = str.substr(spos, epos-spos);
     s.downcase();
+    showHelp = (s=="show" || s=="help");
     addCalc = !(s=="select" || s=="update" || s=="insert" ||
                 s=="calc" || s=="delete" || s=="count"  || 
-                s=="show" || s=="help" || s=="create" || s=="createtable" ||
+                s=="create" || s=="createtable" ||
                 s=="alter" || s=="altertable" ||
-                s=="using"  || s=="usingstyle"  || s=="time");
+                s=="using"  || s=="usingstyle"  || s=="time" ||
+                showHelp);
     showResult = (s=="select");
     if (s=="count") {
       doCount    = True;
@@ -606,7 +609,7 @@ Table doCommand (bool printCommand, bool printSelect, bool printMeas,
     colNames.resize (colNames.size() + 1, True);
     colNames[colNames.size() - 1] = "_COUNT_";
   }
-  if (printCommand) {
+  if (printCommand && !showHelp) {
     if (!varName.empty()) {
       cout << varName << " = ";
     }
@@ -750,7 +753,7 @@ void showTableInfo (const String& name, const Table& tab,
 void showTableMap (const TableMap& tables)
 {
   if (tables.empty()) {
-    cout << "  no saved selections;    note: use h or help to get help info" << endl;
+    cout << "  no saved selections;    note: use h to get help info" << endl;
       } else {
     for (TableMap::const_iterator iter = tables.begin();
          iter != tables.end(); ++iter) {
@@ -864,7 +867,7 @@ void askCommands (bool printCommand, bool printSelect, bool printMeas,
         }
         str = commands[inx++];
       }
-      if (str == "h"  ||  str == "help") {
+      if (str == "h"  ||  str == "-h"  ||  str == "--help") {
         showHelp();
       } else if (str == "?") {
         showTableMap (tables);
