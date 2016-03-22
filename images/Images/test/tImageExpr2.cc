@@ -1,5 +1,5 @@
-//# version.h: Get casacore version
-//# Copyright (C) 2008
+//# tImageExpr2.cc: Test program for boolean images with different shapes
+//# Copyright (C) 2016
 //# Associated Universities, Inc. Washington DC, USA.
 //#
 //# This library is free software; you can redistribute it and/or modify it
@@ -25,32 +25,31 @@
 //#
 //# $Id$
 
-#ifndef CASA_VERSION_H
-#define CASA_VERSION_H
 
-#include <string>
-#include <casacore/casa/aips.h>
+#include <casacore/images/Images/PagedImage.h>
+#include <casacore/images/Regions/ImageRegion.h>
+#include <casacore/coordinates/Coordinates/CoordinateUtil.h>
+#include <stdexcept>
+#include <iostream>
 
-#define CASACORE_MAJOR_VERSION 2
-#define CASACORE_MINOR_VERSION 1
-#define CASACORE_PATCH_VERSION 0
+using namespace casacore;
 
-#define STRING(x) STR_HELPER(x)
-#define STR_HELPER(x) #x
-#define CASACORE_VERSION STRING(CASACORE_MAJOR_VERSION.CASACORE_MINOR_VERSION.CASACORE_PATCH_VERSION)
+int main()
+{
+  try {
+    {  
+      PagedImage<Float> a(IPosition(4, 20, 20, 1, 20),
+                          CoordinateUtil::defaultCoords4D(), "A.im");
+      PagedImage<Float> b(IPosition(4, 20, 20, 1, 1),
+                          CoordinateUtil::defaultCoords4D(), "B.im");
+    }
+    ImageRegion* reg = 0;
+    reg = ImageRegion::fromLatticeExpression("(A.im + B.im) > 0");
+    delete reg;
+    reg = ImageRegion::fromLatticeExpression("A.im > 0 && B.im < 0");
+    delete reg;
+  } catch (const std::exception& x) {
+    std::cout << x.what() << std::endl;
+  }
+}
 
-namespace casacore { //# NAMESPACE CASACORE - BEGIN
-
-  // Get the casacore version.
-  const std::string getVersion();
-
-  // Get the version of casacore on CASA's vendor branch
-  // Note: CASA's private version of casacore has a lifecycle
-  // which is not necessarily identical to versions of casacore
-  // elsewhere. This function returns the version of casacore
-  // on CASA's vendor branch.
-  const std::string getVersionCASA();
-
-} //# NAMESPACE CASACORE - END
-
-#endif

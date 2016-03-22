@@ -257,7 +257,7 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
   const char* calcHelp[] = {
     "CALC expression [FROM table_list]",
     "",
-    "This command evaluates the given expression, possible using columns from",
+    "This command evaluates the given expression, which can contain columns from",
     "the given tables. It is basically the same as",
     "  SELECT expression [FROM table_list]",
     "but does not create an output table as SELECT always does."
@@ -270,6 +270,9 @@ namespace casacore { //# NAMESPACE CASACORE - BEGIN
     "  [WHERE expression]",
     "  [ORDERBY [DISTINCT] [ASC|DESC] sort_list]",
     "  [LIMIT expression] [OFFSET expression]",
+    "",
+    "This command makes it possible to update values in selected rows and columns",
+    "of the first table in the table list.",
     ""
   };
 
